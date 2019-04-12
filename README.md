@@ -1,1 +1,5 @@
-# tracker
+# Tracker
+
+## License
+
+MIT License
