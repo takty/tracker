@@ -8,7 +8,7 @@
 
 //
 // Table for Managing File Types
-// 2019-04-12
+// 2019-05-19
 //
 
 class TypeTable {
@@ -61,7 +61,7 @@ public:
 		return it->second;
 	}
 
-	int get_color(int id) {
+	int get_color(int id) const {
 		auto it = id_to_color_.find(id);
 		if (it == id_to_color_.end()) return -1;
 		return it->second;

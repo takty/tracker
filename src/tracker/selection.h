@@ -25,25 +25,13 @@ class Selection {
 		return s;
 	}
 
-	HWND hWnd_;
+	HWND hWnd_ = nullptr;
 	std::vector<std::wstring> objects_;
 	std::wstring defaultOpener_;
-	ULONG idNotify_;
+	ULONG idNotify_ = 0;
 
 	const TypeTable& extentions_;
 	const Pref& pref_;
-
-	//// Display pop-up menu with arranged strings
-	//int PopupInfo(const std::vector<std::wstring>& items, UINT f, const POINT& pt) {
-	//	auto hMenu = ::CreatePopupMenu();
-
-	//	for (auto i = 0U; i < items.size(); ++i) {
-	//		::AppendMenu(hMenu, MF_STRING, i, items[i].c_str());
-	//	}
-	//	int ret = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTBUTTON | f, pt.x, pt.y, 0, hWnd_, nullptr);
-	//	::DestroyMenu(hMenu);
-	//	return ret;
-	//}
 
 	// Open file (specify target)
 	bool OpenFile(const std::vector<std::wstring>& objs) {
