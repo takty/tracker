@@ -32,7 +32,7 @@ class View : public Observer {
 
 	enum { SEPA = 1, DIR = 2, HIDE = 4, LINK = 8, HIER = 16, SEL = 32, EMPTY = 64 };
 
-	int cxSide_, cyItem_, cxScrollBar_;
+	int cxSide_ = 0, cyItem_, cxScrollBar_;
 	HFONT hMarkFont_, hItemFont_;
 	RECT listRect_;
 

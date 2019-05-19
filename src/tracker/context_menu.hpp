@@ -34,9 +34,9 @@ class ContextMenu {
 		}
 	}
 
-	const HWND wnd_;
-	LPCONTEXTMENU2 context_menu_;
-	WNDPROC orig_proc_;
+	const HWND wnd_ = nullptr;
+	LPCONTEXTMENU2 context_menu_ = nullptr;
+	WNDPROC orig_proc_ = nullptr;
 
 	HRESULT invoke(const LPCONTEXTMENU cm, const char* cmd) const {
 		CMINVOKECOMMANDINFO ici;

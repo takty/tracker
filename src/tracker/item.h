@@ -27,7 +27,7 @@ class Item {
 	unsigned long long size_;
 	int color_;
 	int style_;
-	int data_;
+	int data_ = 0;
 
 	// parentPath must include \ at the end
 	void Assign(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {

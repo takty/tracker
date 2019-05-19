@@ -6,7 +6,7 @@
 #include "stdafx.h"
 #include "View.h"
 
-const wchar_t MUTEX[] = _T("TRACKER300_20170103");
+const wchar_t MUTEX[] = _T("TRACKER400_20190519");
 const wchar_t CLASS_NAME[] = _T("Tracker");
 const wchar_t WINDOW_NAME[] = _T("Tracker");
 
@@ -16,7 +16,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ in
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
-	::CoInitialize(nullptr);  // For shell context menu
+	auto res = ::CoInitialize(nullptr);  // For shell context menu
+	if (FAILED(res)) return 0;
 	auto hr = ::OleInitialize(nullptr);  // For supporting drag
 	if (FAILED(hr)) return 0;
 

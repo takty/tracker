@@ -16,7 +16,7 @@
 class History {
 
 	std::vector<std::wstring> paths_;
-	int max_size_;
+	int max_size_ = 0;
 
 public:
 
