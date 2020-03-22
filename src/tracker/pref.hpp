@@ -1,3 +1,13 @@
+/**
+ *
+ * Preference (Reading and writing INI file)
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <vector>
@@ -8,11 +18,6 @@
 
 #include "file_utils.hpp"
 
-
-//
-// Reading and writing preferences (INI file)
-// 2019-04-12
-//
 
 class Pref {
 
@@ -75,7 +80,7 @@ public:
 			if (outLen != buf.size() - 1) break;
 			buf.resize(buf.size() * 2);
 		}
-		return{ buf.data() };
+		return { buf.data() };
 	}
 
 	// Get string item

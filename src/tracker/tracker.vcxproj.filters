@@ -22,6 +22,9 @@
     <Filter Include="Header Files\Document\FileUtils">
       <UniqueIdentifier>{9d0ed06a-cfac-44ac-9638-a96ff66c3a3c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\View\Utils">
+      <UniqueIdentifier>{503f1c41-9aa3-40c1-ba06-63df430e0717}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="tracker.ico">
@@ -53,17 +56,11 @@
     <ClInclude Include="view.h">
       <Filter>Header Files\View</Filter>
     </ClInclude>
-    <ClInclude Include="pref.hpp">
-      <Filter>Header Files\View</Filter>
-    </ClInclude>
     <ClInclude Include="hier_transition.h">
       <Filter>Header Files\View</Filter>
     </ClInclude>
     <ClInclude Include="tracker.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="regex.h">
-      <Filter>Header Files\View</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
@@ -92,25 +89,13 @@
     <ClInclude Include="item_list.h">
       <Filter>Header Files\Document</Filter>
     </ClInclude>
-    <ClInclude Include="migemo_wrapper.h">
-      <Filter>Header Files\View</Filter>
-    </ClInclude>
     <ClInclude Include="migemo.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="window_utils.h">
-      <Filter>Header Files\View</Filter>
-    </ClInclude>
-    <ClInclude Include="tool_tip.h">
-      <Filter>Header Files\View</Filter>
     </ClInclude>
     <ClInclude Include="rename_edit.h">
       <Filter>Header Files\View</Filter>
     </ClInclude>
     <ClInclude Include="search.h">
-      <Filter>Header Files\View</Filter>
-    </ClInclude>
-    <ClInclude Include="string_converter.h">
       <Filter>Header Files\View</Filter>
     </ClInclude>
     <ClInclude Include="shell.hpp">
@@ -142,6 +127,24 @@
     </ClInclude>
     <ClInclude Include="operation.hpp">
       <Filter>Header Files\Document\FileUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="regex.h">
+      <Filter>Header Files\View\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="string_converter.h">
+      <Filter>Header Files\View\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="window_utils.h">
+      <Filter>Header Files\View\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="tool_tip.h">
+      <Filter>Header Files\View\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="migemo_wrapper.h">
+      <Filter>Header Files\View\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="pref.hpp">
+      <Filter>Header Files\View\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

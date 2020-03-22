@@ -414,18 +414,18 @@ class View : public Observer {
 			::GetTextExtentPoint32(dc, num.c_str(), num.size(), &font);
 			RECT nr = r;
 			nr.left = nr.right - font.cx - 3;
-			drawGrayText(dc, nr, num.c_str());
+			WindowUtils::DrawGrayText(dc, nr, num.c_str());
 			r.right = nr.left - 1;
 			str[0] = sortBy[doc_.GetOpt().GetSortType() + doc_.GetOpt().GetSortOrder() * 4], str[1] = _T('\0');
 
 			r.left += 3;
-			drawGrayText(dc, r, str);
+			WindowUtils::DrawGrayText(dc, r, str);
 			::GetTextExtentPoint32(dc, str, ::_tcslen(str), &font);
 			r.left = font.cx + 2;
 		}
 		if (doc_.InHistory()) {
 			r.left += 3;
-			drawGrayText(dc, r, _T("x"));
+			WindowUtils::DrawGrayText(dc, r, _T("x"));
 			::GetTextExtentPoint32(dc, _T("x"), 1, &font);
 			r.left = font.cx + 2;
 		}
@@ -496,20 +496,6 @@ class View : public Observer {
 		::SetTextColor(dc, ::GetSysColor(cur ? COLOR_HIGHLIGHTTEXT : COLOR_MENUTEXT));
 		if (sel) ::DrawText(dc, _T("a"), 1, &rl, 0x0025);
 		if (dir) ::DrawText(dc, _T("4"), 1, &rr, 0x0025);
-	}
-
-	// Draw gray text
-	void drawGrayText(HDC dc, RECT r, const TCHAR* str)
-	{
-		::SetBkMode(dc, TRANSPARENT);
-		r.left += 2, r.top += 1;
-		::SetTextColor(dc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-		::DrawText(dc, str, -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-		r.left -= 2, r.top -= 1;
-		::SetTextColor(dc, GetSysColor(COLOR_GRAYTEXT));
-		::DrawText(dc, str, -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-		r.left += 1;
-		::DrawText(dc, str, -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 	}
 
 	void wmTimer()

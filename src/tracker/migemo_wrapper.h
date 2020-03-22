@@ -1,7 +1,11 @@
-//
-// Migemo Wrapper
-// 2019-04-12
-//
+/**
+ *
+ * Migemo Wrapper
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
 
 
 #pragma once
@@ -19,19 +23,19 @@ class Migemo {
 	typedef unsigned char* (*MIGEMO_QUERY)(migemo* object, unsigned char* query);
 	typedef void(*MIGEMO_RELEASE)(migemo* object, unsigned char* string);
 
-	MIGEMO_OPEN migemoOpen;
-	MIGEMO_CLOSE migemoClose;
-	MIGEMO_QUERY migemoQuery;
-	MIGEMO_RELEASE migemoRelease;
+	MIGEMO_OPEN    migemoOpen_;
+	MIGEMO_CLOSE   migemoClose_;
+	MIGEMO_QUERY   migemoQuery_;
+	MIGEMO_RELEASE migemoRelease_;
 
-	bool standBy_;
-	HINSTANCE hMigemo_;
-	migemo* m_;
+	bool            standBy_ = false;
+	HINSTANCE       hMigemo_ = nullptr;
+	migemo*         m_       = nullptr;
 	StringConverter sc_;
 
 public:
 
-	Migemo() : standBy_(false) {
+	Migemo() {
 	}
 
 	~Migemo() {
@@ -43,16 +47,16 @@ public:
 
 		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
 		if (hMigemo_) {
-			migemoOpen = (MIGEMO_OPEN)GetProcAddress(hMigemo_, "migemo_open");
-			migemoClose = (MIGEMO_CLOSE)GetProcAddress(hMigemo_, "migemo_close");
-			migemoQuery = (MIGEMO_QUERY)GetProcAddress(hMigemo_, "migemo_query");
-			migemoRelease = (MIGEMO_RELEASE)GetProcAddress(hMigemo_, "migemo_release");
+			migemoOpen_    = (MIGEMO_OPEN)GetProcAddress(hMigemo_, "migemo_open");
+			migemoClose_   = (MIGEMO_CLOSE)GetProcAddress(hMigemo_, "migemo_close");
+			migemoQuery_   = (MIGEMO_QUERY)GetProcAddress(hMigemo_, "migemo_query");
+			migemoRelease_ = (MIGEMO_RELEASE)GetProcAddress(hMigemo_, "migemo_release");
 
 			wstring dp(dictPath);
 			if (dp.empty()) {
 				dp = Path::parent(FileSystem::module_file_path()).append(_T("\\Dict\\migemo-dict"));
 			}
-			m_ = migemoOpen((char*)sc_.convert(dp.c_str()));
+			m_ = migemoOpen_((char*)sc_.convert(dp.c_str()));
 			if (m_ == nullptr) return false;
 			standBy_ = true;
 		}
@@ -61,14 +65,14 @@ public:
 
 	void query(const wstring& searchWord, string& query) {
 		auto mbs = sc_.convert(searchWord);
-		auto p = migemoQuery(m_, (unsigned char*)mbs);
+		auto p = migemoQuery_(m_, (unsigned char*)mbs);
 		query.assign("/").append((const char*)p).append("/ki");  // Handle as Japanese, case-insensitive
-		migemoRelease(m_, p);
+		migemoRelease_(m_, p);
 	}
 
 	void freeLibrary() {
 		if (standBy_) {
-			migemoClose(m_);
+			migemoClose_(m_);
 			FreeLibrary(hMigemo_);
 			standBy_ = false;
 		}
