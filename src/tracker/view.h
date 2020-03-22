@@ -7,6 +7,7 @@
  *
  */
 
+
 #pragma once
 
 #include <windows.h>
@@ -36,22 +37,20 @@ class View : public Observer {
 
 	enum { SEPA = 1, DIR = 2, HIDE = 4, LINK = 8, HIER = 16, SEL = 32, EMPTY = 64 };
 
-	int cxSide_ = 0, cyItem_, cxScrollBar_;
-	HFONT hMarkFont_, hItemFont_;
+	int mouseDownY_        = -1;
+	int mouseDownArea_     = -1;
+	int mouseDownIndex_    = -1;
+	int mouseDownTopIndex_ = -1;
+	Document::ListType mouseDownListType_ = Document::FILE;
+
+	int scrollListTopIndex_ = 0;
+	int listCursorIndex_    = 0;
+	Document::ListType listCursorSwitch_ = Document::FILE;
+
+	int cxSide_ = 0, cyItem_ = 0, cxScrollBar_ = 0;
+	HFONT hMarkFont_ = nullptr, hItemFont_ = nullptr;
+	int scrollListLineNum_ = 0;
 	RECT listRect_;
-
-	int mouseDownY_;
-	int mouseDownArea_;
-	int mouseDownIndex_;
-	int mouseDownTopIndex_;
-	Document::ListType mouseDownListType_;
-
-	int scrollListLineNum_;
-	int scrollListTopIndex_;
-	int listCursorIndex_;
-	Document::ListType listCursorSwitch_;
-
-	HierTransition ht_;
 
 	Pref pref_;
 	int popupPos_;
@@ -61,11 +60,12 @@ class View : public Observer {
 		static int menuTop_;
 		return menuTop_;
 	}
-	bool curSelIsLong_, dontPopup_;
-	UINT cursorAlign_;
+	bool curSelIsLong_ = false, suppressPopup_ = false;
+	UINT cursorAlign_ = 0;
 	HWND hWnd_;
 	double dpiFactX_, dpiFactY_;
 
+	HierTransition ht_;
 	Document doc_;
 	TypeTable extentions_;
 	Selection ope_;
@@ -134,12 +134,6 @@ class View : public Observer {
 	View(const HWND hWnd) : doc_(extentions_, pref_, SEPA, (SEPA | HIER)), ope_(extentions_, pref_), re_(WM_RENAMEEDITCLOSED)
 	{
 		doc_.SetView(this);
-		mouseDownY_ = mouseDownArea_ = mouseDownIndex_ = mouseDownTopIndex_ = -1;
-		curSelIsLong_ = dontPopup_ = false;
-		cursorAlign_ = 0;
-		scrollListTopIndex_ = 0;
-		listCursorIndex_ = 0;
-		listCursorSwitch_ = Document::FILE;
 
 		hWnd_ = hWnd;
 		::SetWindowLong(hWnd, GWL_USERDATA, (LONG)this);  // Set the window a property
@@ -163,37 +157,41 @@ class View : public Observer {
 	{
 		pref_.set_current_section(SECTION_WINDOW);
 
-		cxSide_ = (int)(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
-		cyItem_ = (int)(pref_.item_int(KEY_LINE_HEIGHT, VAL_LINE_HEIGHT) * dpiFactY_);
+		cxSide_      = (int)(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
+		cyItem_      = (int)(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
 		cxScrollBar_ = (int)(6 * dpiFactX_);
-		auto width = (int)(pref_.item_int(KEY_WIDTH, VAL_WIDTH) * dpiFactX_);
-		auto height = (int)(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
+
+		popupPos_        = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
+		fullScreenCheck_ = pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
+
+		int width  = (int)(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
+		int height = (int)(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
+
+		wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
+		wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
+
+		wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
+		int     fontSize = (int)(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
+
+		bool useMigemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
+
 		::MoveWindow(hWnd_, 0, 0, width, height, FALSE);
 		::ShowWindow(hWnd_, SW_SHOW);  // Once display, and calculate the size etc.
 		::ShowWindow(hWnd_, SW_HIDE);  // Hide immediately
 
-		popupPos_ = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
+		ope_.SetDefaultOpener(defOpener);
+		SetHotkey(hotKey, IDHK);
 
-		ope_.SetDefaultOpener(pref_.item(KEY_NO_LINKED, VAL_NO_LINKED));
-		fullScreenCheck_ = (pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0);
-		SetHotkey(pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY), IDHK);
-
-		// Get and set the font to display the item
-		auto temp = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
-		auto fontSize = (int)(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
 		::DeleteObject(hItemFont_);
-		hItemFont_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, temp.c_str());
-		if (temp.empty() || !hItemFont_) hItemFont_ = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
+		hItemFont_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
+		if (fontName.empty() || !hItemFont_) hItemFont_ = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
+		hMarkFont_ = ::CreateFont((int)(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
 		re_.SetFont(hItemFont_);
 
-		// Generate font for mark
-		hMarkFont_ = ::CreateFont((int)(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
+		search_.Initialize(useMigemo);
+		extentions_.restore(pref_);  // Load extension color
 
 		doc_.Initialize(firstTime);
-
-		pref_.set_current_section(SECTION_WINDOW);
-		search_.Initialize(pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0);
-		extentions_.restore(pref_);  // Load extension color
 	}
 
 	void SetHotkey(const wstring& key, int id)
@@ -276,7 +274,7 @@ class View : public Observer {
 	void wmHotKey(int id)
 	{
 		if (id == IDHK) {
-			if (::IsWindowVisible(hWnd_)) dontPopup_ = true;
+			if (::IsWindowVisible(hWnd_)) suppressPopup_ = true;
 			::ShowWindow(hWnd_, ::IsWindowVisible(hWnd_) ? SW_HIDE : SW_SHOW);
 		}
 	}
@@ -522,10 +520,10 @@ class View : public Observer {
 			(popupPos_ == 0 && pt.x <= 1 && pt.y <= 1) || (popupPos_ == 1 && pt.x == r && pt.y == 0) ||
 			(popupPos_ == 2 && pt.x == r && pt.y == b) || (popupPos_ == 3 && pt.x == 0 && pt.y == b)
 			)) {
-			dontPopup_ = false;
+			suppressPopup_ = false;
 			return;
 		}
-		if (dontPopup_) return;
+		if (suppressPopup_) return;
 		// Does not pop up while dragging
 		if (::GetAsyncKeyState(VK_LBUTTON) < 0 || ::GetAsyncKeyState(VK_RBUTTON) < 0) return;
 		// Does not pop up if the current frontmost window is full screen
