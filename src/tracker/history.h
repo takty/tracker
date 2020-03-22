@@ -1,3 +1,13 @@
+/**
+ *
+ * History
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <vector>
@@ -7,11 +17,6 @@
 #include "file_utils.hpp"
 #include "pref.hpp"
 
-
-//
-// History
-// 2019-04-12
-//
 
 class History {
 

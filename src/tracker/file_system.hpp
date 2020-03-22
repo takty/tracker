@@ -1,3 +1,13 @@
+/**
+ *
+ * File System Operations
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <string>
@@ -8,11 +18,6 @@
 
 #include "Path.hpp"
 
-
-//
-// Utility class for file path operations
-// 2016/03/04
-//
 
 class FileSystem {
 
@@ -88,7 +93,7 @@ public:
 		return ret;
 	}
 
-	// Check whether there is an execution file that has the same name as the name of path 
+	// Check whether there is an execution file that has the same name as the name of path
 	static bool is_existing_same_name_execution_file(const std::wstring& path) {
 		bool ret = false;
 		auto temp = Path::parent(path);

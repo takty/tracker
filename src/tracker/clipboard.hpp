@@ -1,3 +1,13 @@
+/**
+ *
+ * Clipboard Operations
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <string>
@@ -10,11 +20,6 @@
 #include "Link.hpp"
 #include "Shell.hpp"
 
-
-//
-// Clipboard operations
-// 2016/03/04
-//
 
 class Clipboard {
 

@@ -1,3 +1,13 @@
+/**
+ *
+ * Document
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <string>
@@ -22,16 +32,11 @@ using namespace std;
 class Item;
 
 
-//
-// Document
-// 2019-04-12
-//
-
 class Document {
 
 public:
 
-	enum ListType { FILE, HIER = 64 };
+	enum class ListType { FILE, HIER = 64 };
 
 private:
 
@@ -155,7 +160,7 @@ public:
 
 	// Move to lower folder
 	bool MoveToLower(ListType w, int index) {
-		Item *f = ((w == FILE) ? files_ : navis_)[index];
+		Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
 		if (f->IsEmpty()) return false;
 
 		if (f->IsDir()) {
@@ -186,7 +191,7 @@ public:
 
 	// Check if it is possible to move to lower folder
 	bool MovableToLower(ListType w, int index) {
-		Item *f = ((w == FILE) ? files_ : navis_)[index];
+		Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
 
 		if (f->IsEmpty()) return false;
 		if (f->IsDir()) return true;
@@ -200,7 +205,7 @@ public:
 		ope.Clear();
 		if (index == -1) return ope;
 
-		auto &vec = (type == FILE) ? files_ : navis_;
+		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		if (vec[index]->IsEmpty()) return ope;
 
 		// When index is not selected (including hierarchy) -> Single file is selected alone
@@ -238,7 +243,7 @@ public:
 
 	// Add to / Remove from Favorites
 	void AddOrRemoveFavorite(const std::wstring& obj, ListType w, int index) {
-		auto &vec = (w == FILE) ? files_ : navis_;
+		auto &vec = (w == ListType::FILE) ? files_ : navis_;
 
 		if (vec[index]->IsEmpty()) return;
 		if (InBookmark()) {
@@ -251,7 +256,7 @@ public:
 
 	// Select file by range specification
 	void SelectFile(int front, int back, ListType type, bool all) {
-		auto &vec = (type == FILE) ? files_ : navis_;
+		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		vec.Select(front, back, all);
 	}
 
@@ -291,7 +296,7 @@ public:
 
 	// Return file information
 	Item* GetItem(ListType w, int index) {
-		return (w == FILE) ? files_[index] : navis_[index];
+		return (w == ListType::FILE) ? files_[index] : navis_[index];
 	}
 
 	const ItemList& GetNavis() const {

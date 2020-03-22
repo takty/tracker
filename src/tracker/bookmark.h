@@ -1,3 +1,13 @@
+/**
+ *
+ * Bookmarks
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <vector>
@@ -5,11 +15,6 @@
 
 #include "Pref.hpp"
 
-
-//
-// Bookmarks
-// 2016/03/04
-//
 
 class Bookmark {
 

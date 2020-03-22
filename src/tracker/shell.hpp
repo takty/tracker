@@ -1,3 +1,13 @@
+/**
+ *
+ * Shell Object Operations
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <vector>
@@ -8,11 +18,6 @@
 
 #include "Path.hpp"
 
-
-//
-// Utility class for shell object operations
-// 2016/03/04
-//
 
 class Shell {
 

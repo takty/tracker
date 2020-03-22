@@ -1,3 +1,13 @@
+/**
+ *
+ * Table for Managing File Types
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <map>
@@ -5,11 +15,6 @@
 
 #include "Pref.hpp"
 
-
-//
-// Table for Managing File Types
-// 2019-05-19
-//
 
 class TypeTable {
 

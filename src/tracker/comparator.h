@@ -1,12 +1,17 @@
+/**
+ *
+ * Comparator of File Items
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include "Item.h"
 
-
-//
-// Comparator of File Items
-// 2019-04-12
-//
 
 // Function Object for Comparing By Names
 class CompByName {

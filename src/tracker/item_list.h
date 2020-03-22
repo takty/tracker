@@ -1,14 +1,19 @@
+/**
+ *
+ * Item list
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <vector>
 
 #include "Item.h"
 
-
-//
-// Item list
-// 2016/02/22
-//
 
 class ItemList {
 

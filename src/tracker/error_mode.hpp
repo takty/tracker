@@ -1,12 +1,17 @@
+/**
+ *
+ * Utility for Temporal Error Mode Change
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <WinBase.h>
 
-
-//
-// Utility for temporal error mode change
-// 2016/02/24
-//
 
 class ErrorMode {
 

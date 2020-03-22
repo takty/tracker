@@ -1,14 +1,19 @@
+/**
+ *
+ * File Path Operations
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <string>
 #include <vector>
 #include <algorithm>
 
-
-//
-// Utility class for file path operations
-// 2016/03/01
-//
 
 const std::wstring PATH_EXT_DIR(L"<folder>");
 
@@ -18,9 +23,9 @@ class Path {
 
 public:
 
-	static const wchar_t PATH_SEPARATOR = L'\\';  // File path separator
-	static const wchar_t DRIVE_IDENTIFIER = L':';  // Drive identifier
-	static const wchar_t EXT_PREFIX = L'.';  // Extention prefix
+	static const wchar_t PATH_SEPARATOR   = L'\\';  // File path separator
+	static const wchar_t DRIVE_IDENTIFIER = L':';   // Drive identifier
+	static const wchar_t EXT_PREFIX       = L'.';   // Extention prefix
 
 	constexpr static wchar_t const * const UNC_PREFIX = L"\\\\?\\";
 
@@ -28,7 +33,7 @@ public:
 	static std::wstring name(const std::wstring& path) {
 		const auto size = path.size();
 		const auto last = (path.back() == PATH_SEPARATOR) ? size - 2 : size - 1;
-		const auto pos = path.find_last_of(PATH_SEPARATOR, last);
+		const auto pos  = path.find_last_of(PATH_SEPARATOR, last);
 
 		if (pos == std::wstring::npos) {  // File name only
 			return path.substr(0, last + 1);

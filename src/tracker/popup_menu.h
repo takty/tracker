@@ -43,20 +43,17 @@ class PopupMenu {
 			}
 			if (name == _T("-")) {  // Separator
 				::AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
-			}
-			else if (path == _T(">")) {  // Sub-menu
+			} else if (path == _T(">")) {  // Sub-menu
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addTypeMenu(sec.substr(1), items, hSubMenu);
 				::AppendMenu(hMenu, MF_POPUP, (UINT)hSubMenu, name.c_str());
-			}
-			else if (path == _T("<New>")) {  // New file menu
+			} else if (path == _T("<New>")) {  // New file menu
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addNewFileMenu(hSubMenu, items);
 				::AppendMenu(hMenu, MF_POPUP, (UINT)hSubMenu, name.c_str());
-			}
-			else {  // Normal menu item
+			} else {  // Normal menu item
 				UINT flag = MF_STRING;
 				if ((!paste && path == _T("<Paste>")) || (!pasteShortcut && path == _T("<PasteShortcut>"))) {
 					flag |= MF_GRAYED;

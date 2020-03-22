@@ -1,3 +1,13 @@
+/**
+ *
+ * File Operations
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <windows.h>
@@ -9,11 +19,6 @@
 #include "type_table.h"
 #include "pref.hpp"
 
-
-//
-// File Operations
-// 2019-04-12
-//
 
 class Selection {
 
@@ -374,20 +379,20 @@ public:
 	// Execute a string command
 	int Command(const std::wstring& cmd) {
 		if (cmd.find(COM_CREATE_NEW) == 0) { CreateNewFile(cmd.c_str() + 11); return 1; }
-		if (cmd == COM_NEW_FOLDER) { CreateNewFolderIn(); return 1; }
-		if (cmd == COM_DELETE) { DeleteFile(); return 1; }
-		if (cmd == COM_CLONE) { CloneHere(); return 1; }
-		if (cmd == COM_SHORTCUT) { CreateShortcutHere(); return 1; }
-		if (cmd == COM_COPY_TO_DESKTOP) { CopyToDesktop(); return 1; }
-		if (cmd == COM_MOVE_TO_DESKTOP) { MoveToDesktop(); return 1; }
-		if (cmd == COM_COPY_PATH) { CopyPathInClipboard(); return 1; }
-		if (cmd == COM_COPY) { Copy(); return 1; }
-		if (cmd == COM_CUT) { Cut(); return 1; }
-		if (cmd == COM_PASTE) { PasteIn(); return 1; }
-		if (cmd == COM_PASTE_SHORTCUT) { PasteAsShortcutIn(); return 1; }
-		if (cmd == COM_PROPERTY) { PopupFileProperty(); return 1; }
-		if (cmd == COM_OPEN) { return OpenWithAssociation() ? -1 : 0; }
-		if (cmd == COM_OPEN_RESOLVE) { return OpenAfterResolve() ? -1 : 0; }
+		if (cmd == COM_NEW_FOLDER)         { CreateNewFolderIn(); return 1; }
+		if (cmd == COM_DELETE)             { DeleteFile(); return 1; }
+		if (cmd == COM_CLONE)              { CloneHere(); return 1; }
+		if (cmd == COM_SHORTCUT)           { CreateShortcutHere(); return 1; }
+		if (cmd == COM_COPY_TO_DESKTOP)    { CopyToDesktop(); return 1; }
+		if (cmd == COM_MOVE_TO_DESKTOP)    { MoveToDesktop(); return 1; }
+		if (cmd == COM_COPY_PATH)          { CopyPathInClipboard(); return 1; }
+		if (cmd == COM_COPY)               { Copy(); return 1; }
+		if (cmd == COM_CUT)                { Cut(); return 1; }
+		if (cmd == COM_PASTE)              { PasteIn(); return 1; }
+		if (cmd == COM_PASTE_SHORTCUT)     { PasteAsShortcutIn(); return 1; }
+		if (cmd == COM_PROPERTY)           { PopupFileProperty(); return 1; }
+		if (cmd == COM_OPEN)               { return OpenWithAssociation() ? -1 : 0; }
+		if (cmd == COM_OPEN_RESOLVE)       { return OpenAfterResolve() ? -1 : 0; }
 		return 0;
 	}
 

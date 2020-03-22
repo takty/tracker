@@ -1,3 +1,13 @@
+/**
+ *
+ * Shell Context Menu
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <vector>
@@ -8,11 +18,6 @@
 
 #include "Shell.hpp"
 
-
-//
-// Utility class for shell context menu
-// 2016/03/04
-//
 
 class ContextMenu {
 
@@ -34,19 +39,19 @@ class ContextMenu {
 		}
 	}
 
-	const HWND wnd_ = nullptr;
+	const HWND wnd_              = nullptr;
 	LPCONTEXTMENU2 context_menu_ = nullptr;
-	WNDPROC orig_proc_ = nullptr;
+	WNDPROC orig_proc_           = nullptr;
 
 	HRESULT invoke(const LPCONTEXTMENU cm, const char* cmd) const {
 		CMINVOKECOMMANDINFO ici;
-		ici.cbSize = sizeof(ici);
-		ici.fMask = 0;
-		ici.hwnd = nullptr;
-		ici.lpVerb = cmd;
+		ici.cbSize       = sizeof(ici);
+		ici.fMask        = 0;
+		ici.hwnd         = nullptr;
+		ici.lpVerb       = cmd;
 		ici.lpParameters = nullptr;
-		ici.lpDirectory = nullptr;
-		ici.nShow = SW_SHOWNORMAL;
+		ici.lpDirectory  = nullptr;
+		ici.nShow        = SW_SHOWNORMAL;
 		return cm->InvokeCommand(&ici);
 	}
 
@@ -58,22 +63,6 @@ class ContextMenu {
 		cm->Release();
 		return res;
 	}
-
-	//LPCONTEXTMENU get_background_context_menu(const std::wstring& path) const {
-	//	LPCONTEXTMENU ret_cm = nullptr;
-	//	auto parent_shf = Shell::get_shell_folder(path);
-	//	if (parent_shf != nullptr) {
-	//		LPSHELLVIEW sv;
-	//		auto res = parent_shf->CreateViewObject(wnd_, IID_IShellView, (void**)&sv);
-	//		if (res == S_OK) {
-	//			res = sv->GetItemObject(SVGIO_BACKGROUND, IID_IContextMenu, (void**)&ret_cm);
-	//			if (res != S_OK) ret_cm = nullptr;
-	//			sv->Release();
-	//		}
-	//		parent_shf->Release();
-	//	}
-	//	return ret_cm;
-	//}
 
 public:
 
@@ -151,4 +140,3 @@ public:
 	}
 
 };
-

@@ -97,7 +97,7 @@ class Operation {
 	bool shell_execute(const std::wstring& obj, const wchar_t* opt = nullptr) const {
 		SHELLEXECUTEINFO sei;
 		sei.cbSize       = sizeof(SHELLEXECUTEINFO);
-		sei.fMask        = SEE_MASK_FLAG_NO_UI;  // To suppress that a caution dialog is shown
+		sei.fMask        = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC | SEE_MASK_FLAG_LOG_USAGE;  // To suppress that a caution dialog is shown
 		sei.hwnd         = nullptr;
 		sei.lpVerb       = nullptr;
 		sei.lpFile       = obj.c_str();

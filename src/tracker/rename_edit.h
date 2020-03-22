@@ -34,8 +34,7 @@ class RenameEdit {
 			if ((int)wp == VK_RETURN) {
 				p->Close();
 				break;
-			}
-			else if ((int)wp == VK_ESCAPE) {
+			} else if ((int)wp == VK_ESCAPE) {
 				::ShowWindow(hEdit_, SW_HIDE);
 				break;
 			}
@@ -81,8 +80,7 @@ public:
 		auto len = fname.size();
 		if (Link::is_link(renamedPath_)) {
 			fname.resize(fname.size() - 4);  // If it is a shortcut, remove the extension from the file name
-		}
-		else {
+		} else {
 			auto exe = Path::ext(fname);
 			if (!exe.empty()) len -= exe.size() + 1;
 		}

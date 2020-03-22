@@ -1,3 +1,13 @@
+/**
+ *
+ * Shortcut File Operations
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <string>
@@ -8,11 +18,6 @@
 #include "path.hpp"
 #include "file_system.hpp"
 
-
-//
-// Utility class for shortcut file operations
-// 2016/02/26
-//
 
 class Link {
 

@@ -1,3 +1,13 @@
+/**
+ *
+ * File Item
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <windows.h>
@@ -8,11 +18,6 @@
 #include "type_table.h"
 
 
-//
-// File Item
-// 2019-04-12
-//
-
 class Item {
 
 	static std::wstring& EMPTY_STR() {
@@ -20,7 +25,7 @@ class Item {
 		return EMPTY_STR;
 	}
 
-	enum { /*SEPA = 1, */DIR = 2, HIDE = 4, LINK = 8, HIER = 16, SEL = 32, EMPTY = 64 };
+	enum { DIR = 2, HIDE = 4, LINK = 8, HIER = 16, SEL = 32, EMPTY = 64 };
 
 	std::wstring path_, name_;
 	FILETIME date_;
@@ -83,7 +88,7 @@ class Item {
 
 public:
 
-	Item() {}
+	Item() : date_({ 0 }) {}
 
 	Item* SetFileItem(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
 		Assign(parentPath, wfd, exts);

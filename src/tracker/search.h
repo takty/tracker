@@ -85,8 +85,7 @@ public:
 					break;
 				}
 			}
-		}
-		else {
+		} else {
 			for (int i = startIndex; ; ++i) {
 				if (i >= items.Count()) {
 					i = 0;

@@ -1,5 +1,14 @@
+/**
+ *
+ * Drives
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
-//#pragma warning(disable:4351)
 
 #include <vector>
 #include <string>
@@ -9,16 +18,11 @@
 #include "file_utils.hpp"
 
 
-//
-// Drives
-// 2019-04-12
-//
-
 class Drives {
 
 	static const wchar_t FIRST_LETTER = L'A';
-	static const wchar_t LAST_LETTER = L'Z';
-	static const int WAITING_TIME = 200;
+	static const wchar_t LAST_LETTER  = L'Z';
+	static const int WAITING_TIME     = 200;
 
 	std::vector<std::wstring> paths_;
 	bool slowDrives_[LAST_LETTER - FIRST_LETTER + 1];

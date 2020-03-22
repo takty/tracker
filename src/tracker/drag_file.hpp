@@ -1,3 +1,13 @@
+/**
+ *
+ * OLE File Dragging
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <vector>
@@ -8,11 +18,6 @@
 #include "Path.hpp"
 #include "Shell.hpp"
 
-
-//
-// Utility class for ole file dragging
-// 2016/03/04
-//
 
 class DragFile {
 
