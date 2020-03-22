@@ -98,6 +98,7 @@ private:
 		} else if (currentPath_ == his_.PATH) {
 			his_.clean_up();
 			for (int i = 0; i < his_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(his_[i], extentions_, i));
+			opt_.SortHistory(files_);
 		} else if (currentPath_ == dri_.PATH) {
 			dri_.clean_up();
 			for (int i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));

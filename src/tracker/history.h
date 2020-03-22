@@ -30,7 +30,7 @@ public:
 	History() {}
 
 	void initialize(Pref& pref) {
-		max_size_ = pref.item_int(KEY_RECENT_NUM, VAL_RECENT_NUM);
+		max_size_ = pref.item_int(KEY_MAX_HISTORY, VAL_MAX_HISTORY);
 	}
 
 	void restore(Pref& pref) {

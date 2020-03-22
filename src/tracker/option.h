@@ -19,8 +19,11 @@
 
 class Option {
 
-	bool showHidden_, sortOrder_;
-	int sortType_;
+	bool showHidden_, sortRev_;
+	int sortBy_;
+
+	bool sortHis_, sortHisRev_;
+	int sortHisBy_;
 
 public:
 
@@ -28,23 +31,31 @@ public:
 
 	void Restore(Pref& pref) {
 		pref.set_current_section(SECTION_WINDOW);
-		showHidden_ = (pref.item_int(KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0);
-		sortOrder_  = (pref.item_int(KEY_SORT_REV, VAL_SORT_REV) != 0);
-		sortType_   = pref.item_int(KEY_SORT_BY, VAL_SORT_BY);
+		showHidden_ = pref.item_int(KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
+		sortRev_    = pref.item_int(KEY_SORT_REV,    VAL_SORT_REV)    != 0;
+		sortBy_     = pref.item_int(KEY_SORT_BY,     VAL_SORT_BY);
+
+		sortHis_    = pref.item_int(KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
+		sortHisRev_ = pref.item_int(KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
+		sortHisBy_  = pref.item_int(KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
 	}
 
 	void Store(Pref& pref) {
 		pref.set_item_int(SECTION_WINDOW, KEY_SHOW_HIDDEN, showHidden_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_REV, sortOrder_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_BY, sortType_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_REV,    sortRev_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_BY,     sortBy_);
+
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY,     sortHis_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sortHisRev_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sortHisBy_);
 	}
 
 	int GetSortType() {
-		return sortType_;
+		return sortBy_;
 	}
 
 	bool GetSortOrder() {
-		return sortOrder_;
+		return sortRev_;
 	}
 
 	bool IsShowHidden() {
@@ -52,11 +63,11 @@ public:
 	}
 
 	int SetSortType(int t) {
-		return sortType_ = t;
+		return sortBy_ = t;
 	}
 
 	bool SetSortOrder(bool f) {
-		return sortOrder_ = f;
+		return sortRev_ = f;
 	}
 
 	bool SetShowHidden(bool f) {
@@ -64,11 +75,21 @@ public:
 	}
 
 	void SortFiles(ItemList& files) {
-		switch (sortType_) {
-		case 0: files.Sort(CompByName(sortOrder_)); break;
-		case 1: files.Sort(CompByType(sortOrder_)); break;
-		case 2: files.Sort(CompByDate(sortOrder_)); break;
-		case 3: files.Sort(CompBySize(sortOrder_)); break;
+		switch (sortBy_) {
+		case 0: files.Sort(CompByName(sortRev_)); break;
+		case 1: files.Sort(CompByType(sortRev_)); break;
+		case 2: files.Sort(CompByDate(sortRev_)); break;
+		case 3: files.Sort(CompBySize(sortRev_)); break;
+		}
+	}
+
+	void SortHistory(ItemList& files) {
+		if (!sortHis_) return;
+		switch (sortHisBy_) {
+		case 0: files.Sort(CompByName(sortHisRev_)); break;
+		case 1: files.Sort(CompByType(sortHisRev_)); break;
+		case 2: files.Sort(CompByDate(sortHisRev_)); break;
+		case 3: files.Sort(CompBySize(sortHisRev_)); break;
 		}
 	}
 
