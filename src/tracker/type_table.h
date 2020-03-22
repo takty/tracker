@@ -25,7 +25,36 @@ class TypeTable {
 	const wchar_t EXT_DIV{ L'|' };
 
 	std::map<std::wstring, int> ext_to_id_;
-	std::map<int, int> id_to_color_;
+	std::map<int, int>          id_to_color_;
+
+	int convert_hex_to_color(const std::wstring& hex) {
+		if (hex.empty()) return -1;
+		const std::wstring pre0{ L"0x" };
+		const std::wstring pre1{ L"#" };
+		std::wstring ro;
+		if (hex.compare(0, pre0.size(), pre0) == 0) {
+			ro.assign(hex);
+		} else if (hex.compare(0, pre1.size(), pre1) == 0) {
+			ro.assign(L"000000");
+			std::wstring t{ hex };
+			if (hex.size() <= 4) {
+				t.append(L"000");
+				ro[0] = ro[1] = t[3];
+				ro[2] = ro[3] = t[2];
+				ro[4] = ro[5] = t[1];
+			} else {
+				t.append(L"000000");
+				ro[0] = t[5]; ro[1] = t[6];
+				ro[2] = t[3]; ro[3] = t[4];
+				ro[4] = t[1]; ro[5] = t[2];
+			}
+		}
+		try {
+			return std::stoi(ro, nullptr, 16);
+		} catch (...) {
+			return -1;
+		}
+	}
 
 public:
 
@@ -47,7 +76,8 @@ public:
 				cur = next + 1;
 			}
 			ext_to_id_[ext.substr(cur)] = i;
-			id_to_color_[i] = pref.item_int(COLOR_KEY + std::to_wstring(i + 1), -1);
+			auto hex = pref.item(COLOR_KEY + std::to_wstring(i + 1), L"");
+			id_to_color_[i] = convert_hex_to_color(hex);
 		}
 	}
 
