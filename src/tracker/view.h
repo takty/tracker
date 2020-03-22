@@ -565,9 +565,9 @@ class View : public Observer {
 	{
 		if (re_.IsActive()) return;  // Reject while renaming
 
-		mouseDownY_ = y;
-		mouseDownArea_ = getItemArea(x);
-		mouseDownIndex_ = lineToIndex(y / cyItem_, mouseDownListType_);
+		mouseDownY_        = y;
+		mouseDownArea_     = getItemArea(x);
+		mouseDownIndex_    = lineToIndex(y / cyItem_, mouseDownListType_);
 		mouseDownTopIndex_ = scrollListTopIndex_;
 
 		if (mouseDownArea_ == 1) {  // Scroller
@@ -953,16 +953,16 @@ class View : public Observer {
 	// System command execution
 	void systemCommand(const wstring& cmd, const Selection& objs, Document::ListType w, int index)
 	{
-		if (cmd == COM_SELECT_ALL) { selectFile(0, doc_.GetFiles().Count() - 1, true); return; }
-		if (cmd == COM_RENAME) {
+		if (cmd == COM_SELECT_ALL)    { selectFile(0, doc_.GetFiles().Count() - 1, true); return; }
+		if (cmd == COM_RENAME)        {
 			re_.Open(objs[0], indexToLine(index, w) * cyItem_, listRect_.right, cyItem_);
 			return;
 		}
-		if (cmd == COM_POPUP_INFO) { popupInfo(objs, w, index); return; }
+		if (cmd == COM_POPUP_INFO)    { popupInfo(objs, w, index); return; }
 		if (cmd == COM_CLEAR_HISTORY) { doc_.ClearHistory(); return; }
-		if (cmd == COM_FAVORITE) { doc_.AddOrRemoveFavorite(objs[0], w, index); return; }  // Update here, so do nothing after return
-		if (cmd == COM_START_DRAG) { ::SetCursor(::LoadCursor(nullptr, IDC_NO)); ::ShowWindow(hWnd_, SW_HIDE); ope_.StartDrag(); return; }
-		if (cmd == COM_SHELL_MENU) {
+		if (cmd == COM_FAVORITE)      { doc_.AddOrRemoveFavorite(objs[0], w, index); return; }  // Update here, so do nothing after return
+		if (cmd == COM_START_DRAG)    { ::SetCursor(::LoadCursor(nullptr, IDC_NO)); ::ShowWindow(hWnd_, SW_HIDE); ope_.StartDrag(); return; }
+		if (cmd == COM_SHELL_MENU)    {
 			UINT f;
 			POINT pt = popupPt(w, index, f);
 			ope_.PopupShellMenu(pt, f);
@@ -1057,15 +1057,15 @@ public:
 	static BOOL InitApplication(HINSTANCE hInst, const wchar_t* className)
 	{
 		WNDCLASS wc;
-		wc.style = CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc = (WNDPROC)View::wndProc;
-		wc.cbClsExtra = 0;
-		wc.cbWndExtra = 0;
-		wc.hInstance = hInst;
-		wc.hIcon = nullptr;
-		wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);  // Mouse cursor (standard arrow)
+		wc.style         = CS_HREDRAW | CS_VREDRAW;
+		wc.lpfnWndProc   = (WNDPROC)View::wndProc;
+		wc.cbClsExtra    = 0;
+		wc.cbWndExtra    = 0;
+		wc.hInstance     = hInst;
+		wc.hIcon         = nullptr;
+		wc.hCursor       = ::LoadCursor(nullptr, IDC_ARROW);  // Mouse cursor (standard arrow)
 		wc.hbrBackground = nullptr;
-		wc.lpszMenuName = nullptr;
+		wc.lpszMenuName  = nullptr;
 		wc.lpszClassName = className;
 		return ::RegisterClass(&wc);
 	}
