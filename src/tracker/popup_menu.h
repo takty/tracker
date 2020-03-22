@@ -25,10 +25,10 @@ class PopupMenu {
 	const Pref &pref_;
 
 	// Add Menu Items in INI File to Menu
-	void addTypeMenu(const wstring &sec, std::vector<wstring> &items, HMENU hMenu) {
+	void addTypeMenu(const std::wstring &sec, std::vector<std::wstring> &items, HMENU hMenu) {
 		TCHAR key[16];
 		bool paste, pasteShortcut;
-		wstring def;
+		std::wstring def;
 
 		canPaste(paste, pasteShortcut);
 		for (int i = 0; i < 32; ++i) {
@@ -65,8 +65,8 @@ class PopupMenu {
 	}
 
 	// Create new file menu
-	void addNewFileMenu(HMENU hMenu, std::vector<wstring> &items) {
-		wstring path;
+	void addNewFileMenu(HMENU hMenu, std::vector<std::wstring> &items) {
+		std::wstring path;
 
 		auto dir = Path::parent(pref_.path()) + L"\\newfile\\";
 		FileSystem::find_first_file(dir, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
@@ -99,9 +99,9 @@ class PopupMenu {
 	}
 
 	// Search for specified accelerator command from menu item of INI file
-	bool searchMenu(const wstring &sec, TCHAR accel, wstring &cmd) {
+	bool searchMenu(const std::wstring &sec, TCHAR accel, std::wstring &cmd) {
 		TCHAR key[16];
-		wstring a, def;
+		std::wstring a, def;
 
 		a.assign(_T("&")).append(1, accel);  // Make search string
 		for (int i = 0; i < 32; i++) {
@@ -110,7 +110,7 @@ class PopupMenu {
 			if (name.empty()) continue;
 			wsprintf(key, _T("Path%d"), i + 1);
 			auto path = pref_.item(sec, key, def);
-			if (name.find(a) != wstring::npos) {  // Find
+			if (name.find(a) != std::wstring::npos) {  // Find
 				cmd.assign(path);
 				return true;
 			}
@@ -123,10 +123,10 @@ public:
 	PopupMenu(HWND hWnd, const Pref *pref) : hWnd_(hWnd), pref_(*pref) {}
 
 	// Display pop-up menu and get command
-	bool popup(int type, const POINT &pt, UINT f, wstring& cmd, const std::vector<wstring> &additional) {
+	bool popup(int type, const POINT &pt, UINT f, std::wstring& cmd, const std::vector<std::wstring> &additional) {
 		TCHAR key[16];
 		bool ret = false;
-		std::vector<wstring> items;
+		std::vector<std::wstring> items;
 		HMENU hMenu = ::CreatePopupMenu();  // Create menu
 		hMenus_.push_back(hMenu);
 
@@ -157,7 +157,7 @@ public:
 	}
 
 	// Get command from accelerator
-	bool getAccelCommand(int type, TCHAR acce, wstring& cmd) {
+	bool getAccelCommand(int type, TCHAR acce, std::wstring& cmd) {
 		TCHAR key[16];
 		bool ret = false;
 

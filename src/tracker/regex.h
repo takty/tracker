@@ -107,7 +107,7 @@ public:
 		if (refCount_ != nullptr) ++(*refCount_);
 	}
 
-	bool match(const wstring& str) {
+	bool match(const std::wstring& str) {
 		if (refCount_ == nullptr) return false;
 		const char* mbs = sc_.convert(str);
 		return bm_->bregexpMatch_((char*)pattern_.c_str(), (char*)mbs, (char*)mbs + ::strlen(mbs), &rxp_, msg_) != 0;

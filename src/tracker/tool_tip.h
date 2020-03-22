@@ -32,13 +32,13 @@ public:
 	void Initialize(HWND hWnd) {
 		HINSTANCE hInst = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
 		hWnd_  = hWnd;
-		hHint_ = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, 
+		hHint_ = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 			WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_NOANIMATE | TTS_NOFADE,
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT , CW_USEDEFAULT, hWnd, nullptr, hInst, nullptr);
 	}
 
 	//  Display Tool Tips
-	void Activate(const wstring& str, const RECT& rect) {
+	void Activate(const std::wstring& str, const RECT& rect) {
 		TOOLINFO ti = { 0 };
 		ti.cbSize   = sizeof(TOOLINFO);
 		ti.uFlags   = TTF_SUBCLASS | TTF_TRANSPARENT;

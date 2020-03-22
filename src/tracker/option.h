@@ -17,7 +17,7 @@
 #include "item_list.h"
 
 
-class Opt {
+class Option {
 
 	bool showHidden_, sortOrder_;
 	int sortType_;

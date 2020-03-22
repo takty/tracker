@@ -43,12 +43,12 @@ public:
 		return currentViewIndex_ > 0;
 	}
 
-	wstring& goBack() {
+	std::wstring& goBack() {
 		--currentViewIndex_;
 		return views_[currentViewIndex_].path_;
 	}
 
-	void goForward(unsigned int index, const wstring& path) {
+	void goForward(unsigned int index, const std::wstring& path) {
 		if (canGoBack() && views_[currentViewIndex_ - 1].path_ == path) return;
 		views_[currentViewIndex_].set(path, index);
 		++currentViewIndex_;

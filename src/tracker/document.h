@@ -25,9 +25,8 @@
 #include "bookmark.h"
 #include "history.h"
 #include "drives.h"
-#include "opt.h"
+#include "option.h"
 
-using namespace std;
 
 class Item;
 
@@ -45,12 +44,12 @@ private:
 	Pref& pref_;
 
 	Bookmark fav_;
-	History his_;
-	Drives dri_;
+	History  his_;
+	Drives   dri_;
 
 	std::wstring currentPath_, lastCurrentPath_;
 	ItemList files_, navis_;
-	Opt opt_;
+	Option opt_;
 
 	int special_separator_option_data_;
 	int hierarchy_separator_option_data_;
@@ -260,7 +259,7 @@ public:
 		vec.Select(front, back, all);
 	}
 
-	Opt& GetOpt() {
+	Option& GetOpt() {
 		return opt_;
 	}
 

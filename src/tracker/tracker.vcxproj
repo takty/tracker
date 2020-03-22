@@ -126,7 +126,7 @@
     <ClInclude Include="item.h" />
     <ClInclude Include="hier_transition.h" />
     <ClInclude Include="migemo.h" />
-    <ClInclude Include="opt.h" />
+    <ClInclude Include="option.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="selection.h" />
     <ClInclude Include="file_system.hpp" />

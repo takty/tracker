@@ -42,7 +42,7 @@ public:
 		if (standBy_) freeLibrary();
 	}
 
-	bool loadLibrary(const wstring& dictPath = wstring()) {
+	bool loadLibrary(const std::wstring& dictPath = std::wstring()) {
 		standBy_ = false;
 
 		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
@@ -52,7 +52,7 @@ public:
 			migemoQuery_   = (MIGEMO_QUERY)GetProcAddress(hMigemo_, "migemo_query");
 			migemoRelease_ = (MIGEMO_RELEASE)GetProcAddress(hMigemo_, "migemo_release");
 
-			wstring dp(dictPath);
+			std::wstring dp(dictPath);
 			if (dp.empty()) {
 				dp = Path::parent(FileSystem::module_file_path()).append(_T("\\Dict\\migemo-dict"));
 			}
@@ -63,7 +63,7 @@ public:
 		return standBy_;
 	}
 
-	void query(const wstring& searchWord, string& query) {
+	void query(const std::wstring& searchWord, std::string& query) {
 		auto mbs = sc_.convert(searchWord);
 		auto p = migemoQuery_(m_, (unsigned char*)mbs);
 		query.assign("/").append((const char*)p).append("/ki");  // Handle as Japanese, case-insensitive

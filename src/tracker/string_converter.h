@@ -29,7 +29,7 @@ public:
 		if (buf_ != nullptr) delete[] buf_;
 	}
 
-	const char* convert(const wstring& str) {
+	const char* convert(const std::wstring& str) {
 		int size = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
 		if (size_ < size) {
 			if (buf_ != nullptr) delete[] buf_;

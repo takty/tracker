@@ -71,7 +71,7 @@ public:
 		return ::IsWindowVisible(hEdit_) == TRUE;
 	}
 
-	void Open(const wstring path, int y, int width, int height) {
+	void Open(const std::wstring path, int y, int width, int height) {
 		renamedPath_.clear();
 		if (Path::is_root(path)) return;
 		renamedPath_.assign(path);
@@ -107,11 +107,11 @@ public:
 		::SendMessage(hWnd_, msg_, 0, 0);
 	}
 
-	const wstring& GetRenamePath() {
+	const std::wstring& GetRenamePath() {
 		return renamedPath_;
 	}
 
-	const wstring& GetNewFileName() {
+	const std::wstring& GetNewFileName() {
 		return newFileName_;
 	}
 
