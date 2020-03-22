@@ -1,7 +1,11 @@
-//
-// View
-// 2019-04-12
-//
+/**
+ *
+ * View
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
 
 #pragma once
 
@@ -338,7 +342,7 @@ class View : public Observer {
 				if (i < navis.Count()) {
 					const Item *fd = navis[i];
 					if ((fd->data() & SEPA) != 0) {
-						drawSeparator(dc, r, fd->IsHier());
+						drawSeparator(dc, r, /*fd->IsHier()*/(fd->data() == (SEPA | HIER)));
 					}
 					else {
 						DrawItem(dc, r, fd, listCursorSwitch_ == Document::HIER && i == listCursorIndex_);
@@ -528,7 +532,6 @@ class View : public Observer {
 		int b = ::GetSystemMetrics(SM_CYSCREEN) - 1;
 		POINT pt;
 		::GetCursorPos(&pt);
-		//OutputDebugString((intToStr(pt.x) + intToStr(pt.y) + L"\n").c_str());
 		if (!(
 			(popupPos_ == 0 && pt.x <= 1 && pt.y <= 1) || (popupPos_ == 1 && pt.x == r && pt.y == 0) ||
 			(popupPos_ == 2 && pt.x == r && pt.y == b) || (popupPos_ == 3 && pt.x == 0 && pt.y == b)
@@ -740,7 +743,7 @@ class View : public Observer {
 			if (vkey == VK_LBUTTON) action(COM_CLEAR_HISTORY, type, index);
 			return true;
 		}
-		if (doc_.GetItem(type, index)->IsHier()) {  // Click the hierarchy separator
+		if (doc_.GetItem(type, index)->data() == (SEPA | HIER)) {  // Click the hierarchy separator
 			if (listRect_.right * 2 / 3 < x) {  // If it is more than two thirds
 				selectFile(0, doc_.GetFiles().Count() - 1);
 			}
