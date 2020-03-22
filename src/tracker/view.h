@@ -33,6 +33,10 @@ using namespace std;
 #define IDHK 1
 
 
+BOOL InitApplication(HINSTANCE hInst, const wchar_t* className);
+LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+
+
 class View : public Observer {
 
 	enum { SEPA = 1, DIR = 2, HIDE = 4, LINK = 8, HIER = 16, SEL = 32, EMPTY = 64 };
@@ -73,49 +77,9 @@ class View : public Observer {
 	Search search_;
 	ToolTip tt_;
 
-	// Procedure
-	static LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
-	{
-		auto view = (View*)::GetWindowLong(hWnd, GWL_USERDATA);
+public:
 
-		switch (msg) {
-		case WM_CREATE:            new View(hWnd); break;
-		case WM_DESTROY:           delete view; break;
-		case WM_DPICHANGED:        view->wmDpiChanged(LOWORD(wp), HIWORD(wp)); break;
-		case WM_WINDOWPOSCHANGING: view->wmWindowPosChanging((LPWINDOWPOS)lp); break;
-		case WM_SIZE:              view->wmSize(LOWORD(lp), HIWORD(lp)); break;
-		case WM_PAINT:             view->wmPaint(); break;
-		case WM_ACTIVATEAPP:       if (!(BOOL)wp && ::GetCapture() != hWnd) ::ShowWindow(hWnd, SW_HIDE);  break;
-		case WM_TIMER:             view->wmTimer(); break;
-		case WM_HOTKEY:            view->wmHotKey(wp); break;
-		case WM_SHOWWINDOW:        view->wmShowWindow((BOOL)wp); break;
-		case WM_LBUTTONDOWN:       view->wmButtonDown(VK_LBUTTON, LOWORD(lp), HIWORD(lp)); break;
-		case WM_RBUTTONDOWN:       view->wmButtonDown(VK_RBUTTON, LOWORD(lp), HIWORD(lp)); break;
-		case WM_MBUTTONDOWN:       view->wmButtonDown(VK_MBUTTON, LOWORD(lp), HIWORD(lp)); break;
-		case WM_MOUSEMOVE:         view->wmMouseMove(wp, LOWORD(lp), HIWORD(lp)); break;
-		case WM_LBUTTONUP:         view->wmButtonUp(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-		case WM_RBUTTONUP:         view->wmButtonUp(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-		case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-		case WM_MOUSEWHEEL:        view->wmMouseWheel((short)HIWORD(wp)); break;
-		case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
-		case WM_ENDSESSION:        view->doc_.Finalize(); break;
-		case WM_REQUESTUPDATE:     view->wmRequestUpdate(); break;
-		case WM_RENAMEEDITCLOSED:  view->wmRenameEditClosed(); break;
-		case WM_KEYDOWN:           view->wmKeyDown(wp); break;
-		case WM_ENTERMENULOOP:     view->wmMenuLoop(true); break;
-		case WM_EXITMENULOOP:      view->wmMenuLoop(false); break;
-		case WM_CLOSE:             view->wmClose(); break;
-		case WM_LBUTTONDBLCLK:
-		case WM_RBUTTONDBLCLK:
-		case WM_MBUTTONDBLCLK:
-		case WM_NCRBUTTONDOWN:     break;
-		default:                   return DefWindowProc(hWnd, msg, wp, lp);
-		}
-		return 0;
-	}
-
-	static LRESULT CALLBACK menuProc(HWND hMenu, UINT msg, WPARAM wp, LPARAM lp)
-	{
+	static LRESULT CALLBACK menuProc(HWND hMenu, UINT msg, WPARAM wp, LPARAM lp) {
 		switch (msg) {
 		case WM_WINDOWPOSCHANGING:
 			auto pos = (WINDOWPOS*)lp;
@@ -130,9 +94,7 @@ class View : public Observer {
 		return ::CallWindowProc((WNDPROC)::GetWindowLong(hMenu, GWL_USERDATA), hMenu, msg, wp, lp);
 	}
 
-	// Constructor
-	View(const HWND hWnd) : doc_(extentions_, pref_, SEPA, (SEPA | HIER)), ope_(extentions_, pref_), re_(WM_RENAMEEDITCLOSED)
-	{
+	View(const HWND hWnd) : doc_(extentions_, pref_, SEPA, (SEPA | HIER)), ope_(extentions_, pref_), re_(WM_RENAMEEDITCLOSED) {
 		doc_.SetView(this);
 
 		hWnd_ = hWnd;
@@ -153,8 +115,7 @@ class View : public Observer {
 	}
 
 	// Read INI file
-	void loadPropData(const bool firstTime)
-	{
+	void loadPropData(const bool firstTime) {
 		pref_.set_current_section(SECTION_WINDOW);
 
 		cxSide_      = (int)(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
@@ -194,8 +155,7 @@ class View : public Observer {
 		doc_.Initialize(firstTime);
 	}
 
-	void SetHotkey(const wstring& key, int id)
-	{
+	void SetHotkey(const wstring& key, int id) {
 		UINT flag = 0;
 		if (key.size() < 5) return;
 		if (key[0] == _T('1')) flag |= MOD_ALT;
@@ -205,15 +165,14 @@ class View : public Observer {
 		if (flag) RegisterHotKey(hWnd_, id, flag, key[4]);
 	}
 
-	~View()
-	{
+	~View() {
 		re_.Finalize();
 
 		RECT rw;
 		GetWindowRect(hWnd_, &rw);
 		pref_.set_current_section(SECTION_WINDOW);
-		pref_.set_item_int(KEY_WIDTH, (int)((rw.right - rw.left) / dpiFactX_));
-		pref_.set_item_int(KEY_HEIGHT, (int)((rw.bottom - rw.top) / dpiFactY_));
+		pref_.set_item_int(KEY_WIDTH,  (int)(((int)rw.right  - rw.left) / dpiFactX_));
+		pref_.set_item_int(KEY_HEIGHT, (int)(((int)rw.bottom - rw.top)  / dpiFactY_));
 
 		doc_.Finalize();
 		::UnregisterHotKey(hWnd_, IDHK);  // Cancel hot key
@@ -223,8 +182,7 @@ class View : public Observer {
 		::PostQuitMessage(0);
 	}
 
-	void wmClose()
-	{
+	void wmClose() {
 		if (WindowUtils::CtrlPressed()) {
 			::ShowWindow(hWnd_, SW_HIDE);
 			loadPropData(false);
@@ -249,8 +207,7 @@ class View : public Observer {
 		}
 	}
 
-	void wmWindowPosChanging(WINDOWPOS *wpos)
-	{
+	void wmWindowPosChanging(WINDOWPOS *wpos) {
 		int edge = ::GetSystemMetrics(SM_CYSIZEFRAME);
 		int upNC = ::GetSystemMetrics(SM_CYSMCAPTION) + edge;
 
@@ -259,8 +216,7 @@ class View : public Observer {
 		if (wpos->cx < 96) wpos->cx = 96;
 	}
 
-	void wmSize(int cwidth, int cheight)
-	{
+	void wmSize(int cwidth, int cheight) {
 		::SetRect(&listRect_, 0, 0, cwidth - cxScrollBar_, cheight);
 		scrollListLineNum_ = (cheight - doc_.GetNavis().Count() * cyItem_) / cyItem_;
 
@@ -271,22 +227,23 @@ class View : public Observer {
 		}
 	}
 
-	void wmHotKey(int id)
-	{
+	void wmHotKey(int id) {
 		if (id == IDHK) {
 			if (::IsWindowVisible(hWnd_)) suppressPopup_ = true;
 			::ShowWindow(hWnd_, ::IsWindowVisible(hWnd_) ? SW_HIDE : SW_SHOW);
 		}
 	}
 
-	void wmRequestUpdate()
-	{
+	void wmEndSession() {
+		doc_.Finalize();
+	}
+
+	void wmRequestUpdate() {
 		ope_.DoneRequest();
 		doc_.Update();
 	}
 
-	void wmRenameEditClosed()
-	{
+	void wmRenameEditClosed() {
 		auto renamedPath = re_.GetRenamePath();
 		auto newFileName = re_.GetNewFileName();
 		auto ok = ope_.Rename(renamedPath, newFileName);
@@ -297,8 +254,7 @@ class View : public Observer {
 	}
 
 	// Event handler of WM_*MENULOOP
-	void wmMenuLoop(bool enter)
-	{
+	void wmMenuLoop(bool enter) {
 		auto hMenu = ::FindWindow(TEXT("#32768"), nullptr);
 
 		if (!::IsWindow(hMenu)) return;
@@ -311,16 +267,14 @@ class View : public Observer {
 		}
 	}
 
-	void wmMouseWheel(int delta)
-	{
+	void wmMouseWheel(int delta) {
 		if (re_.IsActive()) return;  // Rejected while renaming
 		setScrollListTopIndex(scrollListTopIndex_ - ((delta > 0) ? 3 : -3));
 	}
 
-	enum IconType { NONE, SQUARE, CIRCLE, SCIRCLE };
+	enum class IconType { NONE = 0, SQUARE = 1, CIRCLE = 2, SCIRCLE = 3 };
 
-	void wmPaint()
-	{
+	void wmPaint() {
 		RECT rc;
 		PAINTSTRUCT ps;
 
@@ -390,8 +344,7 @@ class View : public Observer {
 	}
 
 	// Draw a separator
-	void drawSeparator(HDC dc, RECT r, bool isHier)
-	{
+	void drawSeparator(HDC dc, RECT r, bool isHier) {
 		TCHAR str[4], *sortBy = _T("nedsNEDS");
 		SIZE font;
 		const ItemList& files = doc_.GetFiles();
@@ -432,8 +385,7 @@ class View : public Observer {
 	}
 
 	// Draw an item
-	void DrawItem(HDC dc, RECT r, const Item *fd, bool cur)
-	{
+	void DrawItem(HDC dc, RECT r, const Item *fd, bool cur) {
 		::FillRect(dc, &r, (HBRUSH)((cur ? COLOR_HIGHLIGHT : COLOR_MENU) + 1));  // Draw the background
 		if (fd->IsEmpty()) {
 			::SetTextColor(dc, GetSysColor(COLOR_GRAYTEXT));
@@ -444,17 +396,14 @@ class View : public Observer {
 			::DrawText(dc, _T("empty"), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 			return;
 		}
-		IconType type;
+		IconType type = IconType::NONE;
 		int color = fd->Color();
 		if (fd->IsLink()) {  // Is shortcut?
-			if (color == -1) color = ::GetSysColor(COLOR_GRAYTEXT), type = SCIRCLE;
-			else type = CIRCLE;
+			if (color == -1) color = ::GetSysColor(COLOR_GRAYTEXT), type = IconType::SCIRCLE;
+			else type = IconType::CIRCLE;
 		}
 		else if (color != -1) {
-			type = SQUARE;
-		}
-		else {
-			type = NONE;
+			type = IconType::SQUARE;
 		}
 		drawMark(dc, r, type, color, cur, fd->IsSelected(), fd->IsDir());
 
@@ -475,17 +424,16 @@ class View : public Observer {
 	}
 
 	// Draw a mark
-	void drawMark(HDC dc, RECT r, IconType type, int color, bool cur, bool sel, bool dir)
-	{
+	void drawMark(HDC dc, RECT r, IconType type, int color, bool cur, bool sel, bool dir) {
 		TCHAR *c = nullptr;
 		RECT rl = r, rr = r;
 
 		rl.right = cxSide_, rr.left = r.right - cxSide_;
 		::SetBkMode(dc, TRANSPARENT);
 		::SelectObject(dc, hMarkFont_);  // Select font for symbols
-		if (type == SQUARE)       c = _T("g");
-		else if (type == CIRCLE)  c = _T("n");
-		else if (type == SCIRCLE) c = _T("i");
+		if (type == IconType::SQUARE)       c = _T("g");
+		else if (type == IconType::CIRCLE)  c = _T("n");
+		else if (type == IconType::SCIRCLE) c = _T("i");
 		if (c) {
 			::SetTextColor(dc, color);
 			::DrawText(dc, c, 1, &rl, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
@@ -496,8 +444,7 @@ class View : public Observer {
 		if (dir) ::DrawText(dc, _T("4"), 1, &rr, 0x0025);
 	}
 
-	void wmTimer()
-	{
+	void wmTimer() {
 		if (::IsWindowVisible(hWnd_)) {
 			if (hWnd_ != ::GetForegroundWindow()) {  // If the window is displayed but somehow it is not the front
 				DWORD id, fid;
@@ -531,8 +478,7 @@ class View : public Observer {
 		::ShowWindow(hWnd_, SW_SHOW);
 	}
 
-	void wmShowWindow(BOOL show)
-	{
+	void wmShowWindow(BOOL show) {
 		if (show) {
 			doc_.Update();
 			WindowUtils::MoveWindowToCorner(hWnd_, popupPos_);
@@ -545,8 +491,7 @@ class View : public Observer {
 	}
 
 	// Event Handler of WM_*BUTTONDOWN
-	void wmButtonDown(int vkey, int x, int y)
-	{
+	void wmButtonDown(int vkey, int x, int y) {
 		if (re_.IsActive()) return;  // Reject while renaming
 
 		mouseDownY_        = y;
@@ -573,19 +518,18 @@ class View : public Observer {
 		mouseDownY_ = mouseDownArea_ = mouseDownIndex_ = mouseDownTopIndex_ = -1;
 	}
 
-	void wmMouseMove(int mkey, int x, int y)
-	{
+	void wmMouseMove(int mkey, int x, int y) {
 		if (re_.IsActive()) return;  // Reject while renaming
 
 		if (mouseDownY_ != -1 && mouseDownArea_ == 1) {  // Scroller
-			int t = (int)(mouseDownTopIndex_ - (mouseDownY_ - y) / ((double)listRect_.bottom / doc_.GetFiles().Count()));
+			int t = (int)(mouseDownTopIndex_ - ((int)mouseDownY_ - y) / ((double)listRect_.bottom / doc_.GetFiles().Count()));
 			setScrollListTopIndex(t);
 			return;
 		}
 		Document::ListType type;
 		int cursor = lineToIndex(y / cyItem_, type);
-		int dir = pointerMovingDir(x, y);
-		int area = getItemArea(x);
+		int dir    = pointerMovingDir(x, y);
+		int area   = getItemArea(x);
 		static int lastArea = 2;
 		static ULONGLONG lastTime;
 
@@ -657,8 +601,7 @@ class View : public Observer {
 	}
 
 	// Event Handler of WM_*BUTTONUP
-	void wmButtonUp(int vkey, int x, int y, int mkey)
-	{
+	void wmButtonUp(int vkey, int x, int y, int mkey) {
 		if (re_.IsActive()) {
 			re_.Close();
 			return;  // Reject while renaming
@@ -711,16 +654,14 @@ class View : public Observer {
 	}
 
 	// Check the position of the pointer
-	int getItemArea(int x)
-	{
+	int getItemArea(int x) {
 		if (x < cxSide_) return 0;
 		if (x >= listRect_.right - cxSide_) return 1;
 		return 2;
 	}
 
 	// Click on the separator
-	bool separatorClick(int vkey, int index, int x, Document::ListType type)
-	{
+	bool separatorClick(int vkey, int index, int x, Document::ListType type) {
 		if ((doc_.GetItem(type, index)->data() & SEPA) == 0) return false;
 
 		if (doc_.InHistory()) {  // Click history separator
@@ -748,8 +689,7 @@ class View : public Observer {
 		return true;
 	}
 
-	void wmKeyDown(int key)
-	{
+	void wmKeyDown(int key) {
 		bool ctrl = WindowUtils::CtrlPressed();
 		if (ctrl || key == VK_APPS || key == VK_DELETE || key == VK_RETURN) {
 			if (listCursorIndex_ == -1) return;
@@ -779,8 +719,7 @@ class View : public Observer {
 
 	// TODO Allow cursor movement to the navigation pane
 	// Cursor key input
-	void keyCursor(int key)
-	{
+	void keyCursor(int key) {
 		int index = listCursorIndex_;
 		const ItemList& files = doc_.GetFiles();
 
@@ -819,8 +758,7 @@ class View : public Observer {
 	}
 
 	// Specify cursor position
-	void setCursorIndex(int index, Document::ListType type)
-	{
+	void setCursorIndex(int index, Document::ListType type) {
 		if (index != -1 && type == Document::FILE) {
 			if (index < scrollListTopIndex_) setScrollListTopIndex(index, false);
 			else if (scrollListTopIndex_ + scrollListLineNum_ <= index) setScrollListTopIndex(index - scrollListLineNum_ + 1, false);
@@ -857,8 +795,7 @@ class View : public Observer {
 	}
 
 	// Specify the start index of the scroll list
-	void setScrollListTopIndex(int i, bool update = true)
-	{
+	void setScrollListTopIndex(int i, bool update = true) {
 		const ItemList& files = doc_.GetFiles();
 
 		int old = scrollListTopIndex_;
@@ -879,12 +816,10 @@ class View : public Observer {
 	}
 
 	// Display pop-up menu and execute command
-	void popupMenu(Document::ListType w, int index)
-	{
+	void popupMenu(Document::ListType w, int index) {
 		doc_.SetOperator(index, w, ope_);
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
-//		auto ext = Path::ext(ope_[0], true);
 		int type = extentions_.get_id(ext) + 1;
 		UINT f;
 		POINT pt = popupPt(w, index, f);
@@ -896,8 +831,7 @@ class View : public Observer {
 	}
 
 	// Execution of command by accelerator
-	void accelerator(char accelerator, Document::ListType w, int index)
-	{
+	void accelerator(char accelerator, Document::ListType w, int index) {
 		doc_.SetOperator(index, w, ope_);
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
@@ -908,8 +842,7 @@ class View : public Observer {
 	}
 
 	// Command execution
-	void action(const wstring& cmd, Document::ListType w, int index)
-	{
+	void action(const wstring& cmd, Document::ListType w, int index) {
 		doc_.SetOperator(index, w, ope_);
 		action(ope_, cmd, w, index);
 	}
@@ -935,8 +868,7 @@ class View : public Observer {
 	}
 
 	// System command execution
-	void systemCommand(const wstring& cmd, const Selection& objs, Document::ListType w, int index)
-	{
+	void systemCommand(const wstring& cmd, const Selection& objs, Document::ListType w, int index) {
 		if (cmd == COM_SELECT_ALL)    { selectFile(0, doc_.GetFiles().Count() - 1, true); return; }
 		if (cmd == COM_RENAME)        {
 			re_.Open(objs[0], indexToLine(index, w) * cyItem_, listRect_.right, cyItem_);
@@ -956,8 +888,7 @@ class View : public Observer {
 	}
 
 	// Select file by range specification
-	void selectFile(int front, int back, bool all = false)
-	{
+	void selectFile(int front, int back, bool all = false) {
 		if (front == -1 || back == -1 || doc_.InDrives()) return;
 		if (back < front) std::swap(front, back);
 		doc_.SelectFile(front, back, Document::FILE, all);
@@ -978,8 +909,7 @@ class View : public Observer {
 	}
 
 	// Display file information
-	void popupInfo(const Selection&, Document::ListType w, int index)
-	{
+	void popupInfo(const Selection&, Document::ListType w, int index) {
 		vector<wstring> items;
 		ope_.InformationStrings(items);
 		items.push_back(_T("...more"));
@@ -998,8 +928,7 @@ class View : public Observer {
 	}
 
 	// Find the position of the popup
-	POINT popupPt(Document::ListType w, int index, UINT &f)
-	{
+	POINT popupPt(Document::ListType w, int index, UINT &f) {
 		f = TPM_RETURNCMD;
 		RECT r;
 		::GetWindowRect(hWnd_, &r);
@@ -1019,14 +948,12 @@ class View : public Observer {
 	}
 
 	// Return line from index and type
-	int indexToLine(int index, Document::ListType type)
-	{
+	int indexToLine(int index, Document::ListType type) {
 		return index + (doc_.GetNavis().Count() - scrollListTopIndex_) * (type == Document::FILE);
 	}
 
 	// Return index and type from line
-	int lineToIndex(int line, Document::ListType &type)
-	{
+	int lineToIndex(int line, Document::ListType &type) {
 		if (line < doc_.GetNavis().Count()) {
 			type = Document::HIER;
 			return line;
@@ -1038,25 +965,8 @@ class View : public Observer {
 
 public:
 
-	static BOOL InitApplication(HINSTANCE hInst, const wchar_t* className)
-	{
-		WNDCLASS wc;
-		wc.style         = CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc   = (WNDPROC)View::wndProc;
-		wc.cbClsExtra    = 0;
-		wc.cbWndExtra    = 0;
-		wc.hInstance     = hInst;
-		wc.hIcon         = nullptr;
-		wc.hCursor       = ::LoadCursor(nullptr, IDC_ARROW);  // Mouse cursor (standard arrow)
-		wc.hbrBackground = nullptr;
-		wc.lpszMenuName  = nullptr;
-		wc.lpszClassName = className;
-		return ::RegisterClass(&wc);
-	}
-
 	// Window size position adjustment
-	virtual void Updated()
-	{
+	virtual void Updated() {
 		setScrollListTopIndex(ht_.index());
 		setCursorIndex(-1, Document::FILE);
 		scrollListLineNum_ = (listRect_.bottom - doc_.GetNavis().Count() * cyItem_) / cyItem_;

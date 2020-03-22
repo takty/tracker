@@ -23,10 +23,10 @@ class Migemo {
 	typedef unsigned char* (*MIGEMO_QUERY)(migemo* object, unsigned char* query);
 	typedef void(*MIGEMO_RELEASE)(migemo* object, unsigned char* string);
 
-	MIGEMO_OPEN    migemoOpen_;
-	MIGEMO_CLOSE   migemoClose_;
-	MIGEMO_QUERY   migemoQuery_;
-	MIGEMO_RELEASE migemoRelease_;
+	MIGEMO_OPEN    migemoOpen_    = nullptr;
+	MIGEMO_CLOSE   migemoClose_   = nullptr;
+	MIGEMO_QUERY   migemoQuery_   = nullptr;
+	MIGEMO_RELEASE migemoRelease_ = nullptr;
 
 	bool            standBy_ = false;
 	HINSTANCE       hMigemo_ = nullptr;

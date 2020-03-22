@@ -1,7 +1,12 @@
-//
-// Search Functions
-// 2019-04-12
-//
+/**
+ *
+ * Search Functions
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
 
 #pragma once
 
@@ -15,34 +20,29 @@
 #include "regex.h"
 #include "pref.hpp"
 
-using namespace std;
 
 class Search {
 
-	Migemo migemo_;
-	Regex regex_;
-	ULONGLONG lastKeySearchTime_;
-	bool useMigemo_, reserveFind_;
-	wstring searchWord_;
-	string mkey_;  // Always ANSI
+	Migemo       migemo_;
+	Regex        regex_;
+	ULONGLONG    lastKeySearchTime_ = 0;
+	bool         useMigemo_         = false;
+	bool         reserveFind_       = false;
+	std::wstring searchWord_;
+	std::string  mkey_;  // Always ANSI
 
 public:
 
-	Search()
-	{
-		lastKeySearchTime_ = 0;
-		reserveFind_ = false;
+	Search() {
 	}
 
-	bool Initialize(bool useMigemo)
-	{
+	bool Initialize(bool useMigemo) {
 		useMigemo_ = (useMigemo && regex_.loadLibrary() && migemo_.loadLibrary());
 		return useMigemo_;
 	}
 
 	// Key input search
-	void KeySearch(int key)
-	{
+	void KeySearch(int key) {
 		auto time = GetTickCount64();
 		if (time - lastKeySearchTime_ > 1000) searchWord_.clear();
 		lastKeySearchTime_ = time;
@@ -50,8 +50,7 @@ public:
 		reserveFind_ = true;  // Flag the call to findFirst using a timer
 	}
 
-	bool IsReserved()
-	{
+	bool IsReserved() {
 		if (reserveFind_) {
 			auto time = GetTickCount64();
 			if (time - lastKeySearchTime_ > 500) return true;
@@ -59,15 +58,13 @@ public:
 		return false;
 	}
 
-	int FindFirst(int cursorIndex, const ItemList& items)
-	{
+	int FindFirst(int cursorIndex, const ItemList& items) {
 		reserveFind_ = false;
 		if (useMigemo_) migemo_.query(searchWord_, mkey_);
 		return FindNext(cursorIndex, items);
 	}
 
-	int FindNext(int cursorIndex, const ItemList& items)
-	{
+	int FindNext(int cursorIndex, const ItemList& items) {
 		int jumpTo = -1;
 		bool restart = false;
 
@@ -97,9 +94,9 @@ public:
 				}
 				if (restart && i == startIndex) break;
 
-				wstring name(items[i]->Name());
+				std::wstring name(items[i]->Name());
 				transform(name.begin(), name.end(), name.begin(), ::_totlower);  // Lower case
-				if (name.find(searchWord_) != wstring::npos) {
+				if (name.find(searchWord_) != std::wstring::npos) {
 					jumpTo = i;
 					break;
 				}

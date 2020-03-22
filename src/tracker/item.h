@@ -24,10 +24,10 @@ class Item {
 
 	std::wstring path_, name_;
 	FILETIME date_;
-	unsigned long long size_;
-	int color_;
-	int style_;
-	int data_ = 0;
+	unsigned long long size_ = 0;
+	int color_ = 0;
+	int style_ = 0;
+	int data_  = 0;
 
 	// parentPath must include \ at the end
 	void Assign(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {

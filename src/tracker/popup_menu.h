@@ -1,7 +1,12 @@
-//
-// Popup Menu
-// 2019-04-12
-//
+/**
+ *
+ * Popup Menu
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
 
 #pragma once
 
@@ -11,11 +16,10 @@
 
 #include "Pref.hpp"
 
-using namespace std;
 
 class PopupMenu {
 
-	HWND hWnd_;
+	HWND hWnd_ = nullptr;
 	std::vector<HMENU> hMenus_;
 
 	const Pref &pref_;

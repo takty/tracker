@@ -1,7 +1,12 @@
-//
-// Rename Edit
-// 2019-04-12
-//
+/**
+ *
+ * Rename Edit
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
 
 #pragma once
 
@@ -11,17 +16,17 @@
 #include <string>
 #include "file_utils.hpp"
 
-using namespace std;
 
 class RenameEdit {
 
-	int msg_;
-	HWND hWnd_, hEdit_;
-	WNDPROC orgProc_;
-	wstring renamedPath_, newFileName_;
+	int          msg_;
+	HWND         hWnd_    = nullptr;
+	HWND         hEdit_   = nullptr;
+	WNDPROC      orgProc_ = nullptr;
+	std::wstring renamedPath_;
+	std::wstring newFileName_;
 
-	static LRESULT CALLBACK editProc(HWND hEdit_, UINT msg, WPARAM wp, LPARAM lp)
-	{
+	static LRESULT CALLBACK editProc(HWND hEdit_, UINT msg, WPARAM wp, LPARAM lp) {
 		auto p = (RenameEdit*)GetWindowLong(hEdit_, GWL_USERDATA);
 
 		switch (msg) {
@@ -42,12 +47,10 @@ class RenameEdit {
 
 public:
 
-	RenameEdit(int msg) : msg_(msg)
-	{
+	RenameEdit(int msg) : msg_(msg) {
 	}
 
-	void Initialize(HWND hWnd)
-	{
+	void Initialize(HWND hWnd) {
 		hWnd_ = hWnd;
 		auto hInst = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
 		hEdit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
@@ -57,23 +60,19 @@ public:
 		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG)RenameEdit::editProc);
 	}
 
-	void Finalize()
-	{
+	void Finalize() {
 		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG)orgProc_);
 	}
 
-	void SetFont(HFONT hItemFont)
-	{
+	void SetFont(HFONT hItemFont) {
 		::SendMessage(hEdit_, WM_SETFONT, (WPARAM)hItemFont, 0);
 	}
 
-	bool IsActive()
-	{
+	bool IsActive() {
 		return ::IsWindowVisible(hEdit_) == TRUE;
 	}
 
-	void Open(const wstring path, int y, int width, int height)
-	{
+	void Open(const wstring path, int y, int width, int height) {
 		renamedPath_.clear();
 		if (Path::is_root(path)) return;
 		renamedPath_.assign(path);
@@ -96,8 +95,7 @@ public:
 	}
 
 	// Close name change
-	void Close()
-	{
+	void Close() {
 		if (!::IsWindowVisible(hEdit_)) return;
 
 		::ShowWindow(hEdit_, SW_HIDE);
@@ -105,24 +103,17 @@ public:
 		auto len = ::GetWindowTextLength(hEdit_);  // Not including terminal NULL
 		auto fname = new wchar_t[len + 1];  // Add terminal NULL
 		::GetWindowText(hEdit_, fname, len + 1);  // Add terminal NULL
-		auto path = Path::parent(renamedPath_);
-//		newPath_.assign(path).append(_T("\\")).append(fname);
-		//if (Link::is_link(renamedPath_)) newPath_.append(_T(".lnk"));
 		newFileName_.assign(fname);
 		if (Link::is_link(renamedPath_)) newFileName_.append(_T(".lnk"));
-		//renamedPath_.append(1, _T('\0'));  // Double NULL
-		//newPath_.append(1, _T('\0'));  // Double NULL
 		delete[] fname;
 		::SendMessage(hWnd_, msg_, 0, 0);
 	}
 
-	const wstring& GetRenamePath()
-	{
+	const wstring& GetRenamePath() {
 		return renamedPath_;
 	}
 
-	const wstring& GetNewFileName()
-	{
+	const wstring& GetNewFileName() {
 		return newFileName_;
 	}
 

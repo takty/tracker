@@ -1,3 +1,13 @@
+/**
+ *
+ * Shell File Operations
+ *
+ * @author Takuto Yanagida
+ * @version 2020-03-22
+ *
+ */
+
+
 #pragma once
 
 #include <string>
@@ -8,11 +18,6 @@
 #include "file_system.hpp"
 #include "shell.hpp"
 
-
-//
-// Utility class for shell file operations
-// 2019-04-12
-//
 
 class Operation {
 
@@ -91,14 +96,14 @@ class Operation {
 
 	bool shell_execute(const std::wstring& obj, const wchar_t* opt = nullptr) const {
 		SHELLEXECUTEINFO sei;
-		sei.cbSize = sizeof(SHELLEXECUTEINFO);
-		sei.fMask = SEE_MASK_FLAG_NO_UI;  // To suppress that a caution dialog is shown
-		sei.hwnd = nullptr;
-		sei.lpVerb = nullptr;
-		sei.lpFile = obj.c_str();
+		sei.cbSize       = sizeof(SHELLEXECUTEINFO);
+		sei.fMask        = SEE_MASK_FLAG_NO_UI;  // To suppress that a caution dialog is shown
+		sei.hwnd         = nullptr;
+		sei.lpVerb       = nullptr;
+		sei.lpFile       = obj.c_str();
 		sei.lpParameters = opt;  // A nullptr and an empty string make difference
-		sei.lpDirectory = nullptr;
-		sei.nShow = SW_SHOW;
+		sei.lpDirectory  = nullptr;
+		sei.nShow        = SW_SHOW;
 		return ::ShellExecuteEx(&sei) == TRUE;
 	}
 
