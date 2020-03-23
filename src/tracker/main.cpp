@@ -3,7 +3,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2020-03-23
  *
  */
 
@@ -11,7 +11,7 @@
 #include "stdafx.h"
 #include "View.h"
 
-const wchar_t MUTEX[]       = _T("TRACKER400_20200322");
+const wchar_t MUTEX[]       = _T("TRACKER500_20200323");
 const wchar_t CLASS_NAME[]  = _T("Tracker");
 const wchar_t WINDOW_NAME[] = _T("Tracker");
 
