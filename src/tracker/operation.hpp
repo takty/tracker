@@ -3,7 +3,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2020-03-23
  *
  */
 
@@ -62,6 +62,7 @@ class Operation {
 		}
 	};
 
+	HWND            hWnd_    = nullptr;
 	IFileOperation* file_op_ = nullptr;
 
 	bool perform() const {
@@ -98,18 +99,26 @@ class Operation {
 		SHELLEXECUTEINFO sei;
 		sei.cbSize       = sizeof(SHELLEXECUTEINFO);
 		sei.fMask        = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC | SEE_MASK_FLAG_LOG_USAGE;  // To suppress that a caution dialog is shown
-		sei.hwnd         = nullptr;
+		sei.hwnd         = hWnd_;
 		sei.lpVerb       = nullptr;
 		sei.lpFile       = obj.c_str();
 		sei.lpParameters = opt;  // A nullptr and an empty string make difference
 		sei.lpDirectory  = nullptr;
 		sei.nShow        = SW_SHOW;
+		sei.hInstApp     = NULL;
+		if (::ShellExecuteEx(&sei) == TRUE) return true;
+
+		// Work around for executing files in OneDrive
+		sei.lpVerb       = L"open";
+		sei.lpFile       = L"explorer";
+		sei.lpParameters = obj.c_str();
 		return ::ShellExecuteEx(&sei) == TRUE;
 	}
 
 public:
 
-	Operation() {
+	Operation(HWND hWnd = nullptr) {
+		hWnd_ = hWnd;
 		IFileOperation* obj = nullptr;
 		auto res = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, (void**)&obj);
 		if (SUCCEEDED(res)) {

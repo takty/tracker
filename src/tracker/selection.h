@@ -3,7 +3,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2020-03-23
  *
  */
 
@@ -40,7 +40,7 @@ class Selection {
 
 	// Open file (specify target)
 	bool OpenFile(const std::vector<std::wstring>& objs) {
-		Operation so;
+		Operation so(hWnd_);
 		const auto& obj = objs.front();
 		std::wstring cmd;
 		auto ext = FileSystem::is_directory(obj) ? PATH_EXT_DIR : Path::ext(obj);
@@ -195,7 +195,7 @@ public:
 
 	// Open in shell function based on command line
 	int OpenBy(const std::wstring& line) {
-		Operation so;
+		Operation so(hWnd_);
 		return so.open(objects_, line);
 	}
 
@@ -222,7 +222,7 @@ public:
 		auto newPath = FileSystem::unique_name(npath);
 
 		auto new_fname = Path::name(newPath);
-		Operation so;
+		Operation so(hWnd_);
 		bool ret = so.copy_one_file(orig, objects_[0], new_fname);
 
 		if (ret) RequestUpdate();
@@ -242,7 +242,7 @@ public:
 
 	// Delete
 	bool DeleteFile() {
-		Operation so;
+		Operation so(hWnd_);
 		bool ret = so.delete_files(objects_);
 		if (ret) RequestUpdate();
 		return ret;
@@ -251,7 +251,7 @@ public:
 	// Make a duplicate
 	bool CloneHere() {
 		bool ret = false;
-		Operation so;
+		Operation so(hWnd_);
 
 		for (const auto& o : objects_) {
 			auto clonePath = FileSystem::unique_name(o, L"_Clone");
@@ -285,7 +285,7 @@ public:
 
 	// Copy to desktop
 	bool CopyToDesktop() {
-		Operation so;
+		Operation so(hWnd_);
 		bool ret = so.copy_files(objects_, FileSystem::desktop_path());
 		if (ret) RequestUpdate();
 		return ret;
@@ -293,7 +293,7 @@ public:
 
 	// Move to desktop
 	bool MoveToDesktop() {
-		Operation so;
+		Operation so(hWnd_);
 		bool ret = so.move_files(objects_, FileSystem::desktop_path());
 		if (ret) RequestUpdate();
 		return ret;
@@ -337,7 +337,7 @@ public:
 
 	// Change the file name
 	bool Rename(const std::wstring& path, const std::wstring& newFileName) {
-		Operation so;
+		Operation so(hWnd_);
 		return so.rename(path, newFileName);
 	}
 
