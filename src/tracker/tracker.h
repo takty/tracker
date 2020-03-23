@@ -3,7 +3,7 @@
  * Common Header
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2020-03-23
  *
  */
 
@@ -27,18 +27,18 @@ const std::wstring SECTION_WINDOW(L"Window");
 	const std::wstring KEY_SHOW_HIDDEN(L"ShowHidden");				const int VAL_SHOW_HIDDEN      = 0;
 	const std::wstring KEY_SORT_BY(L"SortBy");						const int VAL_SORT_BY          = 0;
 	const std::wstring KEY_SORT_REV(L"SortRev");					const int VAL_SORT_REV         = 0;
-	const std::wstring KEY_SORT_HISTORY(L"SortHistry");				const int VAL_SORT_HISTORY     = 1;
-	const std::wstring KEY_SORT_HISTORY_BY(L"SortHistryBy");		const int VAL_SORT_HISTORY_BY  = 1;
-	const std::wstring KEY_SORT_HISTORY_REV(L"SortHistryRev");		const int VAL_SORT_HISTORY_REV = 0;
+	const std::wstring KEY_SORT_HISTORY(L"SortHistory");			const int VAL_SORT_HISTORY     = 1;
+	const std::wstring KEY_SORT_HISTORY_BY(L"SortHistoryBy");		const int VAL_SORT_HISTORY_BY  = 1;
+	const std::wstring KEY_SORT_HISTORY_REV(L"SortHistoryRev");		const int VAL_SORT_HISTORY_REV = 0;
 
-	const std::wstring KEY_MULTI_USER(L"MultiUser");				const int VAL_MULTI_USER = 0;
+	const std::wstring KEY_MULTI_USER(L"MultiUser");				const int VAL_MULTI_USER        = 0;
 	const std::wstring KEY_NO_LINKED(L"NoLinked");					const std::wstring VAL_NO_LINKED(L"");
-	const std::wstring KEY_POPUP_POSITION(L"PopupPosition");		const int VAL_POPUP_POSITION = 0;
-	const std::wstring KEY_SIDE_AREA_WIDTH(L"SideAreaWidth");		const int VAL_SIDE_AREA_WIDTH = 14;
-	const std::wstring KEY_LINE_HEIGHT(L"LineHeight");				const int VAL_LINE_HEIGHT = 14;
+	const std::wstring KEY_POPUP_POSITION(L"PopupPosition");		const int VAL_POPUP_POSITION    = 0;
+	const std::wstring KEY_SIDE_AREA_WIDTH(L"SideAreaWidth");		const int VAL_SIDE_AREA_WIDTH   = 14;
+	const std::wstring KEY_LINE_HEIGHT(L"LineHeight");				const int VAL_LINE_HEIGHT       = 14;
 	const std::wstring KEY_FULL_SCREEN_CHECK(L"FullScreenCheck");	const int VAL_FULL_SCREEN_CHECK = 0;
 
-	const std::wstring KEY_WIDTH(L"Width");							const int VAL_WIDTH = 120;
+	const std::wstring KEY_WIDTH(L"Width");							const int VAL_WIDTH  = 120;
 	const std::wstring KEY_HEIGHT(L"Height");						const int VAL_HEIGHT = 480;
 
 	const std::wstring KEY_POPUP_HOT_KEY(L"PopupHotKey");			const std::wstring VAL_POPUP_HOT_KEY(L"");
