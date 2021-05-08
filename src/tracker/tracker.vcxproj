@@ -107,7 +107,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bookmark.h" />
-    <ClInclude Include="bregexp.h" />
     <ClInclude Include="context_menu.hpp" />
     <ClInclude Include="drag_file.hpp" />
     <ClInclude Include="clipboard.hpp" />
@@ -132,7 +131,6 @@
     <ClInclude Include="file_system.hpp" />
     <ClInclude Include="popup_menu.h" />
     <ClInclude Include="pref.hpp" />
-    <ClInclude Include="regex.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="shell.hpp" />
     <ClInclude Include="stdafx.h" />

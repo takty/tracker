@@ -3,7 +3,7 @@
  * String Converter
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -11,35 +11,33 @@
 #pragma once
 
 #include <windows.h>
-#include <tchar.h>
 #include <string>
 
 
 class StringConverter {
 
-	std::unique_ptr<char[]> buf_;
-	int size_{};
-
 public:
 
-	StringConverter() noexcept {}
-
-	StringConverter(const StringConverter& inst) = delete;
-	StringConverter(StringConverter&& inst) = delete;
-	StringConverter& operator=(const StringConverter& inst) = delete;
-	StringConverter& operator=(StringConverter&& inst) = delete;
-
-	~StringConverter() {}
-
-	const char* convert(const std::wstring& str) {
-		const int size = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
-		if (size_ < size) {
-			buf_.reset(new char[size]);
-			size_ = size;
+	static inline std::string to_ansi(const std::wstring& str) {
+		int in_len = (int)str.length();
+		int out_len = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), in_len, nullptr, 0, nullptr, nullptr);
+		std::vector<char> buf(out_len);
+		if (out_len) {
+			::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), in_len, &buf[0], out_len, nullptr, nullptr);
 		}
-		// Calculates the number of characters including NULL by specifying -1
-		::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, (LPSTR) buf_.get(), size_, nullptr, nullptr);
-		return buf_.get();
+		std::string result(buf.begin(), buf.end());
+		return result;
+	}
+
+	static inline std::wstring to_wide(const std::string& str) {
+		int in_len = (int)str.length();
+		int out_len = ::MultiByteToWideChar(CP_THREAD_ACP, 0, str.c_str(), in_len, nullptr, 0);
+		std::vector<wchar_t> buf(out_len);
+		if (out_len) {
+			::MultiByteToWideChar(CP_THREAD_ACP, 0, str.c_str(), in_len, &buf[0], out_len);
+		}
+		std::wstring result(buf.begin(), buf.end());
+		return result;
 	}
 
 };
