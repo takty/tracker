@@ -3,7 +3,7 @@
  * String Converter
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -17,28 +17,29 @@
 
 class StringConverter {
 
-	char* buf_  = nullptr;
-	int   size_ = 0;
+	std::unique_ptr<char[]> buf_;
+	int size_{};
 
 public:
 
-	StringConverter() {
-	}
+	StringConverter() noexcept {}
 
-	~StringConverter() {
-		if (buf_ != nullptr) delete[] buf_;
-	}
+	StringConverter(const StringConverter& inst) = delete;
+	StringConverter(StringConverter&& inst) = delete;
+	StringConverter& operator=(const StringConverter& inst) = delete;
+	StringConverter& operator=(StringConverter&& inst) = delete;
+
+	~StringConverter() {}
 
 	const char* convert(const std::wstring& str) {
-		int size = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
+		const int size = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
 		if (size_ < size) {
-			if (buf_ != nullptr) delete[] buf_;
-			buf_  = new char[size];
+			buf_.reset(new char[size]);
 			size_ = size;
 		}
 		// Calculates the number of characters including NULL by specifying -1
-		::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, (LPSTR)buf_, size_, nullptr, nullptr);
-		return buf_;
+		::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, (LPSTR) buf_.get(), size_, nullptr, nullptr);
+		return buf_.get();
 	}
 
 };

@@ -3,7 +3,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -57,7 +57,7 @@ private:
 	// Make a file list of ordinary folders
 	void SetNormalFolder(const std::wstring& path) {
 		// Create hierarchical list
-		auto last = navis_.Count();
+		const auto last = navis_.Count();
 		std::wstring cur(path);
 
 		while (!cur.empty()) {
@@ -70,7 +70,7 @@ private:
 
 		// Add files
 		FileSystem::find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
-			bool isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
+			const bool isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
 			if (!isHidden || opt_.IsShowHidden()) {
 				files_.Add(files_.CreateItem()->SetFileItem(parent, wfd, extentions_));
 			}
@@ -84,15 +84,15 @@ private:
 		files_.Clear();
 		navis_.Clear();
 
-		const std::wstring path[3] = { fav_.PATH, his_.PATH, dri_.PATH };
-		const std::wstring name[3] = { fav_.NAME, his_.NAME, dri_.NAME };
+		const std::array<const std::wstring, 3> path = { fav_.PATH, his_.PATH, dri_.PATH };
+		const std::array<const std::wstring, 3> name = { fav_.NAME, his_.NAME, dri_.NAME };
 
-		for (int i = 0; i < 3; ++i) navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(path[i], name[i]));
+		for (int i = 0; i < 3; ++i) navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(path.at(i), name.at(i)));
 		auto* item = navis_.CreateItem();// ->SetSeparatorItem(false);
 		item->data() = special_separator_option_data_;
 		navis_.Add(item);
 
-		ErrorMode em;
+		const ErrorMode em;
 		if (currentPath_ == fav_.PATH) {
 			for (int i = 0; i < fav_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(fav_[i], extentions_, i));
 		} else if (currentPath_ == his_.PATH) {
@@ -124,7 +124,7 @@ public:
 		currentPath_ = dri_.PATH;
 	}
 
-	void SetView(Observer* view) {
+	void SetView(Observer* view) noexcept {
 		view_ = view;
 	}
 
@@ -160,12 +160,12 @@ public:
 
 	// Move to lower folder
 	bool MoveToLower(ListType w, int index) {
-		Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		Item * const f = ((w == ListType::FILE) ? files_ : navis_)[index];
 		if (f->IsEmpty()) return false;
 
 		if (f->IsDir()) {
 			std::wstring path;
-			if (f->Path()[0] == L':') {
+			if (f->Path().at(0) == L':') {
 				path.assign(f->Path());
 			} else if (f->IsLink()) {  // Save current folder if folder shortcut
 				path = Link::resolve(f->Path());
@@ -191,7 +191,7 @@ public:
 
 	// Check if it is possible to move to lower folder
 	bool MovableToLower(ListType w, int index) {
-		Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		Item * const f = ((w == ListType::FILE) ? files_ : navis_)[index];
 
 		if (f->IsEmpty()) return false;
 		if (f->IsDir()) return true;
@@ -255,42 +255,42 @@ public:
 	}
 
 	// Select file by range specification
-	void SelectFile(int front, int back, ListType type, bool all) {
+	void SelectFile(int front, int back, ListType type, bool all) noexcept {
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		vec.Select(front, back, all);
 	}
 
-	Option& GetOpt() {
+	Option& GetOpt() noexcept {
 		return opt_;
 	}
 
 	// Return the number of selected files
-	int SelectedCount() {
+	int SelectedCount() noexcept {
 		return files_.SelectionCount();
 	}
 
 	// The current directory is a bookmark
-	bool InBookmark() {
+	bool InBookmark() noexcept {
 		return currentPath_ == fav_.PATH;
 	}
 
 	// Current directory is history
-	bool InHistory() {
+	bool InHistory() noexcept {
 		return currentPath_ == his_.PATH;
 	}
 
 	// Current directory is drive
-	bool InDrives() {
+	bool InDrives() noexcept {
 		return currentPath_ == dri_.PATH;
 	}
 
 	// Return the current path
-	std::wstring& CurrentPath() {
+	std::wstring& CurrentPath() noexcept {
 		return currentPath_;
 	}
 
 	// Return the previous current path
-	std::wstring& LastCurrentPath() {
+	std::wstring& LastCurrentPath() noexcept {
 		return lastCurrentPath_;
 	}
 
@@ -299,11 +299,11 @@ public:
 		return (w == ListType::FILE) ? files_[index] : navis_[index];
 	}
 
-	const ItemList& GetNavis() const {
+	const ItemList& GetNavis() const noexcept {
 		return navis_;
 	}
 
-	const ItemList& GetFiles() const {
+	const ItemList& GetFiles() const noexcept {
 		return files_;
 	}
 

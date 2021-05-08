@@ -3,7 +3,7 @@
  * Document Options
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -50,27 +50,27 @@ public:
 		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sortHisBy_);
 	}
 
-	int GetSortType() {
+	int GetSortType() noexcept {
 		return sortBy_;
 	}
 
-	bool GetSortOrder() {
+	bool GetSortOrder() noexcept {
 		return sortRev_;
 	}
 
-	bool IsShowHidden() {
+	bool IsShowHidden() noexcept {
 		return showHidden_;
 	}
 
-	int SetSortType(int t) {
+	int SetSortType(int t) noexcept {
 		return sortBy_ = t;
 	}
 
-	bool SetSortOrder(bool f) {
+	bool SetSortOrder(bool f)noexcept {
 		return sortRev_ = f;
 	}
 
-	bool SetShowHidden(bool f) {
+	bool SetShowHidden(bool f) noexcept {
 		return showHidden_ = f;
 	}
 
@@ -80,6 +80,7 @@ public:
 		case 1: files.Sort(CompByType(sortRev_)); break;
 		case 2: files.Sort(CompByDate(sortRev_)); break;
 		case 3: files.Sort(CompBySize(sortRev_)); break;
+		default: files.Sort(CompByName(sortRev_)); break;
 		}
 	}
 
@@ -90,6 +91,7 @@ public:
 		case 1: files.Sort(CompByType(sortHisRev_)); break;
 		case 2: files.Sort(CompByDate(sortHisRev_)); break;
 		case 3: files.Sort(CompBySize(sortHisRev_)); break;
+		default: files.Sort(CompByName(sortHisRev_)); break;
 		}
 	}
 

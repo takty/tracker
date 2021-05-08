@@ -3,7 +3,7 @@
  * Clipboard Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -27,7 +27,12 @@ class Clipboard {
 
 public:
 
-	Clipboard(HWND hWnd) : hWnd_(hWnd) {}
+	Clipboard(HWND hWnd) noexcept : hWnd_(hWnd) {}
+
+	Clipboard(const Clipboard& inst) = delete;
+	Clipboard(Clipboard&& inst) = delete;
+	Clipboard& operator=(const Clipboard& inst) = delete;
+	Clipboard& operator=(Clipboard&& inst) = delete;
 
 	~Clipboard() {}
 
@@ -35,7 +40,7 @@ public:
 	bool copy_path(const std::vector<std::wstring>& paths) const {
 		std::wstring str;
 		for (const auto& e : paths) {
-			if (1 < e.size() && e[e.size() - 1] == L':') {  // Drive
+			if (1 < e.size() && e.at(e.size() - 1) == L':') {  // Drive
 				str.append(e).append(L"\\\r\n");
 			} else {
 				str.append(e).append(L"\r\n");
@@ -70,10 +75,10 @@ public:
 
 		auto hDrop = (HDROP) ::GetClipboardData(CF_HDROP);
 		if (hDrop) {
-			int count = ::DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
+			const int count = ::DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
 			for (int i = 0; i < count; ++i) {
-				int len = ::DragQueryFile(hDrop, i, nullptr, 0);  // without end NULL
-				if ((int)buf.size() < len + 1) {
+				const size_t len = ::DragQueryFile(hDrop, i, nullptr, 0);  // without end NULL
+				if (buf.size() < len + 1) {
 					buf.resize(len + 1);  // add end NULL
 				}
 				::DragQueryFile(hDrop, i, buf.data(), buf.size());

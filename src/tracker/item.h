@@ -3,7 +3,7 @@
  * File Item
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -36,13 +36,13 @@ class Item {
 
 	// parentPath must include \ at the end
 	void Assign(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
-		path_ = parentPath + wfd.cFileName;
-		name_ = wfd.cFileName;
+		name_ = (wchar_t*) wfd.cFileName;
+		path_ = parentPath + name_;
 		date_ = wfd.ftLastWriteTime;
 		size_ = (((unsigned long long) wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
 
-		auto isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
-		auto isDir = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		const auto isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)    != 0;
+		const auto isDir    = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 		CheckFile(isDir, isHidden, exts);
 	}
 
@@ -88,7 +88,12 @@ class Item {
 
 public:
 
-	Item() : date_({ 0 }) {}
+	Item() noexcept : date_({ 0 }) {}
+
+	Item(const Item& inst) = delete;
+	Item(Item&& inst) = delete;
+	Item& operator=(const Item& inst) = delete;
+	Item& operator=(Item&& inst) = delete;
 
 	Item* SetFileItem(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
 		Assign(parentPath, wfd, exts);
@@ -124,24 +129,24 @@ public:
 	//	return this;
 	//}
 
-	int& data() {
+	int& data() noexcept {
 		return data_;
 	}
 
-	const int& data() const {
+	const int& data() const noexcept {
 		return data_;
 	}
 
 
-	void SetId(int i) {
+	void SetId(int i) noexcept {
 		style_ |= MAKELONG(0, i);
 	}
 
-	void SetSelected(bool f) {
+	void SetSelected(bool f) noexcept {
 		f ? (style_ |= SEL) : (style_ &= ~SEL);
 	}
 
-	void Clear() {
+	void Clear() noexcept {
 		path_.clear();
 		name_.clear();
 		color_ = style_ = 0;
@@ -149,27 +154,27 @@ public:
 		date_.dwLowDateTime = date_.dwHighDateTime = 0;
 	}
 
-	const std::wstring& Path() const {
+	const std::wstring& Path() const noexcept {
 		return path_;
 	}
 
-	const std::wstring& Name() const {
+	const std::wstring& Name() const noexcept {
 		return name_;
 	}
 
-	unsigned long long Size() const {
+	unsigned long long Size() const noexcept {
 		return size_;
 	}
 
-	const FILETIME& Date() const {
+	const FILETIME& Date() const noexcept {
 		return date_;
 	}
 
-	int Color() const {
+	int Color() const noexcept {
 		return color_;
 	}
 
-	int Id() const {
+	int Id() const noexcept {
 		return HIWORD(style_);
 	}
 
@@ -177,27 +182,27 @@ public:
 	//	return (style_ & SEPA) != 0;
 	//}
 
-	bool IsEmpty() const {
+	bool IsEmpty() const noexcept {
 		return (style_ & EMPTY) != 0;
 	}
 
-	bool IsSelected() const {
+	bool IsSelected() const noexcept {
 		return (style_ & SEL) != 0;
 	}
 
-	bool IsLink() const {
+	bool IsLink() const noexcept {
 		return (style_ & LINK) != 0;
 	}
 
-	bool IsDir() const {
+	bool IsDir() const noexcept {
 		return (style_ & DIR) != 0;
 	}
 
-	bool IsHidden() const {
+	bool IsHidden() const noexcept {
 		return (style_ & HIDE) != 0;
 	}
 
-	bool IsHier() const {
+	bool IsHier() const noexcept {
 		return (style_ & HIER) != 0;
 	}
 

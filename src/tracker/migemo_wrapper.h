@@ -3,7 +3,7 @@
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -35,10 +35,14 @@ class Migemo {
 
 public:
 
-	Migemo() {
-	}
+	Migemo() noexcept {}
 
-	~Migemo() {
+	Migemo(const Migemo& inst) = delete;
+	Migemo(Migemo&& inst) = delete;
+	Migemo& operator=(const Migemo& inst) = delete;
+	Migemo& operator=(Migemo&& inst) = delete;
+
+	~Migemo() noexcept(false) {
 		if (standBy_) freeLibrary();
 	}
 
@@ -47,16 +51,16 @@ public:
 
 		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
 		if (hMigemo_) {
-			migemoOpen_    = (MIGEMO_OPEN)GetProcAddress(hMigemo_, "migemo_open");
-			migemoClose_   = (MIGEMO_CLOSE)GetProcAddress(hMigemo_, "migemo_close");
-			migemoQuery_   = (MIGEMO_QUERY)GetProcAddress(hMigemo_, "migemo_query");
-			migemoRelease_ = (MIGEMO_RELEASE)GetProcAddress(hMigemo_, "migemo_release");
+			migemoOpen_    = (MIGEMO_OPEN) ::GetProcAddress(hMigemo_, "migemo_open");
+			migemoClose_   = (MIGEMO_CLOSE) ::GetProcAddress(hMigemo_, "migemo_close");
+			migemoQuery_   = (MIGEMO_QUERY) ::GetProcAddress(hMigemo_, "migemo_query");
+			migemoRelease_ = (MIGEMO_RELEASE) ::GetProcAddress(hMigemo_, "migemo_release");
 
 			std::wstring dp(dictPath);
 			if (dp.empty()) {
 				dp = Path::parent(FileSystem::module_file_path()).append(_T("\\Dict\\migemo-dict"));
 			}
-			m_ = migemoOpen_((char*)sc_.convert(dp.c_str()));
+			m_ = migemoOpen_((char*) sc_.convert(dp.c_str()));
 			if (m_ == nullptr) return false;
 			standBy_ = true;
 		}
@@ -65,12 +69,12 @@ public:
 
 	void query(const std::wstring& searchWord, std::string& query) {
 		auto mbs = sc_.convert(searchWord);
-		auto p = migemoQuery_(m_, (unsigned char*)mbs);
-		query.assign("/").append((const char*)p).append("/ki");  // Handle as Japanese, case-insensitive
+		auto p = migemoQuery_(m_, (unsigned char*) mbs);
+		query.assign("/").append((const char*) p).append("/ki");  // Handle as Japanese, case-insensitive
 		migemoRelease_(m_, p);
 	}
 
-	void freeLibrary() {
+	void freeLibrary() noexcept {
 		if (standBy_) {
 			migemoClose_(m_);
 			FreeLibrary(hMigemo_);
@@ -78,7 +82,7 @@ public:
 		}
 	}
 
-	bool isStandBy() {
+	bool isStandBy() noexcept {
 		return standBy_;
 	}
 

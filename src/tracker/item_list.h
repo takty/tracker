@@ -3,7 +3,7 @@
  * Item list
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -28,27 +28,27 @@ class ItemList {
 
 public:
 
-	ItemList() : selNum_(0) {}
+	ItemList() noexcept : selNum_(0) {}
 
 	~ItemList() {
 		for (auto& i : items_) delete i;
 		for (auto& i : buf_) delete i;
 	}
 
-	int Count() const {
+	int Count() const noexcept {
 		return items_.size();
 	}
 
-	Item* operator[](int index) {
-		return items_[index];
+	Item* operator[](int index) noexcept(false) {
+		return items_.at(index);
 	}
 
-	const Item* operator[](int index) const {
-		return items_[index];
+	const Item* operator[](int index) const noexcept(false) {
+		return items_.at(index);
 	}
 
 	Item* CreateItem() {
-		Item* f;
+		Item* f = nullptr;
 		if (buf_.empty()) {
 			f = new Item();
 		} else {
@@ -76,18 +76,18 @@ public:
 		sort(items_.begin(), items_.end(), p);
 	}
 
-	int Select(int front, int back, bool all) {
+	int Select(int front, int back, bool all) noexcept {
 		if (front == -1 || back == -1) return selNum_;
 		if (back < front) std::swap(front, back);
 		if (all) {
 			for (int i = front; i <= back; ++i) {
-				if (items_[i]->data() != 0) continue;
-				items_[i]->SetSelected(true);
+				if (items_.at(i)->data() != 0) continue;
+				items_.at(i)->SetSelected(true);
 			}
 			selNum_ = back - front + 1;
 		} else {
 			for (int i = front; i <= back; ++i) {
-				auto& fd = items_[i];
+				auto& fd = items_.at(i);
 				if (fd->data() != 0) continue;
 				fd->SetSelected(!fd->IsSelected());
 				selNum_ += (fd->IsSelected() ? 1 : -1);
@@ -96,11 +96,11 @@ public:
 		return selNum_;
 	}
 
-	void ClearSelection() {
+	void ClearSelection() noexcept {
 		selNum_ = 0;
 	}
 
-	int SelectionCount() {
+	int SelectionCount() noexcept {
 		return selNum_;
 	}
 

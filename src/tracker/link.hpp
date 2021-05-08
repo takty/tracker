@@ -3,7 +3,7 @@
  * Shortcut File Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -32,7 +32,7 @@ public:
 	static bool create(const std::wstring& shortcut_path, const std::wstring& target) {
 		IShellLink *psl = nullptr;
 		auto hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
-		if (FAILED(hr)) return false;
+		if (FAILED(hr) || !psl) return false;
 
 		psl->SetPath(target.c_str());
 		if (!FileSystem::is_directory(target)) {
@@ -40,7 +40,7 @@ public:
 		}
 		IPersistFile* ppf = nullptr;
 		hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr) && ppf) {
 			auto sp = shortcut_path.c_str();
 			ppf->Save(sp, TRUE);
 			ppf->Release();
@@ -58,11 +58,11 @@ public:
 		IShellLink *psl = nullptr;
 
 		auto hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
-		if (FAILED(hr)) return target;
+		if (FAILED(hr) || !psl) return target;
 
 		IPersistFile *ppf = nullptr;
 		hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
-		if (SUCCEEDED(hr)) {
+		if (SUCCEEDED(hr) && ppf) {
 			auto sp = path.c_str();
 			hr = ppf->Load(sp, STGM_READ);  // load target path
 			if (SUCCEEDED(hr)) {

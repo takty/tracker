@@ -3,7 +3,7 @@
  * Bregexp Wrapper
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -33,33 +33,37 @@ class Regex {
 
 public:
 
-	Regex() : bregexpMatch_(0), bregexpFree_(0) {
-	}
+	Regex() noexcept : bregexpMatch_(0), bregexpFree_(0) {}
 
-	~Regex() {
+	Regex(const Regex& inst) = delete;
+	Regex(Regex&& inst) = delete;
+	Regex& operator=(const Regex& inst) = delete;
+	Regex& operator=(Regex&& inst) = delete;
+
+	~Regex() noexcept(false) {
 		if (standBy_) freeLibrary();
 	}
 
-	bool loadLibrary() {
+	bool loadLibrary() noexcept {
 		standBy_ = false;
 
 		hBregexp_ = ::LoadLibrary(_T("Bregexp.dll"));
 		if (hBregexp_) {
-			bregexpMatch_ = (BREGEXP_MATCH)::GetProcAddress(hBregexp_, "BMatch");
-			bregexpFree_  = (BREGEXP_FREE)::GetProcAddress(hBregexp_, "BRegfree");
-			standBy_     = true;
+			bregexpMatch_ = (BREGEXP_MATCH) ::GetProcAddress(hBregexp_, "BMatch");
+			bregexpFree_  = (BREGEXP_FREE) ::GetProcAddress(hBregexp_, "BRegfree");
+			standBy_      = true;
 		}
 		return standBy_;
 	}
 
-	void freeLibrary() {
+	void freeLibrary() noexcept {
 		if(standBy_) {
 			FreeLibrary(hBregexp_);
 			standBy_ = false;
 		}
 	}
 
-	bool isStandBy() {
+	bool isStandBy() noexcept {
 		return standBy_;
 	}
 
@@ -78,18 +82,21 @@ class Pattern {
 
 public:
 
-	Pattern() : bm_(nullptr), rxp_(nullptr), refCount_(new int), msg_("") {
+	Pattern() noexcept(false) : bm_(nullptr), rxp_(nullptr), refCount_(new int), msg_("") {
 	}
 
 	Pattern(Regex& bm, const std::string& pattern) : bm_(&bm), pattern_(pattern), rxp_(nullptr), refCount_(new int), msg_("") {
 		char str[] = " ";
-		bm_->bregexpMatch_((char*)pattern.c_str(), str, str + 1, &rxp_, msg_);
+		bm_->bregexpMatch_((char*) pattern.c_str(), (char*) str, (char*) str + 1, &rxp_, (char*) msg_);
 		*refCount_ = 1;
 	}
 
 	Pattern(const Pattern& p) : bm_(p.bm_), pattern_(p.pattern_), rxp_(p.rxp_), refCount_(p.refCount_), msg_("") {
 		if (refCount_ != nullptr) ++(*refCount_);
 	}
+
+	Pattern(Pattern&& inst) = delete;
+	Pattern& operator=(Pattern&& inst) = delete;
 
 	~Pattern() {
 		if (refCount_ != nullptr && --(*refCount_) == 0) {
@@ -110,7 +117,7 @@ public:
 	bool match(const std::wstring& str) {
 		if (refCount_ == nullptr) return false;
 		const char* mbs = sc_.convert(str);
-		return bm_->bregexpMatch_((char*)pattern_.c_str(), (char*)mbs, (char*)mbs + ::strlen(mbs), &rxp_, msg_) != 0;
+		return bm_->bregexpMatch_((char*) pattern_.c_str(), (char*) mbs, (char*) mbs + ::strlen(mbs), &rxp_, (char*) msg_) != 0;
 	}
 
 };

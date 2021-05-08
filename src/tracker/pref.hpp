@@ -3,7 +3,7 @@
  * Preference (Reading and writing INI file)
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -39,7 +39,7 @@ class Pref {
 
 public:
 
-	Pref() {
+	Pref() noexcept(false) {
 		iniPath_ = FileSystem::module_file_path();
 		iniPath_.insert(0, Path::UNC_PREFIX);  // To handle long paths
 		iniPath_.resize(iniPath_.size() - 3);
@@ -66,7 +66,7 @@ public:
 	}
 
 	// Get INI file path
-	const std::wstring& path() const { return iniPath_; }
+	const std::wstring& path() const noexcept { return iniPath_; }
 
 	// Set the current section
 	void set_current_section(const std::wstring& sec) { curSec_.assign(sec); }
@@ -76,7 +76,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), buf.size(), iniPath_.c_str());
+			const auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), buf.size(), iniPath_.c_str());
 			if (outLen != buf.size() - 1) break;
 			buf.resize(buf.size() * 2);
 		}
@@ -99,48 +99,48 @@ public:
 	}
 
 	// Write a string item
-	void set_item(const std::wstring& str, const std::wstring& sec, const std::wstring& key) {
+	void set_item(const std::wstring& str, const std::wstring& sec, const std::wstring& key) noexcept {
 		::WritePrivateProfileString(sec.c_str(), key.c_str(), str.c_str(), iniPath_.c_str());
 	}
 
 	// Write a string item
-	void set_item(const std::wstring& str, const std::wstring& key) {
+	void set_item(const std::wstring& str, const std::wstring& key) noexcept {
 		set_item(str, curSec_, key);
 	}
 
 	// Get integer item
-	int item_int(const wchar_t* sec, const wchar_t* key, int def) {
+	int item_int(const wchar_t* sec, const wchar_t* key, int def) noexcept {
 		return ::GetPrivateProfileInt(sec, key, def, iniPath_.c_str());
 	}
 
 	// Get integer item
-	int item_int(const std::wstring& sec, const std::wstring& key, int def) {
+	int item_int(const std::wstring& sec, const std::wstring& key, int def) noexcept {
 		return item_int(sec.c_str(), key.c_str(), def);
 	}
 
 	// Get integer item
-	int item_int(const wchar_t* key, int def) {
+	int item_int(const wchar_t* key, int def) noexcept {
 		return item_int(curSec_.c_str(), key, def);
 	}
 
 	// Get integer item
-	int item_int(const std::wstring& key, int def) {
+	int item_int(const std::wstring& key, int def) noexcept {
 		return item_int(curSec_.c_str(), key.c_str(), def);
 	}
 
 	// Write an integer item
-	void set_item_int(const std::wstring& sec, const std::wstring& key, int val) {
+	void set_item_int(const std::wstring& sec, const std::wstring& key, int val) noexcept(false) {
 		::WritePrivateProfileString(sec.c_str(), key.c_str(), std::to_wstring(val).c_str(), iniPath_.c_str());
 	}
 
 	// Write an integer item
-	void set_item_int(const std::wstring& key, int val) {
+	void set_item_int(const std::wstring& key, int val) noexcept(false) {
 		set_item_int(curSec_, key, val);
 	}
 
 	// Get section content
 	template <typename Container> auto items(const std::wstring& sec, const std::wstring& key, int max) -> Container {
-		Container c;
+		Container c{};
 		std::wstring def;
 		for (int i = 0; i < max; ++i) {
 			auto temp = item(sec, key + std::to_wstring(i + 1), def);

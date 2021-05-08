@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -28,12 +28,12 @@ class FileSystem {
 
 		find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				if (!calc_file_size_internally(parent + wfd.cFileName, size, limitTime)) {
+				if (!calc_file_size_internally(parent + (TCHAR*) wfd.cFileName, size, limitTime)) {
 					success = false;
 					return false;  // break
 				}
 			} else {
-				size += ((uint64_t)wfd.nFileSizeHigh << 32) + wfd.nFileSizeLow;
+				size += (((uint64_t) wfd.nFileSizeHigh) << 32) + wfd.nFileSizeLow;
 			}
 			return true;  // continue
 		});
@@ -44,23 +44,23 @@ public:
 
 	// Extract command line string (path|opt)
 	static std::pair<std::wstring, std::wstring> extract_command_line_string(const std::wstring& line, const std::vector<std::wstring>& objs) {
-		auto sep = line.find_first_of(L'|');
+		const auto sep = line.find_first_of(L'|');
 		if (sep == std::wstring::npos) {
 			return { Path::absolute_path(line, module_file_path()), Path::space_separeted_quoted_paths_string(objs) };
 		}
 		auto opt = line.substr(sep + 1);
 
-		// %path%  ¨ "path\file"
+		// %path% -> "path\file"
 		auto pos = opt.find(L"%path%");
 		if (pos != std::wstring::npos) {
 			opt.replace(pos, 6, Path::quote(objs.front()));
 		}
-		// %paths% ¨ "path\file1" "path\file2"...
+		// %paths% -> "path\file1" "path\file2"...
 		pos = opt.find(L"%paths%");
 		if (pos != std::wstring::npos) {
 			opt.replace(pos, 7, Path::space_separeted_quoted_paths_string(objs));
 		}
-		// %file% ¨ "file"
+		// %file% -> "file"
 		pos = opt.find(L"%file%");
 		if (pos != std::wstring::npos) {
 			opt.replace(pos, 6, Path::quote(Path::name(objs.front())));
@@ -76,7 +76,7 @@ public:
 
 		std::wstring ext;
 		if (!is_directory(obj)) {
-			if (name[0] != Path::EXT_PREFIX) {  // When the file is not dot file
+			if (name.at(0) != Path::EXT_PREFIX) {  // When the file is not dot file
 				name = Path::name_without_ext(obj);
 				ext = Path::ext(obj);
 				if (!ext.empty()) ext.insert(std::begin(ext), Path::EXT_PREFIX);
@@ -100,7 +100,7 @@ public:
 		if (temp.empty()) return false;  // path is root
 
 		find_first_file(temp, [&](const std::wstring&, const WIN32_FIND_DATA& wfd) {
-			auto e = Path::ext(wfd.cFileName);
+			auto e = Path::ext((TCHAR*) wfd.cFileName);
 			if (e == L"exe" || e == L"bat") {
 				ret = true;
 				return false;  // break;
@@ -111,7 +111,7 @@ public:
 	}
 
 	// Check whether the path is a removable disk
-	static bool is_removable(const std::wstring& path) {
+	static bool is_removable(const std::wstring& path) noexcept {
 		return ::GetDriveType(path.c_str()) == DRIVE_REMOVABLE;
 	}
 
@@ -124,7 +124,7 @@ public:
 	// Check whether the file of the path is existing
 	static bool is_existing(const std::wstring& path) {
 		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
-		return (int)attr != -1;
+		return attr != INVALID_FILE_ATTRIBUTES;
 	}
 
 	// Get desktop directory path
@@ -155,7 +155,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			auto len = ::GetCurrentDirectory(buf.size(), buf.data());
+			const auto len = ::GetCurrentDirectory(buf.size(), buf.data());
 			if (len < buf.size()) break;
 			buf.resize(len);
 		}
@@ -163,8 +163,8 @@ public:
 	}
 
 	// Get drive size
-	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) {
-		::GetDiskFreeSpaceEx(path.c_str(), (PULARGE_INTEGER)&free, (PULARGE_INTEGER)&size, nullptr);
+	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) noexcept {
+		::GetDiskFreeSpaceEx(path.c_str(), (PULARGE_INTEGER) &free, (PULARGE_INTEGER) &size, nullptr);
 	}
 
 	// Calculate file/directory size
@@ -172,7 +172,7 @@ public:
 		if (!is_directory(path)) {
 			auto hf = ::CreateFile(path.c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 			if (hf == INVALID_HANDLE_VALUE) return false;
-			::GetFileSizeEx(hf, (PLARGE_INTEGER)&size);
+			::GetFileSizeEx(hf, (PLARGE_INTEGER) &size);
 			::CloseHandle(hf);
 			return true;
 		}
@@ -183,14 +183,14 @@ public:
 	// Template version of find first file
 	template<typename F> static bool find_first_file(const std::wstring& path, F fn) {
 		auto parent{ path };
-		parent += (parent[parent.size() - 1] == Path::PATH_SEPARATOR) ? L"*" : L"\\*";
+		parent += (parent.at(parent.size() - 1) == Path::PATH_SEPARATOR) ? L"*" : L"\\*";
 
-		WIN32_FIND_DATA wfd;
+		WIN32_FIND_DATA wfd{};
 		auto sh = ::FindFirstFileEx(parent.c_str(), FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 		if (sh == INVALID_HANDLE_VALUE) return false;
 		parent.resize(parent.size() - 1);
 		do {
-			if (!::lstrcmp(wfd.cFileName, L".") || !::lstrcmp(wfd.cFileName, L"..")) continue;
+			if (!::lstrcmp((TCHAR*) wfd.cFileName, L".") || !::lstrcmp((TCHAR*) wfd.cFileName, L"..")) continue;
 			if (!fn(parent, wfd)) break;
 		} while (::FindNextFile(sh, &wfd));
 		::FindClose(sh);

@@ -3,7 +3,7 @@
  * File Path Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -19,7 +19,7 @@ const std::wstring PATH_EXT_DIR(L"<folder>");
 
 class Path {
 
-	Path() {}
+	Path() noexcept {}
 
 public:
 
@@ -44,7 +44,7 @@ public:
 	// Extract file name without extention
 	static std::wstring name_without_ext(const std::wstring& path) {
 		auto ret = name(path);
-		auto pos = ret.find_last_of(EXT_PREFIX);
+		const auto pos = ret.find_last_of(EXT_PREFIX);
 		if (pos != std::wstring::npos) ret.resize(pos);
 		return ret;
 	}
@@ -52,7 +52,7 @@ public:
 	// Extract file extention
 	static std::wstring ext(const std::wstring& path) {
 		auto n = name(path);
-		auto pos = n.find_last_of(EXT_PREFIX);
+		const auto pos = n.find_last_of(EXT_PREFIX);
 
 		if (pos == std::wstring::npos) {  // No extention
 			return L"";  // Return empty
@@ -64,13 +64,13 @@ public:
 
 	// Extract parent path
 	static std::wstring parent(const std::wstring& path) {
-		auto size = path.size();
-		auto pos = path.find_last_of(PATH_SEPARATOR);
+		const auto size = path.size();
+		const auto pos = path.find_last_of(PATH_SEPARATOR);
 
 		if (pos == std::wstring::npos) {  // Abnormal
 			return L"";  // Return empty
 		}
-		if (1 < size && path[pos - 1] == DRIVE_IDENTIFIER) {  // When root 'C:\'
+		if (1 < size && path.at(pos - 1) == DRIVE_IDENTIFIER) {  // When root 'C:\'
 			if (pos == size - 1) {  // Pos is the tail end
 				return L"";  // Return empty
 			} else {  // Return containing '\'
@@ -103,7 +103,7 @@ public:
 
 	// Translate relative path to absolute path
 	static std::wstring absolute_path(const std::wstring& path, const std::wstring& module_file_path) {
-		if (path[0] == EXT_PREFIX && path[1] == PATH_SEPARATOR) {
+		if (path.at(0) == EXT_PREFIX && path.at(1) == PATH_SEPARATOR) {
 			auto ret = parent(module_file_path);
 			return ret.append(path, 1);
 		}
@@ -139,11 +139,11 @@ public:
 	}
 
 	// Check whether the path is root
-	static bool is_root(const std::wstring& path) {
-		auto size = path.size();
+	static bool is_root(const std::wstring& path) noexcept(false) {
+		const auto size = path.size();
 		return
-			(1 < size && path[size - 2] == DRIVE_IDENTIFIER && path[size - 1] == PATH_SEPARATOR) ||
-			(0 < size && path[size - 1] == DRIVE_IDENTIFIER);
+			(1 < size && path.at(size - 2) == DRIVE_IDENTIFIER && path.at(size - 1) == PATH_SEPARATOR) ||
+			(0 < size && path.at(size - 1) == DRIVE_IDENTIFIER);
 	}
 
 };

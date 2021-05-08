@@ -3,7 +3,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-08
  *
  */
 
@@ -28,11 +28,17 @@ class DragFile {
 
 	public:
 
-		DropSource() : refCount_(1) {}
+		DropSource() noexcept : refCount_(1) {}
 
-		~DropSource() {}
+		DropSource(const DropSource& inst) = delete;
+		DropSource(DropSource&& inst) = delete;
+		DropSource& operator=(const DropSource& inst) = delete;
+		DropSource& operator=(DropSource&& inst) = delete;
 
-		virtual HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) {
+		virtual ~DropSource() {}
+
+		HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) override {
+			if (!ppv) return E_NOINTERFACE;
 			if (iid == IID_IDropSource || iid == IID_IUnknown) {
 				AddRef();
 				*ppv = this;
@@ -43,17 +49,17 @@ class DragFile {
 			}
 		}
 
-		virtual ULONG __stdcall AddRef() {
+		ULONG __stdcall AddRef() override {
 			return ::InterlockedIncrement(&refCount_);
 		}
 
-		virtual ULONG __stdcall Release() {
-			auto count = ::InterlockedDecrement(&refCount_);
+		ULONG __stdcall Release() override {
+			const auto count = ::InterlockedDecrement(&refCount_);
 			if (count == 0) delete this;
 			return count;
 		}
 
-		virtual HRESULT __stdcall QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) {
+		HRESULT __stdcall QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) noexcept override {
 			if (fEscapePressed) {
 				return DRAGDROP_S_CANCEL;
 			}
@@ -66,7 +72,7 @@ class DragFile {
 			return S_OK;
 		}
 
-		virtual HRESULT __stdcall GiveFeedback(DWORD) {
+		HRESULT __stdcall GiveFeedback(DWORD) noexcept override {
 			return DRAGDROP_S_USEDEFAULTCURSORS;
 		}
 
@@ -81,8 +87,8 @@ public:
 		if (!dobj) return;
 
 		auto ds = new DropSource();
-		bool notDrive = !Path::is_root(paths.front());
-		DWORD dwEffect;
+		const bool notDrive = !Path::is_root(paths.front());
+		DWORD dwEffect = 0;
 		::DoDragDrop(dobj, ds, DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
 		ds->Release();
 

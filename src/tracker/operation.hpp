@@ -3,7 +3,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-23
+ * @version 2021-05-08
  *
  */
 
@@ -28,14 +28,21 @@ class Operation {
 		ShellItem(const std::wstring path) {
 			IShellItem* dest = nullptr;
 			auto p = Path::ensure_no_unc_prefix(path);
-			auto res = ::SHCreateItemFromParsingName(p.c_str(), nullptr, IID_IShellItem, (void**)&dest);
+			const auto res = ::SHCreateItemFromParsingName(p.c_str(), nullptr, IID_IShellItem, (void**)&dest);
 			if (res == S_OK) si_ = dest;
 		}
-		IShellItem* ptr() const {
-			return si_;
-		}
-		~ShellItem() {
+
+		ShellItem(const ShellItem& inst) = delete;
+		ShellItem(ShellItem&& inst) = delete;
+		ShellItem& operator=(const ShellItem& inst) = delete;
+		ShellItem& operator=(ShellItem&& inst) = delete;
+
+		~ShellItem() noexcept(false) {
 			if (si_) si_->Release();
+		}
+
+		IShellItem* ptr() const noexcept {
+			return si_;
 		}
 	};
 
@@ -48,17 +55,22 @@ class Operation {
 			auto parent_shf = iicl_.parent_shell_folder();
 			const auto& cs = iicl_.child_list();
 			if (parent_shf != nullptr && !cs.empty()) {
-				auto res = ::SHCreateShellItemArray(nullptr, parent_shf, cs.size(), (LPCITEMIDLIST*)cs.data(), &sia_);
+				const auto res = ::SHCreateShellItemArray(nullptr, parent_shf, cs.size(), (LPCITEMIDLIST*)cs.data(), &sia_);
 				if (res != S_OK) sia_ = nullptr;
 			}
 		}
 
-		IShellItemArray* shell_item_array() const {
-			return sia_;
-		}
+		ShellItemIdArray(const ShellItemIdArray& inst) = delete;
+		ShellItemIdArray(ShellItemIdArray&& inst) = delete;
+		ShellItemIdArray& operator=(const ShellItemIdArray& inst) = delete;
+		ShellItemIdArray& operator=(ShellItemIdArray&& inst) = delete;
 
 		~ShellItemIdArray() {
 			sia_->Release();
+		}
+
+		IShellItemArray* shell_item_array() const noexcept {
+			return sia_;
 		}
 	};
 
@@ -66,7 +78,7 @@ class Operation {
 	IFileOperation* file_op_ = nullptr;
 
 	bool perform() const {
-		auto res = file_op_->PerformOperations();
+		const auto res = file_op_->PerformOperations();
 		if (SUCCEEDED(res)) return true;
 		return false;
 	}
@@ -95,8 +107,8 @@ class Operation {
 		return need_update;
 	}
 
-	bool shell_execute(const std::wstring& obj, const wchar_t* opt = nullptr) const {
-		SHELLEXECUTEINFO sei;
+	bool shell_execute(const std::wstring& obj, const wchar_t* opt = nullptr) const noexcept {
+		SHELLEXECUTEINFO sei{};
 		sei.cbSize       = sizeof(SHELLEXECUTEINFO);
 		sei.fMask        = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC | SEE_MASK_FLAG_LOG_USAGE;  // To suppress that a caution dialog is shown
 		sei.hwnd         = hWnd_;
@@ -117,17 +129,22 @@ class Operation {
 
 public:
 
-	Operation(HWND hWnd = nullptr) {
+	Operation(HWND hWnd = nullptr) noexcept(false) {
 		hWnd_ = hWnd;
 		IFileOperation* obj = nullptr;
 		auto res = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, (void**)&obj);
-		if (SUCCEEDED(res)) {
+		if (SUCCEEDED(res) && obj) {
 			res = obj->SetOperationFlags(FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOFX_NOMINIMIZEBOX);
 			if (SUCCEEDED(res)) file_op_ = obj;
 		}
 	}
 
-	~Operation() {
+	Operation(const Operation& inst) = delete;
+	Operation(Operation&& inst) = delete;
+	Operation& operator=(const Operation& inst) = delete;
+	Operation& operator=(Operation&& inst) = delete;
+
+	~Operation() noexcept(false) {
 		if (file_op_) file_op_->Release();
 	}
 
@@ -153,7 +170,7 @@ public:
 		ShellItem path_si(path);
 		if (!path_si.ptr()) return false;
 
-		auto res = file_op_->RenameItem(path_si.ptr(), new_fname.c_str(), nullptr);
+		const auto res = file_op_->RenameItem(path_si.ptr(), new_fname.c_str(), nullptr);
 		if (SUCCEEDED(res)) return perform();
 		return false;
 	}
@@ -166,7 +183,7 @@ public:
 		ShellItem dest_si(dest_dir);
 		if (!dest_si.ptr()) return false;
 
-		auto res = file_op_->CopyItem(path_si.ptr(), dest_si.ptr(), new_fname.c_str(), nullptr);
+		const auto res = file_op_->CopyItem(path_si.ptr(), dest_si.ptr(), new_fname.c_str(), nullptr);
 		if (SUCCEEDED(res)) return perform();
 		return false;
 	}
@@ -181,7 +198,7 @@ public:
 			ShellItemIdArray sia(ps);
 			if (!sia.shell_item_array()) return false;
 
-			auto res = file_op_->CopyItems(sia.shell_item_array(), dest_si.ptr());
+			const auto res = file_op_->CopyItems(sia.shell_item_array(), dest_si.ptr());
 			if (SUCCEEDED(res)) return perform();
 			return false;
 		});
@@ -197,7 +214,7 @@ public:
 			ShellItemIdArray sia(ps);
 			if (!sia.shell_item_array()) return false;
 
-			auto res = file_op_->MoveItems(sia.shell_item_array(), dest_si.ptr());
+			const auto res = file_op_->MoveItems(sia.shell_item_array(), dest_si.ptr());
 			if (SUCCEEDED(res)) return perform();
 			return false;
 		});
@@ -211,7 +228,7 @@ public:
 			ShellItemIdArray sia(ps);
 			if (!sia.shell_item_array()) return false;
 
-			auto res = file_op_->DeleteItems(sia.shell_item_array());
+			const auto res = file_op_->DeleteItems(sia.shell_item_array());
 			if (SUCCEEDED(res)) return perform();
 			return false;
 		});
