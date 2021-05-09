@@ -86,11 +86,11 @@ public:
 		auto dobj = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(paths, IID_IDataObject));
 		if (!dobj) return;
 
-		auto ds = std::make_unique<DropSource>();
+		auto ds = new DropSource();
 		const bool notDrive = !Path::is_root(paths.front());
 		DWORD dwEffect = 0;
-		::DoDragDrop(dobj, ds.get(), DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
-		ds.get()->Release();
+		::DoDragDrop(dobj, ds, DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
+		ds->Release();
 
 		dobj->Release();
 	}
