@@ -3,7 +3,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -160,7 +160,7 @@ public:
 
 	// Move to lower folder
 	bool MoveToLower(ListType w, int index) {
-		Item * const f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		const Item* f = ((w == ListType::FILE) ? files_ : navis_)[index];
 		if (f->IsEmpty()) return false;
 
 		if (f->IsDir()) {
@@ -191,7 +191,7 @@ public:
 
 	// Check if it is possible to move to lower folder
 	bool MovableToLower(ListType w, int index) {
-		Item * const f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		const Item* f = ((w == ListType::FILE) ? files_ : navis_)[index];
 
 		if (f->IsEmpty()) return false;
 		if (f->IsDir()) return true;

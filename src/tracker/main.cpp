@@ -17,7 +17,7 @@ const wchar_t WINDOW_NAME[] = _T("Tracker");
 
 
 int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
-	::CreateMutex(nullptr, FALSE, (const wchar_t*) MUTEX);
+	::CreateMutex(nullptr, FALSE, &MUTEX[0]);
 	if (::GetLastError() == ERROR_ALREADY_EXISTS) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
@@ -33,12 +33,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ in
 	iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
 	::InitCommonControlsEx(&iccex);
 
-	if (!InitApplication(hInst, CLASS_NAME)) {
+	if (!InitApplication(hInst, &CLASS_NAME[0])) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
 	// Create main window
-	const HWND hWnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, CLASS_NAME, WINDOW_NAME, WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, hInst, nullptr);
+	const HWND hWnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, &CLASS_NAME[0], &WINDOW_NAME[0], WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, hInst, nullptr);
 	if (!hWnd) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
@@ -57,8 +57,6 @@ BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
 	WNDCLASS wc{};
 	wc.style         = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc   = (WNDPROC)wndProc;
-	// wc.cbClsExtra    = 0;
-	// wc.cbWndExtra    = 0;
 	wc.hInstance     = hInst;
 	wc.hIcon         = nullptr;
 	wc.hCursor       = ::LoadCursor(nullptr, IDC_ARROW);  // Mouse cursor (standard arrow)

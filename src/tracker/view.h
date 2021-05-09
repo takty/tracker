@@ -3,7 +3,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -421,7 +421,7 @@ public:
 
 	// Draw a mark
 	void drawMark(HDC dc, RECT r, IconType type, int color, bool cur, bool sel, bool dir) noexcept {
-		TCHAR *c = nullptr;
+		const TCHAR *c = nullptr;
 		RECT rl = r, rr = r;
 
 		rl.right = cxSide_, rr.left = r.right - cxSide_;
@@ -567,12 +567,11 @@ public:
 	// Sense the direction the pointer is moving
 	int pointerMovingDir(int x, int y) noexcept {
 		static int lastX = 0, lastY = 0;
-		int dir;
+		int dir{ -1 };
 
 		const int w = abs(x - lastX), h = abs(y - lastY);
 		if (w > h)      dir = (x - lastX < 0) ? 0 : 1;
 		else if (w < h) dir = (y - lastY < 0) ? 2 : 3;
-		else           dir = -1;
 		lastX = x, lastY = y;
 		return dir;
 	}

@@ -3,7 +3,7 @@
  * File Item
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -36,7 +36,7 @@ class Item {
 
 	// parentPath must include \ at the end
 	void Assign(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
-		name_ = (wchar_t*) wfd.cFileName;
+		name_ = &wfd.cFileName[0];
 		path_ = parentPath + name_;
 		date_ = wfd.ftLastWriteTime;
 		size_ = (((unsigned long long) wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;

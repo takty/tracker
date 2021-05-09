@@ -3,7 +3,7 @@
  * Item list
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -76,7 +76,7 @@ public:
 		sort(items_.begin(), items_.end(), p);
 	}
 
-	int Select(int front, int back, bool all) noexcept {
+	int Select(int front, int back, bool all) noexcept(false) {
 		if (front == -1 || back == -1) return selNum_;
 		if (back < front) std::swap(front, back);
 		if (all) {

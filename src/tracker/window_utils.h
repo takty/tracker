@@ -3,7 +3,7 @@
  * Window Utilities
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -30,8 +30,8 @@ public:
 
 		if (wr.left <= 0 && wr.top <= 0 && sw <= wr.right && sh <= wr.bottom) {
 			TCHAR cn[256]{};
-			::GetClassName(fw, (TCHAR*)cn, 256);
-			if (::lstrcmp((TCHAR*)cn, _T("Progman")) != 0 && ::lstrcmp((TCHAR*)cn, _T("WorkerW")) != 0) return true;
+			::GetClassName(fw, &cn[0], 256);
+			if (::lstrcmp(&cn[0], _T("Progman")) != 0 && ::lstrcmp(&cn[0], _T("WorkerW")) != 0) return true;
 		}
 		return false;
 	}

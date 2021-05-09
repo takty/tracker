@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -28,7 +28,7 @@ class FileSystem {
 
 		find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				if (!calc_file_size_internally(parent + (TCHAR*) wfd.cFileName, size, limitTime)) {
+				if (!calc_file_size_internally(parent + &wfd.cFileName[0], size, limitTime)) {
 					success = false;
 					return false;  // break
 				}
@@ -100,7 +100,7 @@ public:
 		if (temp.empty()) return false;  // path is root
 
 		find_first_file(temp, [&](const std::wstring&, const WIN32_FIND_DATA& wfd) {
-			auto e = Path::ext((TCHAR*) wfd.cFileName);
+			auto e = Path::ext(&wfd.cFileName[0]);
 			if (e == L"exe" || e == L"bat") {
 				ret = true;
 				return false;  // break;
@@ -190,7 +190,7 @@ public:
 		if (sh == INVALID_HANDLE_VALUE) return false;
 		parent.resize(parent.size() - 1);
 		do {
-			if (!::lstrcmp((TCHAR*) wfd.cFileName, L".") || !::lstrcmp((TCHAR*) wfd.cFileName, L"..")) continue;
+			if (!::lstrcmp(&wfd.cFileName[0], L".") || !::lstrcmp(&wfd.cFileName[0], L"..")) continue;
 			if (!fn(parent, wfd)) break;
 		} while (::FindNextFile(sh, &wfd));
 		::FindClose(sh);
