@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include <windows.h>
 #include <vector>
 #include <string>
+#include <windows.h>
 
 #include "tracker.h"
 #include "file_utils.hpp"
@@ -27,8 +27,6 @@
 #include "rename_edit.h"
 #include "search.h"
 #include "tool_tip.h"
-
-using namespace std;
 
 #define IDHK 1
 
@@ -126,10 +124,10 @@ public:
 		const int width  = (int) (pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
 		const int height = (int) (pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
 
-		wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
-		wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
+		std::wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
+		std::wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
 
-		wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
+		std::wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
 		const int fontSize = (int) (pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
 
 		const bool useMigemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
@@ -153,7 +151,7 @@ public:
 		doc_.Initialize(firstTime);
 	}
 
-	void SetHotkey(const wstring& key, int id) noexcept(false) {
+	void SetHotkey(const std::wstring& key, int id) noexcept(false) {
 		UINT flag = 0;
 		if (key.size() < 5) return;
 		if (key.at(0) == _T('1')) flag |= MOD_ALT;
@@ -348,7 +346,7 @@ public:
 		::FillRect(dc, &r, (HBRUSH) (COLOR_MENU + 1));
 		::SelectObject(dc, hItemFont_);  // Font selection (do here because we measure the size below)
 		if (isHier) {
-			wstring num;
+			std::wstring num;
 			if (doc_.SelectedCount()) {
 				if (doc_.SelectedCount() == files.Count()) {
 					num.assign(_T("ALL / "));
@@ -416,7 +414,7 @@ public:
 			::GetTextExtentPoint32(dc, fd->Name().c_str(), fd->Name().size(), &font);
 			curSelIsLong_ = font.cx > r.right - r.left;  // File name at cursor position is out
 		}
-		::DrawText(dc, fd->Name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (cursorAlign_ * curSelIsLong_ * cur));
+		::DrawText(dc, fd->Name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (cursorAlign_ * (curSelIsLong_ ? 1 : 0) * cur));
 	}
 
 	// Draw a mark
@@ -814,10 +812,10 @@ public:
 		const int type = extentions_.get_id(ext) + 1;
 		UINT f;
 		const POINT pt = popupPt(w, index, f);
-		wstring cmd;
+		std::wstring cmd;
 		PopupMenu pm(hWnd_, &pref_);
 
-		std::vector<wstring> items;
+		std::vector<std::wstring> items;
 		if (pm.popup(type, pt, f, cmd, items)) action(ope_, cmd, w, index);
 	}
 
@@ -827,20 +825,20 @@ public:
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto &ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
 		const int type = extentions_.get_id(ext) + 1;
-		wstring cmd;
+		std::wstring cmd;
 		PopupMenu pm(hWnd_, &pref_);
 		if (pm.getAccelCommand(type, accelerator, cmd)) action(ope_, cmd, w, index);
 	}
 
 	// Command execution
-	void action(const wstring& cmd, Document::ListType w, int index) {
+	void action(const std::wstring& cmd, Document::ListType w, int index) {
 		doc_.SetOperator(index, w, ope_);
 		action(ope_, cmd, w, index);
 	}
 
-	void action(const Selection &objs, const wstring& cmd, Document::ListType w, int index) {
+	void action(const Selection &objs, const std::wstring& cmd, Document::ListType w, int index) {
 		const bool hasObj = objs.Count() != 0 && !objs[0].empty();
-		wstring oldCurrent;
+		std::wstring oldCurrent;
 
 		if (hasObj) {
 			oldCurrent.assign(FileSystem::current_directory_path());
@@ -858,7 +856,7 @@ public:
 	}
 
 	// System command execution
-	void systemCommand(const wstring& cmd, const Selection& objs, Document::ListType w, int index) {
+	void systemCommand(const std::wstring& cmd, const Selection& objs, Document::ListType w, int index) {
 		if (cmd == COM_SELECT_ALL)    { selectFile(0, doc_.GetFiles().Count() - 1, true); return; }
 		if (cmd == COM_RENAME)        {
 			re_.Open(objs[0], indexToLine(index, w) * cyItem_, listRect_.right, cyItem_);
@@ -900,7 +898,7 @@ public:
 
 	// Display file information
 	void popupInfo(const Selection&, Document::ListType w, int index) {
-		vector<wstring> items;
+		std::vector<std::wstring> items;
 		ope_.InformationStrings(items);
 		items.push_back(_T("...more"));
 		UINT f;

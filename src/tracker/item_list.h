@@ -55,6 +55,7 @@ public:
 			f = buf_.back();
 			buf_.pop_back();
 		}
+		if (!f) return nullptr;
 		f->Clear();
 		return f;
 	}

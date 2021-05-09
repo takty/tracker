@@ -3,7 +3,7 @@
  * Tool Tip
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  * Need to add to stdafx.h
  * #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -13,15 +13,15 @@
 
 #pragma once
 
+#include <string>
 #include <windows.h>
 #include <commctrl.h>
-#include <string>
 
 
 class ToolTip {
 
-	HWND hWnd_     = nullptr;
-	HWND hHint_    = nullptr;
+	HWND hWnd_ = nullptr;
+	HWND hHint_ = nullptr;
 	bool isActive_ = false;
 
 public:
@@ -30,11 +30,11 @@ public:
 	}
 
 	void Initialize(HWND hWnd) noexcept {
-		HINSTANCE hInst = (HINSTANCE) ::GetWindowLong(hWnd, GWL_HINSTANCE);
-		hWnd_  = hWnd;
+		HINSTANCE hInst = (HINSTANCE)::GetWindowLong(hWnd, GWL_HINSTANCE);
+		hWnd_ = hWnd;
 		hHint_ = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 			WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_NOANIMATE | TTS_NOFADE,
-			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT , CW_USEDEFAULT, hWnd, nullptr, hInst, nullptr);
+			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWnd, nullptr, hInst, nullptr);
 	}
 
 	//  Display Tool Tips
@@ -46,8 +46,8 @@ public:
 		ti.uId      = 1;
 		ti.rect     = rect;
 		ti.hinst    = nullptr;
-		ti.lpszText = (LPTSTR) str.c_str();
-		SendMessage(hHint_, TTM_ADDTOOL, 0, (LPARAM) &ti);
+		ti.lpszText = (LPTSTR)str.c_str();
+		SendMessage(hHint_, TTM_ADDTOOL, 0, (LPARAM)&ti);
 
 		isActive_ = true;
 	}
@@ -61,7 +61,7 @@ public:
 		ti.cbSize = sizeof(TOOLINFO);
 		ti.hwnd   = hWnd_;
 		ti.uId    = 1;
-		SendMessage(hHint_, TTM_DELTOOL, 0, (LPARAM) &ti);
+		SendMessage(hHint_, TTM_DELTOOL, 0, (LPARAM)&ti);
 	}
 
 };

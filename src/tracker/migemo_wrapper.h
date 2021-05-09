@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include <windows.h>
 #include <regex>
+#include <windows.h>
 
 #include "migemo.h"
 #include "string_converter.h"
@@ -52,10 +52,10 @@ public:
 
 		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
 		if (hMigemo_) {
-			migemoOpen_ = (MIGEMO_OPEN) ::GetProcAddress(hMigemo_, "migemo_open");
-			migemoClose_ = (MIGEMO_CLOSE) ::GetProcAddress(hMigemo_, "migemo_close");
-			migemoQuery_ = (MIGEMO_QUERY) ::GetProcAddress(hMigemo_, "migemo_query");
-			migemoRelease_ = (MIGEMO_RELEASE) ::GetProcAddress(hMigemo_, "migemo_release");
+			migemoOpen_ = (MIGEMO_OPEN)::GetProcAddress(hMigemo_, "migemo_open");
+			migemoClose_ = (MIGEMO_CLOSE)::GetProcAddress(hMigemo_, "migemo_close");
+			migemoQuery_ = (MIGEMO_QUERY)::GetProcAddress(hMigemo_, "migemo_query");
+			migemoRelease_ = (MIGEMO_RELEASE)::GetProcAddress(hMigemo_, "migemo_release");
 
 			std::wstring dp(dictionaryPath);
 			if (dp.empty()) {
@@ -70,8 +70,8 @@ public:
 
 	void query(const std::wstring& searchStr, std::wstring& query) {
 		auto ansi = StringConverter::to_ansi(searchStr);
-		auto q = migemoQuery_(m_, (unsigned char*)ansi.c_str());
-		std::string temp{ (const char*)q };
+		auto q = migemoQuery_(m_, reinterpret_cast<unsigned char*>(ansi.data()));
+		std::string temp(reinterpret_cast<const char*>(q));
 		migemoRelease_(m_, q);
 		query.assign(StringConverter::to_wide(temp));
 		query = std::regex_replace(query, std::wregex(L"\\{"), L"\\{");

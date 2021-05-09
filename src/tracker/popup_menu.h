@@ -138,7 +138,8 @@ public:
 		if (items.size()) {
 			const int id = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, hWnd_, nullptr);
 			ret = (0 < id);  // -1, 0 if not selected
-			if (0 < id && id <= static_cast<int>(items.size())) {
+			int max{ static_cast<int>(std::forward<size_t>(items.size())) };
+			if (0 < id && id <= max) {
 				cmd.assign(items.at(id - 1));  // Ordinary command
 			}
 		}

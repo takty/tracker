@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include <windows.h>
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <regex>
+#include <windows.h>
 
 #include "item_list.h"
 #include "migemo_wrapper.h"
@@ -44,7 +44,7 @@ public:
 		const auto time = GetTickCount64();
 		if (time - lastTime_ > 1000) searchStr_.clear();
 		lastTime_ = time;
-		searchStr_.append(1, ::_totlower((wint_t)key));
+		searchStr_.append(1, ::_totlower(static_cast<wint_t>(key)));
 		reserveFind_ = true;  // Flag the call to findFirst using a timer
 	}
 

@@ -73,7 +73,7 @@ class Selection {
 			if (::SHGetDesktopFolder(&desktopFolder) != NOERROR) return;
 			if (!desktopFolder) return;
 			std::vector<wchar_t> wideName{ path.begin(), path.end() };
-			r = desktopFolder->ParseDisplayName(hWnd_, nullptr, static_cast<LPWSTR>(wideName.data()), nullptr, &currentFolder, nullptr);
+			r = desktopFolder->ParseDisplayName(hWnd_, nullptr, wideName.data(), nullptr, &currentFolder, nullptr);
 			desktopFolder->Release();
 		}
 		if (r != S_OK) return;

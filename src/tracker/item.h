@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include <windows.h>
 #include <string>
+#include <windows.h>
 
 #include "file_utils.hpp"
 #include "document.h"
@@ -39,7 +39,7 @@ class Item {
 		name_ = &wfd.cFileName[0];
 		path_ = parentPath + name_;
 		date_ = wfd.ftLastWriteTime;
-		size_ = (((unsigned long long) wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
+		size_ = (static_cast<unsigned long long>(wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
 
 		const auto isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)    != 0;
 		const auto isDir    = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
@@ -124,11 +124,6 @@ public:
 		return this;
 	}
 
-	//Item* SetSeparatorItem(bool isHier) {
-	//	style_ = (Item::SEPA | (isHier ? Item::HIER : 0));
-	//	return this;
-	//}
-
 	int& data() noexcept {
 		return data_;
 	}
@@ -177,10 +172,6 @@ public:
 	int Id() const noexcept {
 		return HIWORD(style_);
 	}
-
-	//bool IsSeparator() const {
-	//	return (style_ & SEPA) != 0;
-	//}
 
 	bool IsEmpty() const noexcept {
 		return (style_ & EMPTY) != 0;

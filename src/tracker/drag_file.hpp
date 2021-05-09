@@ -3,7 +3,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -12,7 +12,7 @@
 
 #include <vector>
 #include <string>
-
+#include <memory>
 #include <windows.h>
 
 #include "Path.hpp"
@@ -83,14 +83,14 @@ public:
 	static void start(const std::vector<std::wstring>& paths) {
 		if (paths.empty()) return;
 
-		auto dobj = (LPDATAOBJECT)Shell::get_ole_ui_object(paths, IID_IDataObject);
+		auto dobj = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(paths, IID_IDataObject));
 		if (!dobj) return;
 
-		auto ds = new DropSource();
+		auto ds = std::make_unique<DropSource>();
 		const bool notDrive = !Path::is_root(paths.front());
 		DWORD dwEffect = 0;
-		::DoDragDrop(dobj, ds, DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
-		ds->Release();
+		::DoDragDrop(dobj, ds.get(), DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
+		ds.get()->Release();
 
 		dobj->Release();
 	}

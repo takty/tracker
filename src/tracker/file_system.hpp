@@ -12,7 +12,6 @@
 
 #include <string>
 #include <vector>
-
 #include <FileAPI.h>
 #include <Shlobj.h>
 
@@ -32,11 +31,12 @@ class FileSystem {
 					success = false;
 					return false;  // break
 				}
-			} else {
-				size += (((uint64_t) wfd.nFileSizeHigh) << 32) + wfd.nFileSizeLow;
+			}
+			else {
+				size += (static_cast<uint64_t>(wfd.nFileSizeHigh) << 32) + wfd.nFileSizeLow;
 			}
 			return true;  // continue
-		});
+			});
 		return success;
 	}
 
@@ -164,7 +164,7 @@ public:
 
 	// Get drive size
 	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) noexcept {
-		::GetDiskFreeSpaceEx(path.c_str(), (PULARGE_INTEGER) &free, (PULARGE_INTEGER) &size, nullptr);
+		::GetDiskFreeSpaceEx(path.c_str(), (PULARGE_INTEGER)&free, (PULARGE_INTEGER)&size, nullptr);
 	}
 
 	// Calculate file/directory size
@@ -172,7 +172,7 @@ public:
 		if (!is_directory(path)) {
 			auto hf = ::CreateFile(path.c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 			if (hf == INVALID_HANDLE_VALUE) return false;
-			::GetFileSizeEx(hf, (PLARGE_INTEGER) &size);
+			::GetFileSizeEx(hf, (PLARGE_INTEGER)&size);
 			::CloseHandle(hf);
 			return true;
 		}

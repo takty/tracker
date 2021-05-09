@@ -3,7 +3,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -43,8 +43,8 @@ public:
 	}
 
 	bool arrange(int drag, int drop) {
-		if (drag < 0 || drag >= (int) paths_.size()) return false;
-		if (drop < 0 || drop >= (int) paths_.size()) return false;
+		if (drag < 0 || drag >= static_cast<int>(paths_.size())) return false;
+		if (drop < 0 || drop >= static_cast<int>(paths_.size())) return false;
 		std::wstring path(paths_.at(drag));
 		paths_.erase(paths_.begin() + drag);
 		paths_.insert(paths_.begin() + drop, path);

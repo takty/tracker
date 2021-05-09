@@ -3,7 +3,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -50,13 +50,13 @@ public:
 	}
 
 	void add(const std::wstring& path) {
-		auto root = path.at(0) + L":\\";
+		auto root = path.substr(0, 1) + L":\\";
 		if (FileSystem::is_removable(root)) return;  // Do not leave removable
 
 		paths_.erase(remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
 		paths_.insert(paths_.begin(), path);  // Add
 
-		if ((int)paths_.size() > max_size_) {  // Maximum number of history limit
+		if (static_cast<int>(paths_.size()) > max_size_) {  // Maximum number of history limit
 			paths_.resize(max_size_);
 		}
 	}

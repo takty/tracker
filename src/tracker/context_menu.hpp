@@ -3,7 +3,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -12,7 +12,6 @@
 
 #include <vector>
 #include <string>
-
 #include <windows.h>
 #include <shlobj.h>
 
@@ -21,7 +20,7 @@
 
 class ContextMenu {
 
-	static constexpr const wchar_t * const PROP_INSTANCE = L"ContextMenuInstance";
+	static constexpr const wchar_t* const PROP_INSTANCE = L"ContextMenuInstance";
 
 	// Window Procedure that hooked to the original procedure while showing the menu
 	static LRESULT CALLBACK MenuProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -40,9 +39,9 @@ class ContextMenu {
 		}
 	}
 
-	const HWND wnd_              = nullptr;
+	const HWND wnd_ = nullptr;
 	LPCONTEXTMENU2 context_menu_ = nullptr;
-	WNDPROC orig_proc_           = nullptr;
+	WNDPROC orig_proc_ = nullptr;
 
 	HRESULT invoke(const LPCONTEXTMENU cm, const char* cmd) const {
 		if (!cm) return 0;
@@ -58,7 +57,7 @@ class ContextMenu {
 	}
 
 	HRESULT execute(const std::vector<std::wstring>& paths, const char* cmd) const {
-		const auto cm = (LPCONTEXTMENU) Shell::get_ole_ui_object(paths, IID_IContextMenu);
+		const auto cm = (LPCONTEXTMENU)Shell::get_ole_ui_object(paths, IID_IContextMenu);
 		if (!cm) return 0;
 
 		const auto res = invoke(cm, cmd);
@@ -79,12 +78,12 @@ public:
 
 	// Popup shell context menu
 	bool popup(const std::vector<std::wstring>& paths, uint32_t flag, const POINT& pt) {
-		const auto cm = (LPCONTEXTMENU) Shell::get_ole_ui_object(paths, IID_IContextMenu);
+		const auto cm = (LPCONTEXTMENU)Shell::get_ole_ui_object(paths, IID_IContextMenu);
 		if (!cm) return false;
 
 		// Get IContextMenu2
 		LPCONTEXTMENU2 cm2 = nullptr;
-		cm->QueryInterface(IID_IContextMenu2, (void**) &cm2);
+		cm->QueryInterface(IID_IContextMenu2, (void**)&cm2);
 
 		// Create a menu
 		auto hMenu = ::CreatePopupMenu();
@@ -93,10 +92,10 @@ public:
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
-		orig_proc_ = (WNDPROC) ::SetWindowLong(wnd_, GWL_WNDPROC, (LONG) MenuProc);
+		orig_proc_ = (WNDPROC) ::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)MenuProc);
 		const int id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
-		::SetWindowLong(wnd_, GWL_WNDPROC, (LONG) orig_proc_);
+		::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)orig_proc_);
 		::RemoveProp(wnd_, PROP_INSTANCE);
 
 		bool res = false;
@@ -144,7 +143,7 @@ public:
 	// Show the property of files
 	void show_property(const std::vector<std::wstring>& objs) const {
 		// Instead of calling execute function with command "properties"...
-		const auto cm = (LPDATAOBJECT) Shell::get_ole_ui_object(objs, IID_IDataObject);
+		const auto cm = (LPDATAOBJECT)Shell::get_ole_ui_object(objs, IID_IDataObject);
 		if (!cm) return;
 		::SHMultiFileProperties(cm, 0);
 		cm->Release();

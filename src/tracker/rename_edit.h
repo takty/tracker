@@ -3,17 +3,18 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
 
 #pragma once
 
+#include <string>
+#include <tchar.h>
 #include <windows.h>
 #include <commctrl.h>
-#include <tchar.h>
-#include <string>
+
 #include "file_utils.hpp"
 
 
@@ -38,6 +39,7 @@ class RenameEdit {
 				::ShowWindow(hEdit_, SW_HIDE);
 				break;
 			}
+			// Fall through
 		default:
 			return ::CallWindowProc(p->orgProc_, hEdit_, msg, wp, lp);
 		}

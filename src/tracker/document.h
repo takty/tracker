@@ -11,7 +11,6 @@
 #pragma once
 
 #include <string>
-
 #include <windows.h>
 
 #include "file_utils.hpp"
@@ -64,7 +63,8 @@ private:
 			navis_.Insert(last, navis_.CreateItem()->SetFileItem(cur, extentions_));
 			cur = Path::parent(cur);
 		}
-		auto* item = navis_.CreateItem();// ->SetSeparatorItem(true);
+		auto* item = navis_.CreateItem();;
+		if (!item) return;
 		item->data() = hierarchy_separator_option_data_;
 		navis_.Add(item);
 
@@ -88,7 +88,8 @@ private:
 		const std::array<const std::wstring, 3> name = { fav_.NAME, his_.NAME, dri_.NAME };
 
 		for (int i = 0; i < 3; ++i) navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(path.at(i), name.at(i)));
-		auto* item = navis_.CreateItem();// ->SetSeparatorItem(false);
+		auto* item = navis_.CreateItem();
+		if (!item) return;
 		item->data() = special_separator_option_data_;
 		navis_.Add(item);
 
@@ -255,7 +256,7 @@ public:
 	}
 
 	// Select file by range specification
-	void SelectFile(int front, int back, ListType type, bool all) noexcept {
+	void SelectFile(int front, int back, ListType type, bool all) noexcept(false) {
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		vec.Select(front, back, all);
 	}

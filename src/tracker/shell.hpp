@@ -3,7 +3,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -12,7 +12,6 @@
 
 #include <vector>
 #include <string>
-
 #include <windows.h>
 #include <shlobj.h>
 
@@ -38,7 +37,7 @@ public:
 				auto fname = Path::name(e);
 				if (Path::is_root(e)) fname += L'\\';
 				PITEMID_CHILD id{};
-				const auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, (LPWSTR) fname.c_str(), nullptr, &id, nullptr);
+				const auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, (LPWSTR)fname.c_str(), nullptr, &id, nullptr);
 				if (res == S_OK) ids_.push_back(id);
 			}
 		}
@@ -70,7 +69,7 @@ public:
 
 		LPSHELLFOLDER parent_shf{};
 		if (res == S_OK) {
-			res = ::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**) &parent_shf);
+			res = ::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
 			::CoTaskMemFree(parent_id);
 		}
 		return parent_shf;
@@ -82,13 +81,14 @@ public:
 		PIDLIST_ABSOLUTE parent_id{};
 		if (Path::is_root(path)) {
 			res = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &parent_id);
-		} else {
+		}
+		else {
 			auto p = Path::ensure_no_unc_prefix(Path::parent(path));
 			res = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 		}
 		LPSHELLFOLDER parent_shf{};
 		if (res == S_OK) {
-			res = ::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**) &parent_shf);
+			res = ::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
 			::CoTaskMemFree(parent_id);
 		}
 		return parent_shf;
@@ -101,7 +101,7 @@ public:
 
 		if (parent_shf == nullptr) return nullptr;
 		LPVOID ret_obj{};
-		const auto res = parent_shf->GetUIObjectOf(nullptr, cs.size(), (LPCITEMIDLIST*) cs.data(), riid, nullptr, &ret_obj);
+		const auto res = parent_shf->GetUIObjectOf(nullptr, cs.size(), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
 		if (res == S_OK) return ret_obj;
 		return nullptr;
 	}

@@ -3,7 +3,7 @@
  * Clipboard Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-09
  *
  */
 
@@ -12,7 +12,6 @@
 
 #include <string>
 #include <vector>
-
 #include <windows.h>
 #include <shlobj.h>
 
@@ -73,7 +72,7 @@ public:
 
 		if (!::OpenClipboard(hWnd_)) return false;
 
-		auto hDrop = (HDROP) ::GetClipboardData(CF_HDROP);
+		auto hDrop = static_cast<HDROP>(::GetClipboardData(CF_HDROP));
 		if (hDrop) {
 			const int count = ::DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
 			for (int i = 0; i < count; ++i) {
