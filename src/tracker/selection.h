@@ -58,8 +58,8 @@ class Selection {
 
 	// Register Shell Notifications
 	void SetShellNotify(const std::wstring& path) {
-		LPSHELLFOLDER desktopFolder;
-		LPITEMIDLIST currentFolder;
+		LPSHELLFOLDER desktopFolder{};
+		LPITEMIDLIST currentFolder{};
 		SHChangeNotifyEntry scne{};
 
 		if (idNotify_) {
@@ -72,8 +72,8 @@ class Selection {
 		} else {
 			if (::SHGetDesktopFolder(&desktopFolder) != NOERROR) return;
 			if (!desktopFolder) return;
-			wchar_t* wideName = (wchar_t*) path.c_str();
-			r = desktopFolder->ParseDisplayName(hWnd_, nullptr, wideName, nullptr, &currentFolder, nullptr);
+			std::vector<wchar_t> wideName{ path.begin(), path.end() };
+			r = desktopFolder->ParseDisplayName(hWnd_, nullptr, static_cast<LPWSTR>(wideName.data()), nullptr, &currentFolder, nullptr);
 			desktopFolder->Release();
 		}
 		if (r != S_OK) return;
@@ -105,40 +105,64 @@ class Selection {
 
 	// Generate a string representing the size of the file or drive
 	std::wstring FileSizeToStr(const uint64_t& size, bool success, const wchar_t* prefix) {
-		static const wchar_t *u[] = { L" Bytes", L" kB", L" MB", L" GB" };
-		static const int s[] = { 0, 10, 20, 30 };
+		int f{};
+		const wchar_t* u{};
+		double val{};
 
-		std::wstring dest;
-		int f = 0;
-		if (size >= (1 << 30)) f = 3;
-		else if (size >= (1 << 20)) f = 2;
-		else if (size >= (1 << 10)) f = 1;
-		const double val = double(size) / (1ULL << s[f]);
+		if (size >= (1 << 30)) {
+			f = 3;
+			u = L" GB";
+			val = double(size) / (1ULL << 30);
+		}
+		else if (size >= (1 << 20)) {
+			f = 2;
+			u = L" MB";
+			val = double(size) / (1ULL << 20);
+		}
+		else if (size >= (1 << 10)) {
+			f = 1;
+			u = L" kB";
+			val = double(size) / (1ULL << 10);
+		}
+		else {
+			u = L" Bytes";
+			val = double(size) / 1ULL;
+		}
+		const wchar_t* fmt{};
+		if (val < 1) {
+			fmt = L"%.3lf";
+		}
+		else if (val < 10) {
+			fmt = L"%.2lf";
+		}
+		else if (val < 100) {
+			fmt = L"%.1lf";
+		}
+		else {
+			fmt = L"%.0lf";
+		}
+		wchar_t temp[100]{};
+		swprintf_s(&temp[0], 100, fmt, val);
 
-		int pre = 0;
-		if (val < 100) ++pre;
-		if (val < 10) ++pre;
-		if (val < 1) ++pre;
-
-		wchar_t format[100]{}, temp[100]{};
-		swprintf_s((wchar_t*)format, 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, (wchar_t*)u[f]);
-		swprintf_s((wchar_t*)temp, 100, (wchar_t*)format, val);
-		dest.assign((wchar_t*)temp);
+		std::wstring dest{ prefix };
+		if (!success) dest.append(L">");
+		dest.append(&temp[0]);
+		dest.append(u);
 		if (f != 0 && f != 3) dest.append(L" (").append(Format(size)).append(L" Bytes)");
 		return dest;
 	}
 
 	// Generate a string representing the file's timestamp
 	std::wstring& FileTimeToStr(const FILETIME& time, const wchar_t* prefix, std::wstring& dest) {
-		FILETIME local;
-		SYSTEMTIME st;
+		FILETIME local{};
+		SYSTEMTIME st{};
 
 		::FileTimeToLocalFileTime(&time, &local);
 		::FileTimeToSystemTime(&local, &st);
 
 		wchar_t temp[100]{};  // pre + 19 characters
-		swprintf_s((wchar_t*)temp, 100, L"%s%u/%02u/%02u (%02u:%02u:%02u)", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-		dest.assign((wchar_t*)temp);
+		swprintf_s(&temp[0], 100, L"%s%u-%02u-%02u (%02u:%02u:%02u)", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+		dest.assign(&temp[0]);
 		return dest;
 	}
 
@@ -384,7 +408,7 @@ public:
 
 	// Execute a string command
 	int Command(const std::wstring& cmd) {
-		if (cmd.find(COM_CREATE_NEW) == 0) { CreateNewFile(cmd.c_str() + 11); return 1; }
+		if (cmd.find(COM_CREATE_NEW) == 0) { CreateNewFile(cmd.substr(11).c_str()); return 1; }
 		if (cmd == COM_NEW_FOLDER)         { CreateNewFolderIn(); return 1; }
 		if (cmd == COM_DELETE)             { DeleteFile(); return 1; }
 		if (cmd == COM_CLONE)              { CloneHere(); return 1; }
