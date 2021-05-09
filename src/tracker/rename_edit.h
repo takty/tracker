@@ -39,7 +39,7 @@ class RenameEdit {
 				::ShowWindow(hEdit_, SW_HIDE);
 				break;
 			}
-			// Fall through
+			[[fallthrough]];
 		default:
 			return ::CallWindowProc(p->orgProc_, hEdit_, msg, wp, lp);
 		}
@@ -53,12 +53,12 @@ public:
 
 	void Initialize(HWND hWnd) noexcept {
 		hWnd_ = hWnd;
-		auto hInst = (HINSTANCE) ::GetWindowLong(hWnd, GWL_HINSTANCE);
+		auto hInst = (HINSTANCE)::GetWindowLong(hWnd, GWL_HINSTANCE);
 		hEdit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
 			0, 0, 0, 0, hWnd, nullptr, hInst, nullptr);
-		orgProc_ = (WNDPROC) ::GetWindowLong(hEdit_, GWL_WNDPROC);
-		::SetWindowLong(hEdit_, GWL_USERDATA, (LONG) this);
-		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG) RenameEdit::editProc);
+		orgProc_ = (WNDPROC)::GetWindowLong(hEdit_, GWL_WNDPROC);
+		::SetWindowLong(hEdit_, GWL_USERDATA, (LONG)this);
+		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG)RenameEdit::editProc);
 	}
 
 	void Finalize() noexcept {
@@ -66,7 +66,7 @@ public:
 	}
 
 	void SetFont(const HFONT hItemFont) const noexcept {
-		::SendMessage(hEdit_, WM_SETFONT, (WPARAM) hItemFont, 0);
+		::SendMessage(hEdit_, WM_SETFONT, (WPARAM)hItemFont, 0);
 	}
 
 	bool IsActive() noexcept {
