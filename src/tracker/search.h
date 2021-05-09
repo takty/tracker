@@ -27,7 +27,7 @@ class Search {
 	ULONGLONG    lastTime_ = 0;
 	bool         useMigemo_ = false;
 	bool         reserveFind_ = false;
-	std::wstring searchStr_;
+	std::wstring str_;
 	std::wstring query_;
 
 public:
@@ -39,13 +39,24 @@ public:
 		return useMigemo_;
 	}
 
-	// Key input search
-	void KeySearch(int key) {
-		const auto time = GetTickCount64();
-		if (time - lastTime_ > 1000) searchStr_.clear();
-		lastTime_ = time;
-		searchStr_.append(1, ::_totlower(static_cast<wint_t>(key)));
+	const std::wstring& AddKey(wchar_t key) {
+		lastTime_ = GetTickCount64();
+		str_.append(1, ::_totlower(key));
 		reserveFind_ = true;  // Flag the call to findFirst using a timer
+		return str_;
+	}
+
+	const std::wstring& RemoveKey() {
+		if (str_.empty()) return str_;
+		lastTime_ = GetTickCount64();
+		str_.resize(str_.size() - 1);
+		reserveFind_ = !str_.empty();  // Flag the call to findFirst using a timer
+		return str_;
+	}
+
+	void ClearKey() {
+		str_.clear();
+		reserveFind_ = false;
 	}
 
 	bool IsReserved() noexcept {
@@ -59,7 +70,7 @@ public:
 	int FindFirst(int cursorIndex, const ItemList& items) {
 		reserveFind_ = false;
 		if (useMigemo_) {
-			migemo_.query(searchStr_, query_);
+			migemo_.query(str_, query_);
 		}
 		return FindNext(cursorIndex, items);
 	}
@@ -95,7 +106,7 @@ public:
 
 				std::wstring name(items[i]->Name());
 				std::transform(name.begin(), name.end(), name.begin(), ::_totlower);  // Lower case
-				if (name.find(searchStr_) != std::wstring::npos) {
+				if (name.find(str_) != std::wstring::npos) {
 					return i;
 				}
 			}

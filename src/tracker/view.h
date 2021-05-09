@@ -28,7 +28,8 @@
 #include "search.h"
 #include "tool_tip.h"
 
-#define IDHK 1
+constexpr auto IDHK = 1;
+extern const wchar_t WINDOW_NAME[];
 
 
 BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept;
@@ -114,21 +115,21 @@ public:
 	void loadPropData(const bool firstTime) {
 		pref_.set_current_section(SECTION_WINDOW);
 
-		cxSide_      = (int) (pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
-		cyItem_      = (int) (pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
-		cxScrollBar_ = (int) (6 * dpiFactX_);
+		cxSide_      = static_cast<int>(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
+		cyItem_      = static_cast<int>(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
+		cxScrollBar_ = static_cast<int>(6 * dpiFactX_);
 
 		popupPos_        = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
 		fullScreenCheck_ = pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
 
-		const int width  = (int) (pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
-		const int height = (int) (pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
+		const int width  = static_cast<int>(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
+		const int height = static_cast<int>(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
 
 		std::wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
 		std::wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
 
 		std::wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
-		const int fontSize = (int) (pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
+		const int fontSize = static_cast<int>(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
 
 		const bool useMigemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
 
@@ -142,7 +143,7 @@ public:
 		::DeleteObject(hItemFont_);
 		hItemFont_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
 		if (fontName.empty() || !hItemFont_) hItemFont_ = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
-		hMarkFont_ = ::CreateFont((int)(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
+		hMarkFont_ = ::CreateFont(static_cast<int>(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
 		re_.SetFont(hItemFont_);
 
 		search_.Initialize(useMigemo);
@@ -161,14 +162,19 @@ public:
 		if (flag) RegisterHotKey(hWnd_, id, flag, key.at(4));
 	}
 
+	View(const View& inst) = delete;
+	View(View&& inst) = delete;
+	View& operator=(const View& inst) = delete;
+	View& operator=(View&& inst) = delete;
+
 	virtual ~View() {
 		re_.Finalize();
 
 		RECT rw;
 		GetWindowRect(hWnd_, &rw);
 		pref_.set_current_section(SECTION_WINDOW);
-		pref_.set_item_int(KEY_WIDTH,  (int)(((__int64)rw.right  - rw.left) / dpiFactX_));
-		pref_.set_item_int(KEY_HEIGHT, (int)(((__int64)rw.bottom - rw.top)  / dpiFactY_));
+		pref_.set_item_int(KEY_WIDTH, static_cast<int>(((__int64)rw.right  - rw.left) / dpiFactX_));
+		pref_.set_item_int(KEY_HEIGHT, static_cast<int>(((__int64)rw.bottom - rw.top)  / dpiFactY_));
 
 		doc_.Finalize();
 		::UnregisterHotKey(hWnd_, IDHK);  // Cancel hot key
@@ -211,7 +217,7 @@ public:
 		if (wpos->cx < 96) wpos->cx = 96;
 	}
 
-	void wmSize(int cwidth, int cheight) {
+	void wmSize(int cwidth, int cheight) noexcept {
 		::SetRect(&listRect_, 0, 0, cwidth - cxScrollBar_, cheight);
 		scrollListLineNum_ = (cheight - doc_.GetNavis().Count() * cyItem_) / cyItem_;
 
@@ -261,7 +267,7 @@ public:
 		}
 	}
 
-	void wmMouseWheel(int delta) {
+	void wmMouseWheel(int delta) noexcept {
 		if (re_.IsActive()) return;  // Rejected while renaming
 		setScrollListTopIndex(scrollListTopIndex_ - ((delta > 0) ? 3 : -3));
 	}
@@ -318,7 +324,7 @@ public:
 			::FillRect(dc, &rc, (HBRUSH)(COLOR_MENU + 1));
 			return;
 		}
-		const double d = (double) rc.bottom / files.Count();
+		const double d = 1.0 * rc.bottom / files.Count();
 		RECT t = rc;
 		t.bottom = (LONG)(d * scrollListTopIndex_);
 		::FillRect(dc, &t, (HBRUSH)(COLOR_BTNSHADOW + 1));
@@ -339,11 +345,11 @@ public:
 	// Draw a separator
 	void drawSeparator(HDC dc, RECT r, bool isHier) {
 		TCHAR str[4]{};
-		const TCHAR sortBy[] = _T("nedsNEDS");
+		const std::wstring sortBy{ L"nedsNEDS" };
 		SIZE font;
 		const ItemList& files = doc_.GetFiles();
 
-		::FillRect(dc, &r, (HBRUSH) (COLOR_MENU + 1));
+		::FillRect(dc, &r, (HBRUSH)(COLOR_MENU + 1));
 		::SelectObject(dc, hItemFont_);  // Font selection (do here because we measure the size below)
 		if (isHier) {
 			std::wstring num;
@@ -361,11 +367,11 @@ public:
 			WindowUtils::DrawGrayText(dc, nr, num.c_str());
 			r.right = nr.left - 1;
 			const size_t idx = doc_.GetOpt().GetSortType() + doc_.GetOpt().GetSortOrder() * 4;
-			str[0] = sortBy[idx], str[1] = _T('\0');
+			str[0] = sortBy.at(idx), str[1] = _T('\0');
 
 			r.left += 3;
-			WindowUtils::DrawGrayText(dc, r, str);
-			::GetTextExtentPoint32(dc, str, ::_tcslen(str), &font);
+			WindowUtils::DrawGrayText(dc, r, &str[0]);
+			::GetTextExtentPoint32(dc, &str[0], ::_tcslen(&str[0]), &font);
 			r.left = font.cx + 2;
 		}
 		if (doc_.InHistory()) {
@@ -448,7 +454,8 @@ public:
 			}
 			// Search delay processing
 			if (search_.IsReserved()) {
-				setCursorIndex(search_.FindFirst(listCursorIndex_, doc_.GetFiles()), Document::ListType::FILE);
+				auto idx = search_.FindFirst(listCursorIndex_, doc_.GetFiles());
+				if (idx != -1) setCursorIndex(idx, Document::ListType::FILE);
 			}
 			return;
 		}
@@ -481,6 +488,8 @@ public:
 			ht_.clearIndexes();
 			re_.Close();
 		}
+		search_.ClearKey();
+		::SetWindowText(hWnd_, WINDOW_NAME);
 	}
 
 	// Event Handler of WM_*BUTTONDOWN
@@ -679,30 +688,43 @@ public:
 
 	void wmKeyDown(int key) {
 		const bool ctrl = WindowUtils::CtrlPressed();
-		if (ctrl || key == VK_APPS || key == VK_DELETE || key == VK_RETURN) {
+		if (ctrl) {
 			if (listCursorIndex_ == -1) return;
-			if (ctrl) {
-				if (key == VK_APPS) {
-					action(COM_SHELL_MENU, listCursorSwitch_, listCursorIndex_);
-				}  else if (_T('A') <= key && key <= _T('Z')) {
-					accelerator((char)key, listCursorSwitch_, listCursorIndex_);
-				}
-			} else {
-				switch (key) {
-				case VK_APPS:   popupMenu(listCursorSwitch_, listCursorIndex_); break;
-				case VK_DELETE: action(COM_DELETE, listCursorSwitch_, listCursorIndex_); break;
-				case VK_RETURN: action(COM_OPEN, listCursorSwitch_, listCursorIndex_); break;
-				default:  // do nothing
-					break;
-				}
+			if (key == VK_APPS) {
+				action(COM_SHELL_MENU, listCursorSwitch_, listCursorIndex_);
+			}
+			else if (L'A' <= key && key <= L'Z') {
+				accelerator(static_cast<char>(key), listCursorSwitch_, listCursorIndex_);
+			}
+		}
+		else if (key == VK_APPS || key == VK_DELETE || key == VK_RETURN) {
+			if (listCursorIndex_ == -1) return;
+			switch (key) {
+			case VK_APPS:   popupMenu(listCursorSwitch_, listCursorIndex_); break;
+			case VK_DELETE: action(COM_DELETE, listCursorSwitch_, listCursorIndex_); break;
+			case VK_RETURN: action(COM_OPEN, listCursorSwitch_, listCursorIndex_); break;
+			default:  // do nothing
+				break;
 			}
 		} else {
-			if (key == VK_F3) {
-				setCursorIndex(search_.FindNext(listCursorIndex_, doc_.GetFiles()), Document::ListType::FILE);
-				return;
+			if (L'A' <= key && key <= L'Z') {
+				auto& str = search_.AddKey(static_cast<wchar_t>(std::forward<int>(key)));  // Key input search
+				::SetWindowText(hWnd_, str.c_str());
 			}
-			keyCursor(key);  // Cursor movement by key operation
-			if (_T('A') <= key && key <= _T('Z')) search_.KeySearch(key);  // Key input search
+			else if (key == VK_BACK) {
+				auto& str = search_.RemoveKey();
+				::SetWindowText(hWnd_, str.empty() ? WINDOW_NAME : str.c_str());
+			}
+			else if (key == VK_ESCAPE) {
+				search_.ClearKey();
+				::SetWindowText(hWnd_, WINDOW_NAME);
+			}
+			else if (key == VK_F3) {
+				setCursorIndex(search_.FindNext(listCursorIndex_, doc_.GetFiles()), Document::ListType::FILE);
+			}
+			else {
+				keyCursor(key);  // Cursor movement by key operation
+			}
 		}
 	}
 
@@ -718,7 +740,8 @@ public:
 		}
 		switch (key) {
 		case VK_SPACE:  // It's not a cursor but it looks like it
-			selectFile(index, index);  // Through
+			selectFile(index, index);
+			[[fallthrough]];
 		case VK_DOWN:
 			index++;
 			if (index >= files.Count()) index = 0;
@@ -916,7 +939,7 @@ public:
 	}
 
 	// Find the position of the popup
-	POINT popupPt(Document::ListType w, int index, UINT &f) {
+	POINT popupPt(Document::ListType w, int index, UINT &f) noexcept {
 		f = TPM_RETURNCMD;
 		RECT r;
 		::GetWindowRect(hWnd_, &r);
@@ -954,6 +977,9 @@ public:
 
 	// Window size position adjustment
 	void Updated() override {
+		search_.ClearKey();
+		::SetWindowText(hWnd_, WINDOW_NAME);
+
 		setScrollListTopIndex(ht_.index());
 		setCursorIndex(-1, Document::ListType::FILE);
 		scrollListLineNum_ = (listRect_.bottom - doc_.GetNavis().Count() * cyItem_) / cyItem_;

@@ -13,7 +13,7 @@
 
 const wchar_t MUTEX[]       = _T("TRACKER5_21_5");
 const wchar_t CLASS_NAME[]  = _T("Tracker");
-const wchar_t WINDOW_NAME[] = _T("Tracker");
+extern const wchar_t WINDOW_NAME[] = _T("Tracker");
 
 
 int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
