@@ -3,7 +3,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-15
  *
  */
 
@@ -96,7 +96,7 @@ class PopupMenu {
 	}
 
 	// Search for specified accelerator command from menu item of INI file
-	bool searchMenu(const std::wstring &sec, TCHAR accel, std::wstring &cmd) {
+	bool searchMenu(const std::wstring &sec, wchar_t accel, std::wstring &cmd) {
 		std::wstring a, def;
 
 		a.assign(_T("&")).append(1, accel);  // Make search string
@@ -150,7 +150,7 @@ public:
 	}
 
 	// Get command from accelerator
-	bool getAccelCommand(int type, TCHAR acce, std::wstring& cmd) {
+	bool getAccelCommand(int type, wchar_t acce, std::wstring& cmd) {
 		bool ret = false;
 
 		if (type) {  // When a menu number is specified

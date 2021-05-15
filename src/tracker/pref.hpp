@@ -3,7 +3,7 @@
  * Preference (Reading and writing INI file)
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-15
  *
  */
 
@@ -60,8 +60,8 @@ public:
 
 		// When a normal INI file exists and there is no INI file for the current user
 		if (FileSystem::is_existing(normalPath) && !FileSystem::is_existing(iniPath_)) {
-			::CreateDirectory(path.c_str(), nullptr);  // Make a directory
-			::CopyFile(normalPath.c_str(), iniPath_.c_str(), TRUE);  // Copy
+			FileSystem::create_directory(path);
+			FileSystem::copy_file(normalPath, iniPath_);
 		}
 	}
 

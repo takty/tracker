@@ -3,7 +3,7 @@
  * Window Utilities
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-15
  *
  */
 
@@ -29,9 +29,10 @@ public:
 		const int sh = ::GetSystemMetrics(SM_CYSCREEN);
 
 		if (wr.left <= 0 && wr.top <= 0 && sw <= wr.right && sh <= wr.bottom) {
-			TCHAR cn[256]{};
-			::GetClassName(fw, &cn[0], 256);
-			if (::lstrcmp(&cn[0], _T("Progman")) != 0 && ::lstrcmp(&cn[0], _T("WorkerW")) != 0) return true;
+			std::array<wchar_t, 255> temp{};
+			::GetClassName(fw, temp.data(), 256);
+			std::wstring cn{ temp.begin(), temp.end() };
+			if (cn.find(L"Progman") == std::string::npos && cn.find(L"WorkerW") == std::string::npos) return true;
 		}
 		return false;
 	}
@@ -83,7 +84,7 @@ public:
 		return dpi;
 	}
 
-	static void DrawGrayText(HDC dc, RECT r, const TCHAR* str) noexcept {
+	static void DrawGrayText(HDC dc, RECT r, const wchar_t* str) noexcept {
 		::SetBkMode(dc, TRANSPARENT);
 		r.left += 2, r.top += 1;
 		::SetTextColor(dc, GetSysColor(COLOR_HIGHLIGHTTEXT));

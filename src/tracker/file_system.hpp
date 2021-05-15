@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-15
  *
  */
 
@@ -93,6 +93,10 @@ public:
 		return ret;
 	}
 
+
+	// ------------------------------------------------------------------------
+
+
 	// Check whether there is an execution file that has the same name as the name of path
 	static bool is_existing_same_name_execution_file(const std::wstring& path) {
 		bool ret = false;
@@ -126,6 +130,10 @@ public:
 		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
 		return attr != INVALID_FILE_ATTRIBUTES;
 	}
+
+
+	// ------------------------------------------------------------------------
+
 
 	// Get desktop directory path
 	static std::wstring desktop_path() {
@@ -162,6 +170,10 @@ public:
 		return std::wstring(buf.data());
 	}
 
+
+	// ------------------------------------------------------------------------
+
+
 	// Get drive size
 	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) noexcept {
 		::GetDiskFreeSpaceEx(path.c_str(), (PULARGE_INTEGER)&free, (PULARGE_INTEGER)&size, nullptr);
@@ -180,6 +192,10 @@ public:
 		return calc_file_size_internally(path, size, limitTime);
 	}
 
+
+	// ------------------------------------------------------------------------
+
+
 	// Template version of find first file
 	template<typename F> static bool find_first_file(const std::wstring& path, F fn) {
 		auto parent{ path };
@@ -195,6 +211,18 @@ public:
 		} while (::FindNextFile(sh, &wfd));
 		::FindClose(sh);
 		return true;
+	}
+
+
+	// ------------------------------------------------------------------------
+
+
+	static bool create_directory(const std::wstring& path) {
+		return ::CreateDirectory(path.c_str(), nullptr) != 0;
+	}
+
+	static bool copy_file(const std::wstring& from, const std::wstring& to, bool fail_if_exists = true) {
+		return ::CopyFile(from.c_str(), to.c_str(), fail_if_exists) != 0;
 	}
 
 };

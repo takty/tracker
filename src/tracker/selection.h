@@ -3,7 +3,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-15
  *
  */
 
@@ -265,9 +265,9 @@ public:
 		auto npath = objects_.at(0) + L"\\NewFolder";
 		auto newPath = FileSystem::unique_name(npath);
 
-		const BOOL ret = ::CreateDirectory(newPath.c_str(), nullptr);
+		const bool ret = FileSystem::create_directory(newPath);
 		if (ret) RequestUpdate();
-		return ret == TRUE;
+		return ret;
 	}
 
 	// Delete

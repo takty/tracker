@@ -3,7 +3,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-15
  *
  */
 
@@ -344,10 +344,9 @@ public:
 
 	// Draw a separator
 	void drawSeparator(HDC dc, RECT r, bool isHier) {
-		TCHAR str[4]{};
 		const std::wstring sortBy{ L"nedsNEDS" };
-		SIZE font;
 		const ItemList& files = doc_.GetFiles();
+		SIZE font;
 
 		::FillRect(dc, &r, (HBRUSH)(COLOR_MENU + 1));
 		::SelectObject(dc, hItemFont_);  // Font selection (do here because we measure the size below)
@@ -362,16 +361,16 @@ public:
 			}
 			num.append(std::to_wstring(files.Count()));
 			::GetTextExtentPoint32(dc, num.c_str(), num.size(), &font);
-			RECT nr = r;
+			RECT nr{ r };
 			nr.left = nr.right - font.cx - 3;
 			WindowUtils::DrawGrayText(dc, nr, num.c_str());
 			r.right = nr.left - 1;
 			const size_t idx = doc_.GetOpt().GetSortType() + doc_.GetOpt().GetSortOrder() * 4;
-			str[0] = sortBy.at(idx), str[1] = _T('\0');
+			const std::wstring str{ sortBy.at(idx) };
 
 			r.left += 3;
-			WindowUtils::DrawGrayText(dc, r, &str[0]);
-			::GetTextExtentPoint32(dc, &str[0], ::_tcslen(&str[0]), &font);
+			WindowUtils::DrawGrayText(dc, r, str.c_str());
+			::GetTextExtentPoint32(dc, str.c_str(), str.size(), &font);
 			r.left = font.cx + 2;
 		}
 		if (doc_.InHistory()) {
@@ -425,7 +424,7 @@ public:
 
 	// Draw a mark
 	void drawMark(HDC dc, RECT r, IconType type, int color, bool cur, bool sel, bool dir) noexcept {
-		const TCHAR *c = nullptr;
+		const wchar_t *c = nullptr;
 		RECT rl = r, rr = r;
 
 		rl.right = cxSide_, rr.left = r.right - cxSide_;
@@ -694,7 +693,7 @@ public:
 				action(COM_SHELL_MENU, listCursorSwitch_, listCursorIndex_);
 			}
 			else if (L'A' <= key && key <= L'Z') {
-				accelerator(static_cast<char>(key), listCursorSwitch_, listCursorIndex_);
+				accelerator(static_cast<wchar_t>(key), listCursorSwitch_, listCursorIndex_);
 			}
 		}
 		else if (key == VK_APPS || key == VK_DELETE || key == VK_RETURN) {
@@ -843,7 +842,7 @@ public:
 	}
 
 	// Execution of command by accelerator
-	void accelerator(char accelerator, Document::ListType w, int index) {
+	void accelerator(wchar_t accelerator, Document::ListType w, int index) {
 		doc_.SetOperator(index, w, ope_);
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto &ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
