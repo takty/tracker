@@ -86,7 +86,7 @@ public:
 		ret.append(1, Path::PATH_SEPARATOR).append(name).append(post).append(ext);
 
 		for (int i = 1;; ++i) {
-			if (!is_existing(ret)) break;
+			if (!exists(ret)) break;
 			auto count = L"(" + std::to_wstring(i) + L")";
 			ret.assign(path).append(1, Path::PATH_SEPARATOR).append(name).append(post).append(count).append(ext);
 		}
@@ -126,7 +126,7 @@ public:
 	}
 
 	// Check whether the file of the path is existing
-	static bool is_existing(const std::wstring& path) {
+	static bool exists(const std::wstring& path) {
 		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
 		return attr != INVALID_FILE_ATTRIBUTES;
 	}

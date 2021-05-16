@@ -3,7 +3,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2021-05-15
+ * @version 2021-05-16
  *
  */
 
@@ -31,9 +31,9 @@ class PopupMenu {
 
 		canPaste(paste, pasteShortcut);
 		for (int i = 0; i < 32; ++i) {
-			auto name = pref_.item(sec, L"Name" + std::to_wstring(i + 1), def);
+			auto name = pref_.get(sec, L"Name" + std::to_wstring(i + 1), def);
 			if (name.empty()) continue;
-			auto path = pref_.item(sec, L"Path" + std::to_wstring(i + 1), def);
+			auto path = pref_.get(sec, L"Path" + std::to_wstring(i + 1), def);
 			if (name.size() == 2 && name.at(0) == '&') continue;  // Hidden item
 			if (i == 0 && items.size() > 0) {  // When connecting to another menu
 				::AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
@@ -101,9 +101,9 @@ class PopupMenu {
 
 		a.assign(_T("&")).append(1, accel);  // Make search string
 		for (int i = 0; i < 32; i++) {
-			auto name = pref_.item(sec, L"Name" + std::to_wstring(i + 1), def);
+			auto name = pref_.get(sec, L"Name" + std::to_wstring(i + 1), def);
 			if (name.empty()) continue;
-			auto path = pref_.item(sec, L"Path" + std::to_wstring(i + 1), def);
+			auto path = pref_.get(sec, L"Path" + std::to_wstring(i + 1), def);
 			if (name.find(a) != std::wstring::npos) {  // Find
 				cmd.assign(path);
 				return true;

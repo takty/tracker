@@ -3,7 +3,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2021-05-15
+ * @version 2021-05-16
  *
  */
 
@@ -55,7 +55,9 @@ class View : public Observer {
 	int scrollListLineNum_ = 0;
 	RECT listRect_;
 
-	Pref pref_;
+	Pref pref_{L"settings.ini"};
+	Pref bookmarkData_{L"bookmark.dat"};
+	Pref historyData_{L"history.dat"};
 	int popupPos_;
 	bool fullScreenCheck_;
 
@@ -91,7 +93,7 @@ public:
 		return ::CallWindowProc((WNDPROC)::GetWindowLong(hMenu, GWL_USERDATA), hMenu, msg, wp, lp);
 	}
 
-	View(const HWND hWnd) : doc_(extentions_, pref_, SEPA, (SEPA | HIER)), ope_(extentions_, pref_), re_(WM_RENAMEEDITCLOSED) {
+	View(const HWND hWnd) : doc_(extentions_, pref_, bookmarkData_, historyData_, SEPA, (SEPA | HIER)), ope_(extentions_, pref_), re_(WM_RENAMEEDITCLOSED) {
 		doc_.SetView(this);
 
 		hWnd_ = hWnd;
@@ -104,8 +106,12 @@ public:
 		dpiFactX_ = dpi.x / 96.0;
 		dpiFactY_ = dpi.y / 96.0;
 
-		// Whether to make multi-user (call first)
-		if (pref_.item_int(SECTION_WINDOW, KEY_MULTI_USER, VAL_MULTI_USER)) pref_.set_multi_user_mode();
+		// Whether to make multiple user (call first)
+		if (pref_.get(SECTION_WINDOW, KEY_MULTIPLE_USER, VAL_MULTIPLE_USER)) {
+			pref_.enable_multiple_user_mode();
+			bookmarkData_.enable_multiple_user_mode();
+			historyData_.enable_multiple_user_mode();
+		}
 		loadPropData(true);  // Read and set from Ini file
 
 		::SetTimer(hWnd_, 1, 300, nullptr);
@@ -113,25 +119,25 @@ public:
 
 	// Read INI file
 	void loadPropData(const bool firstTime) {
-		pref_.set_current_section(SECTION_WINDOW);
+		//pref_.set_current_section(SECTION_WINDOW);
 
-		cxSide_      = static_cast<int>(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
-		cyItem_      = static_cast<int>(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
+		cxSide_      = static_cast<int>(pref_.get(SECTION_WINDOW, KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
+		cyItem_      = static_cast<int>(pref_.get(SECTION_WINDOW, KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
 		cxScrollBar_ = static_cast<int>(6 * dpiFactX_);
 
-		popupPos_        = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
-		fullScreenCheck_ = pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
+		popupPos_        = pref_.get(SECTION_WINDOW, KEY_POPUP_POSITION, VAL_POPUP_POSITION);
+		fullScreenCheck_ = pref_.get(SECTION_WINDOW, KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
 
-		const int width  = static_cast<int>(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
-		const int height = static_cast<int>(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
+		const int width  = static_cast<int>(pref_.get(SECTION_WINDOW, KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
+		const int height = static_cast<int>(pref_.get(SECTION_WINDOW, KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
 
-		std::wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
-		std::wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
+		std::wstring defOpener = pref_.get(SECTION_WINDOW, KEY_NO_LINKED, VAL_NO_LINKED);
+		std::wstring hotKey    = pref_.get(SECTION_WINDOW, KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
 
-		std::wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
-		const int fontSize = static_cast<int>(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
+		std::wstring fontName = pref_.get(SECTION_WINDOW, KEY_FONT_NAME, VAL_FONT_NAME);
+		const int fontSize = static_cast<int>(pref_.get(SECTION_WINDOW, KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
 
-		const bool useMigemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
+		const bool useMigemo = pref_.get(SECTION_WINDOW, KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
 
 		::MoveWindow(hWnd_, 0, 0, width, height, FALSE);
 		::ShowWindow(hWnd_, SW_SHOW);  // Once display, and calculate the size etc.
@@ -172,9 +178,11 @@ public:
 
 		RECT rw;
 		GetWindowRect(hWnd_, &rw);
-		pref_.set_current_section(SECTION_WINDOW);
-		pref_.set_item_int(KEY_WIDTH, static_cast<int>(((__int64)rw.right  - rw.left) / dpiFactX_));
-		pref_.set_item_int(KEY_HEIGHT, static_cast<int>(((__int64)rw.bottom - rw.top)  / dpiFactY_));
+		//pref_.set_current_section(SECTION_WINDOW);
+		pref_.set(SECTION_WINDOW, KEY_WIDTH, static_cast<int>(((__int64)rw.right  - rw.left) / dpiFactX_));
+		pref_.set(SECTION_WINDOW, KEY_HEIGHT, static_cast<int>(((__int64)rw.bottom - rw.top)  / dpiFactY_));
+		pref_.set(SECTION_WINDOW, L"TestKey", 256);
+		pref_.store();
 
 		doc_.Finalize();
 		::UnregisterHotKey(hWnd_, IDHK);  // Cancel hot key
@@ -441,6 +449,13 @@ public:
 		::SetTextColor(dc, ::GetSysColor(cur ? COLOR_HIGHLIGHTTEXT : COLOR_MENUTEXT));
 		if (sel) ::DrawText(dc, _T("a"), 1, &rl, 0x0025);
 		if (dir) ::DrawText(dc, _T("4"), 1, &rr, 0x0025);
+	}
+
+	void wmActivateApp(bool isActive) {
+		if (!isActive && ::GetCapture() != hWnd_) {
+			::ShowWindow(hWnd_, SW_HIDE);
+			//pref_.store();
+		}
 	}
 
 	void wmTimer() {

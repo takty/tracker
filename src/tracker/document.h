@@ -3,7 +3,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-16
  *
  */
 
@@ -40,7 +40,9 @@ private:
 
 	Observer* view_;
 	const TypeTable& extentions_;
-	Pref& pref_;
+	Pref & pref_;
+	Pref & bookmarkData_;
+	Pref & historyData_;
 
 	Bookmark fav_;
 	History  his_;
@@ -105,7 +107,7 @@ private:
 			for (int i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));
 		} else {
 			while (!currentPath_.empty()) {  // Go back to the folder where the file exists
-				if (FileSystem::is_existing(currentPath_)) break;
+				if (FileSystem::exists(currentPath_)) break;
 				currentPath_ = Path::parent(currentPath_);
 			}
 			if (!currentPath_.empty()) SetNormalFolder(currentPath_);  // Folder found
@@ -119,7 +121,9 @@ private:
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extentions_(exts), pref_(pref) {
+	Document(const TypeTable& exts, Pref& pref, Pref& bookmarkData, Pref& historyData, int special_separator_option_data, int hierarchy_separator_option_data)
+		: extentions_(exts), pref_(pref), bookmarkData_(bookmarkData), historyData_(historyData)
+	{
 		special_separator_option_data_ = special_separator_option_data;
 		hierarchy_separator_option_data_ = hierarchy_separator_option_data;
 		currentPath_ = dri_.PATH;
@@ -133,14 +137,14 @@ public:
 		his_.initialize(pref_);
 		if (firstTime) {
 			opt_.Restore(pref_);
-			fav_.restore(pref_);
-			his_.restore(pref_);
+			fav_.restore(bookmarkData_);
+			his_.restore(historyData_);
 		}
 	}
 
 	void Finalize() {
-		fav_.store(pref_);
-		his_.store(pref_);
+		fav_.store(bookmarkData_);
+		his_.store(historyData_);
 		opt_.Store(pref_);
 	}
 

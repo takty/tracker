@@ -3,7 +3,7 @@
  * Document Options
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-16
  *
  */
 
@@ -30,24 +30,24 @@ public:
 	enum {sbName, sbType, sbDate, sbSize};  // Sort type
 
 	void Restore(Pref& pref) {
-		pref.set_current_section(SECTION_WINDOW);
-		showHidden_ = pref.item_int(KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
-		sortRev_    = pref.item_int(KEY_SORT_REV,    VAL_SORT_REV)    != 0;
-		sortBy_     = pref.item_int(KEY_SORT_BY,     VAL_SORT_BY);
+		//pref.set_current_section(SECTION_WINDOW);
+		showHidden_ = pref.get(SECTION_WINDOW, KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
+		sortRev_    = pref.get(SECTION_WINDOW, KEY_SORT_REV,    VAL_SORT_REV)    != 0;
+		sortBy_     = pref.get(SECTION_WINDOW, KEY_SORT_BY,     VAL_SORT_BY);
 
-		sortHis_    = pref.item_int(KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
-		sortHisRev_ = pref.item_int(KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
-		sortHisBy_  = pref.item_int(KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
+		sortHis_    = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
+		sortHisRev_ = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
+		sortHisBy_  = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
 	}
 
 	void Store(Pref& pref) {
-		pref.set_item_int(SECTION_WINDOW, KEY_SHOW_HIDDEN, showHidden_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_REV,    sortRev_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_BY,     sortBy_);
+		pref.set(SECTION_WINDOW, KEY_SHOW_HIDDEN, showHidden_);
+		pref.set(SECTION_WINDOW, KEY_SORT_REV,    sortRev_);
+		pref.set(SECTION_WINDOW, KEY_SORT_BY,     sortBy_);
 
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY,     sortHis_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sortHisRev_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sortHisBy_);
+		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY,     sortHis_);
+		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sortHisRev_);
+		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sortHisBy_);
 	}
 
 	int GetSortType() noexcept {

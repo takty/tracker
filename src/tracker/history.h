@@ -3,7 +3,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-16
  *
  */
 
@@ -30,15 +30,15 @@ public:
 	History() noexcept(false) {}
 
 	void initialize(Pref& pref) noexcept {
-		max_size_ = pref.item_int(KEY_MAX_HISTORY, VAL_MAX_HISTORY);
+		max_size_ = pref.get(SECTION_HISTORY, KEY_MAX_HISTORY, VAL_MAX_HISTORY);
 	}
 
-	void restore(Pref& pref) {
-		paths_ = pref.items<std::vector<std::wstring>>(SECTION_HISTORY, KEY_FILE, MAX_HISTORY);
+	void restore(Pref& data) {
+		paths_ = data.load_lines<std::vector<std::wstring>>();
 	}
 
-	void store(Pref& pref) {
-		pref.set_items(paths_, SECTION_HISTORY, KEY_FILE);
+	void store(Pref& data) {
+		data.save_lines(paths_);
 	}
 
 	int size() noexcept {
@@ -63,7 +63,7 @@ public:
 
 	void clean_up() {
 		// Delete a nonexistent path
-		paths_.erase(remove_if(paths_.begin(), paths_.end(), [](std::wstring& p) {return !FileSystem::is_existing(p); }), paths_.end());
+		paths_.erase(remove_if(paths_.begin(), paths_.end(), [](std::wstring& p) {return !FileSystem::exists(p); }), paths_.end());
 	}
 
 	void clear() noexcept {

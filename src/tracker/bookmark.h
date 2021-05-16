@@ -3,7 +3,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-16
  *
  */
 
@@ -13,7 +13,7 @@
 #include <vector>
 #include <string>
 
-#include "Pref.hpp"
+#include "pref.hpp"
 
 
 class Bookmark {
@@ -26,12 +26,12 @@ public:
 
 	Bookmark() noexcept(false) {}
 
-	void restore(Pref& pref) {
-		paths_ = pref.items<std::vector<std::wstring>>(SECTION_BOOKMARK, KEY_FILE, MAX_BOOKMARK);
+	void restore(Pref& data) {
+		paths_ = data.load_lines<std::vector<std::wstring>>();
 	}
 
-	void store(Pref& pref) {
-		pref.set_items(paths_, SECTION_BOOKMARK, KEY_FILE);
+	void store(Pref& data) {
+		data.save_lines(paths_);
 	}
 
 	int size() noexcept {

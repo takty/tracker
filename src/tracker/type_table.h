@@ -3,7 +3,7 @@
  * Table for Managing File Types
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-16
  *
  */
 
@@ -13,7 +13,7 @@
 #include <map>
 #include <string>
 
-#include "Pref.hpp"
+#include "pref.hpp"
 
 
 class TypeTable {
@@ -61,12 +61,11 @@ public:
 	TypeTable() noexcept(false) {}
 
 	void restore(Pref& pref) {
-		pref.set_current_section(EXT_SECTION);
 		ext_to_id_.clear();  // Because it may be called many times
 		id_to_color_.clear();
 
 		for (int i = 0; i < 32; ++i) {  // Allow up to 32 extension groups
-			auto ext = pref.item(EXT_KEY + std::to_wstring(i + 1), EMPTY);
+			auto ext = pref.get(EXT_SECTION, EXT_KEY + std::to_wstring(i + 1), EMPTY);
 			if (ext.empty()) continue;
 
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::towlower);  // Lower case
@@ -76,7 +75,7 @@ public:
 				cur = next + 1;
 			}
 			ext_to_id_[ext.substr(cur)] = i;
-			auto hex = pref.item(COLOR_KEY + std::to_wstring(i + 1), L"");
+			auto hex = pref.get(EXT_SECTION, COLOR_KEY + std::to_wstring(i + 1), L"");
 			id_to_color_[i] = convert_hex_to_color(hex);
 		}
 	}
@@ -105,7 +104,7 @@ public:
 	bool get_command(const Pref& pref, const std::wstring& ext, std::wstring& cmd) const {
 		const int type = get_id(ext) + 1;
 		if (type) {
-			cmd = pref.item(L"Extention", L"OpenBy" + std::to_wstring(type), L"");
+			cmd = pref.get(L"Extention", L"OpenBy" + std::to_wstring(type), L"");
 			return !cmd.empty();
 		}
 		return false;

@@ -3,7 +3,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-16
  *
  */
 
@@ -76,7 +76,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_WINDOWPOSCHANGING: view->wmWindowPosChanging((LPWINDOWPOS)lp); break;
 	case WM_SIZE:              view->wmSize(LOWORD(lp), HIWORD(lp)); break;
 	case WM_PAINT:             view->wmPaint(); break;
-	case WM_ACTIVATEAPP:       if (!(BOOL)wp && ::GetCapture() != hWnd) ::ShowWindow(hWnd, SW_HIDE);  break;
+	case WM_ACTIVATEAPP:       view->wmActivateApp((BOOL)wp == TRUE); break;
 	case WM_TIMER:             view->wmTimer(); break;
 	case WM_HOTKEY:            view->wmHotKey(wp); break;
 	case WM_SHOWWINDOW:        view->wmShowWindow((BOOL)wp); break;

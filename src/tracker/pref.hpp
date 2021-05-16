@@ -1,9 +1,9 @@
 /**
  *
- * Preference (Reading and writing INI file)
+ * Preference (Reading and writing file)
  *
  * @author Takuto Yanagida
- * @version 2021-05-15
+ * @version 2021-05-16
  *
  */
 
@@ -13,7 +13,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
-
+#include <fstream>
+#include <locale>
 #include <windows.h>
 
 #include "file_utils.hpp"
@@ -21,146 +22,212 @@
 
 class Pref {
 
-	std::wstring iniPath_;
-	std::wstring curSec_;
-
 	static std::wstring get_user_name() {
-		DWORD bufLen = MAX_PATH;
-		std::vector<wchar_t> buf(bufLen);
+		DWORD len{ MAX_PATH };
+		std::vector<wchar_t> buf(len);
 
 		while (true) {
-			::GetUserName(buf.data(), &bufLen);
+			::GetUserNameW(buf.data(), &len);
 			if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) break;
-			bufLen *= 2;
-			buf.resize(bufLen);
 		}
-		return std::wstring{ buf.data() };
+		return std::wstring{ buf.data(), len - 1 };  // The len contains '\0'
+	}
+
+	static std::wstring trim(const std::wstring& str, const wchar_t* chars = L" \t\v\r\n") {
+		auto left = str.find_first_not_of(chars);
+		if (left == std::string::npos) {
+			return {};
+		}
+		auto right = str.find_last_not_of(chars);
+		return str.substr(left, right - left + 1);
+	}
+
+
+	// ------------------------------------------------------------------------
+
+
+	std::wstring file_path_{};
+	std::vector<std::wstring> cache_{};
+	std::wstring last_section_{};
+	int last_section_index_{};
+
+	int get_section_index(const std::wstring& sec) {
+		if (last_section_ == sec) {
+			return last_section_index_;
+		}
+		last_section_index_ = -1;
+		const auto s = L"[" + sec + L"]";
+		for (auto i = 0U; i < cache_.size(); ++i) {
+			auto line = trim(cache_[i]);
+			if (line == s) {
+				last_section_index_ = i + 1;
+				break;
+			}
+		}
+		if (last_section_index_ != -1) {
+			last_section_ = sec;
+		}
+		return last_section_index_;
+	}
+
+	std::wstring retreive_item(const std::wstring& sec, const std::wstring& key, const std::wstring& def = L"") {
+		if (cache_.empty()) {
+			cache_ = load_lines<std::vector<std::wstring>>();
+		}
+		const int sidx = get_section_index(sec);
+		if (sidx == -1) return def;
+
+
+		for (auto i = size_t(sidx); i < cache_.size(); ++i) {
+			auto line = trim(cache_[i]);
+			if (line.empty()) {
+				continue;
+			}
+			if (line.front() == L'[') {
+				return def;
+			}
+			if (line.compare(0, key.size(), key) != 0) {
+				continue;
+			}
+			auto pos = line.find_first_not_of(L" \t\v\r\n", key.size());
+			if (pos != std::string::npos && line.at(pos) == L'=') {
+				return trim(line.substr(pos + 1));
+			}
+		}
+		return def;
+	}
+
+	void assign_item(const std::wstring& sec, const std::wstring& key, const std::wstring& val) {
+		if (cache_.empty()) {
+			cache_ = load_lines<std::vector<std::wstring>>();
+		}
+		const int sidx = get_section_index(sec);
+		if (sidx == -1) {
+			cache_.push_back(L"[" + sec + L"]");
+			cache_.push_back(key + L"=" + val);
+			last_section_.clear();
+			last_section_index_ = -1;
+			return;
+		}
+		for (auto i = size_t(sidx); i < cache_.size(); ++i) {
+			auto line = trim(cache_[i]);
+			if (line.empty()) {
+				continue;
+			}
+			if (line.front() == L'[') {
+				cache_.insert(cache_.begin() + i, key + L"=" + val);
+				last_section_.clear();
+				last_section_index_ = -1;
+				return;
+			}
+			if (line.compare(0, key.size(), key) != 0) {
+				continue;
+			}
+			auto pos = line.find_first_not_of(L" \t\v\r\n", key.size());
+			if (pos != std::string::npos && line.at(pos) == L'=') {
+				cache_.at(i) = key + L"=" + val;
+				return;
+			}
+		}
 	}
 
 public:
 
 	Pref() noexcept(false) {
-		iniPath_ = FileSystem::module_file_path();
-		iniPath_.insert(0, Path::UNC_PREFIX);  // To handle long paths
-		iniPath_.resize(iniPath_.size() - 3);
-		iniPath_.append(L"ini");
+		auto mp = FileSystem::module_file_path();
+		mp.insert(0, Path::UNC_PREFIX);  // To handle long paths
+		file_path_.assign(mp.begin(), mp.end() - 3).append(L"ini");
+		cache_ = load_lines<std::vector<std::wstring>>();
 	}
 
-	// Make INI file path for multi user
-	void set_multi_user_mode() {
-		// Save the path of the normal INI file
-		auto normalPath{ iniPath_ };
+	Pref(const std::wstring& file_name) noexcept(false) {
+		auto mp = FileSystem::module_file_path();
+		mp.insert(0, Path::UNC_PREFIX);  // To handle long paths
+		file_path_.assign(Path::parent(mp)).append(L"\\").append(file_name);
+	}
 
-		// Create INI file path for current user
-		auto name = Path::name(normalPath);
-		auto path = Path::parent(normalPath);
-		auto user = get_user_name();
-		path.append(L"\\").append(user);
-		iniPath_.assign(path).append(L"\\").append(name);
+	// Make the file path for multiple user
+	void enable_multiple_user_mode() {
+		auto orig{ file_path_ };
 
-		// When a normal INI file exists and there is no INI file for the current user
-		if (FileSystem::is_existing(normalPath) && !FileSystem::is_existing(iniPath_)) {
+		// Create a file path for current user
+		auto path = Path::parent(orig).append(L"\\").append(get_user_name());
+		file_path_.assign(path).append(L"\\").append(Path::name(orig));
+
+		// When a normal file exists and there is no file for the current user
+		if (FileSystem::exists(orig) && !FileSystem::exists(file_path_)) {
 			FileSystem::create_directory(path);
-			FileSystem::copy_file(normalPath, iniPath_);
+			FileSystem::copy_file(orig, file_path_);
 		}
 	}
 
-	// Get INI file path
-	const std::wstring& path() const noexcept { return iniPath_; }
+	// Get the file path
+	const std::wstring& path() const noexcept {
+		return file_path_;
+	}
 
-	// Set the current section
-	void set_current_section(const std::wstring& sec) { curSec_.assign(sec); }
-
-	// Get string item
-	std::wstring item(const wchar_t* sec, const wchar_t* key, const wchar_t* def) const {
-		std::vector<wchar_t> buf(MAX_PATH);
-
-		while (true) {
-			const auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), buf.size(), iniPath_.c_str());
-			if (outLen != buf.size() - 1) break;
-			buf.resize(buf.size() * 2);
+	void store() {
+		if (!cache_.empty()) {
+			save_lines(cache_);
 		}
-		return { buf.data() };
 	}
 
-	// Get string item
-	std::wstring item(const std::wstring& sec, const std::wstring& key, const std::wstring& def) const {
-		return item(sec.c_str(), key.c_str(), def.c_str());
-	}
+
+	// ------------------------------------------------------------------------
+
 
 	// Get string item
-	std::wstring item(const wchar_t* key, const wchar_t* def) const {
-		return item(curSec_.c_str(), key, def);
+	std::wstring get(const std::wstring& sec, const std::wstring& key, const std::wstring& def) const {
+		return const_cast<Pref*>(this)->retreive_item(sec, key, def);
 	}
 
-	// Get string item
-	std::wstring item(const std::wstring& key, const std::wstring& def) const {
-		return item(curSec_.c_str(), key.c_str(), def.c_str());
+	// Get integer item
+	int get(const std::wstring& sec, const std::wstring& key, int def) noexcept {
+		const auto temp = const_cast<Pref*>(this)->retreive_item(sec, key);
+		return temp.empty() ? def : std::stoi(temp);
 	}
 
 	// Write a string item
-	void set_item(const std::wstring& str, const std::wstring& sec, const std::wstring& key) noexcept {
-		::WritePrivateProfileString(sec.c_str(), key.c_str(), str.c_str(), iniPath_.c_str());
-	}
-
-	// Write a string item
-	void set_item(const std::wstring& str, const std::wstring& key) noexcept {
-		set_item(str, curSec_, key);
-	}
-
-	// Get integer item
-	int item_int(const wchar_t* sec, const wchar_t* key, int def) noexcept {
-		return ::GetPrivateProfileInt(sec, key, def, iniPath_.c_str());
-	}
-
-	// Get integer item
-	int item_int(const std::wstring& sec, const std::wstring& key, int def) noexcept {
-		return item_int(sec.c_str(), key.c_str(), def);
-	}
-
-	// Get integer item
-	int item_int(const wchar_t* key, int def) noexcept {
-		return item_int(curSec_.c_str(), key, def);
-	}
-
-	// Get integer item
-	int item_int(const std::wstring& key, int def) noexcept {
-		return item_int(curSec_.c_str(), key.c_str(), def);
+	void set(const std::wstring& str, const std::wstring& sec, const std::wstring& key) noexcept {
+		assign_item(sec, key, str);
 	}
 
 	// Write an integer item
-	void set_item_int(const std::wstring& sec, const std::wstring& key, int val) noexcept(false) {
-		::WritePrivateProfileString(sec.c_str(), key.c_str(), std::to_wstring(val).c_str(), iniPath_.c_str());
+	void set(const std::wstring& sec, const std::wstring& key, int val) noexcept(false) {
+		assign_item(sec, key, std::to_wstring(val));
 	}
 
-	// Write an integer item
-	void set_item_int(const std::wstring& key, int val) noexcept(false) {
-		set_item_int(curSec_, key, val);
-	}
 
-	// Get section content
-	template <typename Container> auto items(const std::wstring& sec, const std::wstring& key, int max) -> Container {
+	// ------------------------------------------------------------------------
+
+
+	template <typename Container> auto load_lines() -> Container {
 		Container c{};
-		std::wstring def;
-		for (int i = 0; i < max; ++i) {
-			auto temp = item(sec, key + std::to_wstring(i + 1), def);
-			if (temp.empty()) continue;
-			c.resize(c.size() + 1);
-			c.back() = temp;
+		std::wifstream fs(file_path_);
+		if (!fs.is_open()) {
+			return c;
 		}
+		fs.imbue(std::locale(".utf8", std::locale::ctype));
+
+		std::wstring line{};
+		while (std::getline(fs, line)) {
+			c.push_back(line);
+		}
+		fs.close();
 		return c;
 	}
 
-	// Write the content of the section
-	template <typename Container> void set_items(const Container& c, const std::wstring& sec, const std::wstring& key) {
-		::WritePrivateProfileString(sec.c_str(), nullptr, nullptr, iniPath_.c_str());
-		int i = 0;
-		for (const auto& it : c) {
-			std::wostringstream vss;
-			vss << it;
-			set_item(vss.str(), sec, key + std::to_wstring(i + 1));
-			i += 1;
+	template <typename Container> void save_lines(const Container& c) {
+		std::wofstream fs(file_path_);
+		if (!fs.is_open()) {
+			return;
 		}
+		fs.imbue(std::locale(".utf8", std::locale::ctype));
+
+		for (const auto& line : c) {
+			fs << line << std::endl;
+		}
+		fs.close();
 	}
 
 };

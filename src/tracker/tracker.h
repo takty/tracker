@@ -3,7 +3,7 @@
  * Common Header
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-15
  *
  */
 
@@ -31,7 +31,7 @@ const std::wstring SECTION_WINDOW(L"Window");
 	const std::wstring KEY_SORT_HISTORY_BY(L"SortHistoryBy");		constexpr int VAL_SORT_HISTORY_BY  = 1;
 	const std::wstring KEY_SORT_HISTORY_REV(L"SortHistoryRev");		constexpr int VAL_SORT_HISTORY_REV = 0;
 
-	const std::wstring KEY_MULTI_USER(L"MultiUser");				constexpr int VAL_MULTI_USER        = 0;
+	const std::wstring KEY_MULTIPLE_USER(L"MultipleUser");			constexpr int VAL_MULTIPLE_USER        = 0;
 	const std::wstring KEY_NO_LINKED(L"NoLinked");					const std::wstring VAL_NO_LINKED(L"");
 	const std::wstring KEY_POPUP_POSITION(L"PopupPosition");		constexpr int VAL_POPUP_POSITION    = 0;
 	const std::wstring KEY_SIDE_AREA_WIDTH(L"SideAreaWidth");		constexpr int VAL_SIDE_AREA_WIDTH   = 14;
