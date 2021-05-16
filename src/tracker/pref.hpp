@@ -34,11 +34,11 @@ class Pref {
 	}
 
 	static std::wstring trim(const std::wstring& str, const wchar_t* chars = L" \t\v\r\n") {
-		auto left = str.find_first_not_of(chars);
+		const auto left = str.find_first_not_of(chars);
 		if (left == std::string::npos) {
 			return {};
 		}
-		auto right = str.find_last_not_of(chars);
+		const auto right = str.find_last_not_of(chars);
 		return str.substr(left, right - left + 1);
 	}
 
@@ -47,39 +47,42 @@ class Pref {
 
 
 	std::wstring file_path_{};
-	std::vector<std::wstring> cache_{};
-	std::wstring last_section_{};
-	int last_section_index_{};
 
-	int get_section_index(const std::wstring& sec) {
+	mutable std::vector<std::wstring> cache_{};
+	bool is_modified_{ false };
+
+	mutable std::wstring last_section_{};
+	mutable size_t last_section_index_{};
+
+	size_t get_section_index(const std::wstring& sec) const {
 		if (last_section_ == sec) {
 			return last_section_index_;
 		}
-		last_section_index_ = -1;
+		last_section_index_ = 0U;
 		const auto s = L"[" + sec + L"]";
 		for (auto i = 0U; i < cache_.size(); ++i) {
-			auto line = trim(cache_[i]);
+			auto line = trim(cache_.at(i));
 			if (line == s) {
 				last_section_index_ = i + 1;
 				break;
 			}
 		}
-		if (last_section_index_ != -1) {
+		if (last_section_index_ != 0U) {
 			last_section_ = sec;
 		}
 		return last_section_index_;
 	}
 
-	std::wstring retreive_item(const std::wstring& sec, const std::wstring& key, const std::wstring& def = L"") {
+	std::wstring retreive_item(const std::wstring& sec, const std::wstring& key, const std::wstring& def = L"") const noexcept(false) {
 		if (cache_.empty()) {
 			cache_ = load_lines<std::vector<std::wstring>>();
 		}
-		const int sidx = get_section_index(sec);
-		if (sidx == -1) return def;
+		const auto sidx = get_section_index(sec);
+		if (sidx == 0U) return def;
 
 
-		for (auto i = size_t(sidx); i < cache_.size(); ++i) {
-			auto line = trim(cache_[i]);
+		for (auto i = sidx; i < cache_.size(); ++i) {
+			auto line = trim(cache_.at(i));
 			if (line.empty()) {
 				continue;
 			}
@@ -89,7 +92,7 @@ class Pref {
 			if (line.compare(0, key.size(), key) != 0) {
 				continue;
 			}
-			auto pos = line.find_first_not_of(L" \t\v\r\n", key.size());
+			const auto pos = line.find_first_not_of(L" \t\v\r\n", key.size());
 			if (pos != std::string::npos && line.at(pos) == L'=') {
 				return trim(line.substr(pos + 1));
 			}
@@ -101,31 +104,34 @@ class Pref {
 		if (cache_.empty()) {
 			cache_ = load_lines<std::vector<std::wstring>>();
 		}
-		const int sidx = get_section_index(sec);
-		if (sidx == -1) {
+		const auto sidx = get_section_index(sec);
+		if (sidx == 0U) {
 			cache_.push_back(L"[" + sec + L"]");
 			cache_.push_back(key + L"=" + val);
 			last_section_.clear();
-			last_section_index_ = -1;
+			last_section_index_ = 0U;
+			is_modified_ = true;
 			return;
 		}
-		for (auto i = size_t(sidx); i < cache_.size(); ++i) {
-			auto line = trim(cache_[i]);
+		for (auto i = sidx; i < cache_.size(); ++i) {
+			auto line = trim(cache_.at(i));
 			if (line.empty()) {
 				continue;
 			}
 			if (line.front() == L'[') {
 				cache_.insert(cache_.begin() + i, key + L"=" + val);
 				last_section_.clear();
-				last_section_index_ = -1;
+				last_section_index_ = 0U;
+				is_modified_ = true;
 				return;
 			}
 			if (line.compare(0, key.size(), key) != 0) {
 				continue;
 			}
-			auto pos = line.find_first_not_of(L" \t\v\r\n", key.size());
+			const auto pos = line.find_first_not_of(L" \t\v\r\n", key.size());
 			if (pos != std::string::npos && line.at(pos) == L'=') {
 				cache_.at(i) = key + L"=" + val;
+				is_modified_ = true;
 				return;
 			}
 		}
@@ -151,7 +157,7 @@ public:
 		auto orig{ file_path_ };
 
 		// Create a file path for current user
-		auto path = Path::parent(orig).append(L"\\").append(get_user_name());
+		const auto path{ Path::parent(orig).append(L"\\").append(get_user_name()) };
 		file_path_.assign(path).append(L"\\").append(Path::name(orig));
 
 		// When a normal file exists and there is no file for the current user
@@ -167,8 +173,9 @@ public:
 	}
 
 	void store() {
-		if (!cache_.empty()) {
+		if (!cache_.empty() && is_modified_) {
 			save_lines(cache_);
+			is_modified_ = false;
 		}
 	}
 
@@ -177,18 +184,18 @@ public:
 
 
 	// Get string item
-	std::wstring get(const std::wstring& sec, const std::wstring& key, const std::wstring& def) const {
-		return const_cast<Pref*>(this)->retreive_item(sec, key, def);
+	std::wstring get(const std::wstring& sec, const std::wstring& key, const std::wstring& def) const noexcept(false) {
+		return retreive_item(sec, key, def);
 	}
 
 	// Get integer item
-	int get(const std::wstring& sec, const std::wstring& key, int def) noexcept {
-		const auto temp = const_cast<Pref*>(this)->retreive_item(sec, key);
+	int get(const std::wstring& sec, const std::wstring& key, int def) const noexcept(false) {
+		const auto temp = retreive_item(sec, key);
 		return temp.empty() ? def : std::stoi(temp);
 	}
 
 	// Write a string item
-	void set(const std::wstring& str, const std::wstring& sec, const std::wstring& key) noexcept {
+	void set(const std::wstring& str, const std::wstring& sec, const std::wstring& key)  noexcept(false) {
 		assign_item(sec, key, str);
 	}
 
@@ -201,7 +208,7 @@ public:
 	// ------------------------------------------------------------------------
 
 
-	template <typename Container> auto load_lines() -> Container {
+	template <typename Container> Container load_lines() const {
 		Container c{};
 		std::wifstream fs(file_path_);
 		if (!fs.is_open()) {
@@ -217,7 +224,7 @@ public:
 		return c;
 	}
 
-	template <typename Container> void save_lines(const Container& c) {
+	template <typename Container> void save_lines(const Container& c) const {
 		std::wofstream fs(file_path_);
 		if (!fs.is_open()) {
 			return;

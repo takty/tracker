@@ -3,7 +3,7 @@
  * String Converter
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-16
  *
  */
 
@@ -20,7 +20,7 @@ class StringConverter {
 public:
 
 	static inline std::string to_ansi(const std::wstring& str) {
-		const int in_len = static_cast<int>(str.length());
+		const auto in_len{ str.length() };
 		const int out_len = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), in_len, nullptr, 0, nullptr, nullptr);
 		std::vector<char> buf(out_len);
 		if (out_len) {
@@ -31,7 +31,7 @@ public:
 	}
 
 	static inline std::wstring to_wide(const std::string& str) {
-		const int in_len = static_cast<int>(str.length());
+		const auto in_len{ str.length() };
 		const int out_len = ::MultiByteToWideChar(CP_THREAD_ACP, 0, str.c_str(), in_len, nullptr, 0);
 		std::vector<wchar_t> buf(out_len);
 		if (out_len) {

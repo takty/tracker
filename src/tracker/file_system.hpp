@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-15
+ * @version 2021-05-16
  *
  */
 
@@ -15,7 +15,7 @@
 #include <FileAPI.h>
 #include <Shlobj.h>
 
-#include "Path.hpp"
+#include "path.hpp"
 
 
 class FileSystem {
@@ -217,11 +217,11 @@ public:
 	// ------------------------------------------------------------------------
 
 
-	static bool create_directory(const std::wstring& path) {
+	static bool create_directory(const std::wstring& path) noexcept {
 		return ::CreateDirectory(path.c_str(), nullptr) != 0;
 	}
 
-	static bool copy_file(const std::wstring& from, const std::wstring& to, bool fail_if_exists = true) {
+	static bool copy_file(const std::wstring& from, const std::wstring& to, bool fail_if_exists = true) noexcept {
 		return ::CopyFile(from.c_str(), to.c_str(), fail_if_exists) != 0;
 	}
 
