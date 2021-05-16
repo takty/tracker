@@ -30,7 +30,6 @@ public:
 	enum {sbName, sbType, sbDate, sbSize};  // Sort type
 
 	void Restore(Pref& pref) {
-		//pref.set_current_section(SECTION_WINDOW);
 		showHidden_ = pref.get(SECTION_WINDOW, KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
 		sortRev_    = pref.get(SECTION_WINDOW, KEY_SORT_REV,    VAL_SORT_REV)    != 0;
 		sortBy_     = pref.get(SECTION_WINDOW, KEY_SORT_BY,     VAL_SORT_BY);

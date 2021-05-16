@@ -3,7 +3,7 @@
  * File Path Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-16
  *
  */
 
@@ -25,7 +25,7 @@ public:
 
 	static const wchar_t PATH_SEPARATOR   = L'\\';  // File path separator
 	static const wchar_t DRIVE_IDENTIFIER = L':';   // Drive identifier
-	static const wchar_t EXT_PREFIX       = L'.';   // Extention prefix
+	static const wchar_t EXT_PREFIX       = L'.';   // Extension prefix
 
 	constexpr static wchar_t const * const UNC_PREFIX = L"\\\\?\\";
 

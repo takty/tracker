@@ -119,8 +119,6 @@ public:
 
 	// Read INI file
 	void loadPropData(const bool firstTime) {
-		//pref_.set_current_section(SECTION_WINDOW);
-
 		cxSide_      = static_cast<int>(pref_.get(SECTION_WINDOW, KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
 		cyItem_      = static_cast<int>(pref_.get(SECTION_WINDOW, KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
 		cxScrollBar_ = static_cast<int>(6 * dpiFactX_);
@@ -178,10 +176,8 @@ public:
 
 		RECT rw;
 		GetWindowRect(hWnd_, &rw);
-		//pref_.set_current_section(SECTION_WINDOW);
 		pref_.set(SECTION_WINDOW, KEY_WIDTH, static_cast<int>(((__int64)rw.right  - rw.left) / dpiFactX_));
 		pref_.set(SECTION_WINDOW, KEY_HEIGHT, static_cast<int>(((__int64)rw.bottom - rw.top)  / dpiFactY_));
-		pref_.set(SECTION_WINDOW, L"TestKey", 256);
 		pref_.store();
 
 		doc_.Finalize();

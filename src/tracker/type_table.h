@@ -18,7 +18,7 @@
 
 class TypeTable {
 
-	const std::wstring EXT_SECTION{ L"Extention" };
+	const std::wstring EXT_SECTION{ L"Extension" };
 	const std::wstring EXT_KEY{ L"Ext" };
 	const std::wstring COLOR_KEY{ L"Color" };
 	const std::wstring EMPTY{ L"" };
@@ -104,7 +104,7 @@ public:
 	bool get_command(const Pref& pref, const std::wstring& ext, std::wstring& cmd) const {
 		const int type = get_id(ext) + 1;
 		if (type) {
-			cmd = pref.get(L"Extention", L"OpenBy" + std::to_wstring(type), L"");
+			cmd = pref.get(L"Extension", L"OpenBy" + std::to_wstring(type), L"");
 			return !cmd.empty();
 		}
 		return false;
