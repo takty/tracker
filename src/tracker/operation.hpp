@@ -3,7 +3,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-29
  *
  */
 
@@ -116,7 +116,7 @@ class Operation {
 		sei.lpParameters = opt;  // A nullptr and an empty string make difference
 		sei.lpDirectory  = nullptr;
 		sei.nShow        = SW_SHOW;
-		sei.hInstApp     = NULL;
+		sei.hInstApp     = nullptr;
 		if (::ShellExecuteEx(&sei) == TRUE) return true;
 
 		// Work around for executing files in OneDrive
