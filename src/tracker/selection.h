@@ -3,7 +3,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-15
+ * @version 2021-05-29
  *
  */
 
@@ -13,6 +13,8 @@
 #include <windows.h>
 #include <vector>
 #include <string>
+#include <format>
+#include <locale>
 
 #include "tracker.h"
 #include "file_utils.hpp"
@@ -130,40 +132,33 @@ class Selection {
 		}
 		const wchar_t* fmt{};
 		if (val < 1) {
-			fmt = L"%.3lf";
+			fmt = L"{:.3f}";
 		}
 		else if (val < 10) {
-			fmt = L"%.2lf";
+			fmt = L"{:.2f}";
 		}
 		else if (val < 100) {
-			fmt = L"%.1lf";
+			fmt = L"{:.1f}";
 		}
 		else {
-			fmt = L"%.0lf";
+			fmt = L"{:.0f}";
 		}
-		wchar_t temp[100]{};
-		swprintf_s(&temp[0], 100, fmt, val);
-
 		std::wstring dest{ prefix };
 		if (!success) dest.append(L">");
-		dest.append(&temp[0]);
-		dest.append(u);
-		if (f != 0 && f != 3) dest.append(L" (").append(Format(size)).append(L" Bytes)");
+		dest.append(std::format(fmt, val)).append(u);
+		if (f == 1 || f == 2) dest.append(L" (").append(Format(size)).append(L" Bytes)");
 		return dest;
 	}
 
 	// Generate a string representing the file's timestamp
-	std::wstring& FileTimeToStr(const FILETIME& time, const wchar_t* prefix, std::wstring& dest) {
+	std::wstring FileTimeToStr(const FILETIME& time, const wchar_t* prefix) const {
 		FILETIME local{};
 		SYSTEMTIME st{};
 
 		::FileTimeToLocalFileTime(&time, &local);
 		::FileTimeToSystemTime(&local, &st);
 
-		wchar_t temp[100]{};  // pre + 19 characters
-		swprintf_s(&temp[0], 100, L"%s%u-%02u-%02u (%02u:%02u:%02u)", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-		dest.assign(&temp[0]);
-		return dest;
+		return std::format(L"{:s}{:d}-{:02d}-{:02d} ({:02d}:{:02d}:{:02d})", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 	}
 
 public:
@@ -381,7 +376,6 @@ public:
 			items.push_back(usedStr.append(1, L'/').append(sizeStr));
 			items.push_back(FileSizeToStr(dFree, true, L"Free: "));
 		} else {  // When it is a normal file
-			std::wstring ctStr, mtStr;
 			uint64_t size;
 			bool const suc = FilesSize(size, ::GetTickCount64() + 1000);
 			items.push_back(FileSizeToStr(size, suc, L"Size:\t"));
@@ -392,8 +386,8 @@ public:
 				FILETIME ctime, mtime;
 				::GetFileTime(hf, &ctime, nullptr, &mtime);
 				::CloseHandle(hf);
-				items.push_back(FileTimeToStr(ctime, L"Created:\t", ctStr));
-				items.push_back(FileTimeToStr(mtime, L"Modified:\t", mtStr));
+				items.push_back(FileTimeToStr(ctime, L"Created:\t"));
+				items.push_back(FileTimeToStr(mtime, L"Modified:\t"));
 			}
 		}
 	}
