@@ -3,14 +3,14 @@
  * Comparator of File Items
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-29
  *
  */
 
 
 #pragma once
 
-#include "Item.h"
+#include "item.h"
 
 
 // Function Object for Comparing By Names

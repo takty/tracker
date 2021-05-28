@@ -3,7 +3,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -15,7 +15,7 @@
 #include <windows.h>
 #include <shlobj.h>
 
-#include "Path.hpp"
+#include "path.hpp"
 
 
 class Shell {

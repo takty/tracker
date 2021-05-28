@@ -3,13 +3,13 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
 
 #include "stdafx.h"
-#include "View.h"
+#include "view.h"
 
 const wchar_t MUTEX[]       = _T("TRACKER5_21_5");
 const wchar_t CLASS_NAME[]  = _T("Tracker");

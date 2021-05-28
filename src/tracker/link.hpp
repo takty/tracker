@@ -3,7 +3,7 @@
  * Shortcut File Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-29
  *
  */
 
@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include <Shlobj.h>
+#include <shlobj.h>
 
 #include "path.hpp"
 #include "file_system.hpp"

@@ -11,7 +11,6 @@
 #pragma once
 
 #include <string>
-
 #include <shlobj.h>
 
 #include "path.hpp"

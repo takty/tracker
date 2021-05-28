@@ -3,7 +3,7 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -11,7 +11,6 @@
 #pragma once
 
 #include <string>
-#include <tchar.h>
 #include <windows.h>
 #include <commctrl.h>
 

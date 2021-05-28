@@ -3,14 +3,14 @@
  * Window Utilities
  *
  * @author Takuto Yanagida
- * @version 2021-05-15
+ * @version 2021-05-29
  *
  */
 
 
 #pragma once
 
-#include "Windows.h"
+#include "windows.h"
 
 
 class WindowUtils {

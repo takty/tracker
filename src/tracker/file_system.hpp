@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
@@ -12,8 +12,8 @@
 
 #include <string>
 #include <vector>
-#include <FileAPI.h>
-#include <Shlobj.h>
+#include <fileapi.h>
+#include <shlobj.h>
 
 #include "path.hpp"
 

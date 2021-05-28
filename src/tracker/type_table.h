@@ -3,7 +3,7 @@
  * Table for Managing File Types
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
@@ -60,7 +60,7 @@ public:
 
 	TypeTable() noexcept(false) {}
 
-	void restore(Pref& pref) {
+	void restore(const Pref& pref) {
 		ext_to_id_.clear();  // Because it may be called many times
 		id_to_color_.clear();
 
