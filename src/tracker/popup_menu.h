@@ -3,7 +3,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
@@ -13,8 +13,9 @@
 #include <windows.h>
 #include <vector>
 #include <string>
+#include <iterator>
 
-#include "Pref.hpp"
+#include "pref.hpp"
 
 
 class PopupMenu {
@@ -138,7 +139,7 @@ public:
 		if (items.size()) {
 			const int id = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, hWnd_, nullptr);
 			ret = (0 < id);  // -1, 0 if not selected
-			int max{ static_cast<int>(std::forward<size_t>(items.size())) };
+			const int max{ std::ssize(items) };
 			if (0 < id && id <= max) {
 				cmd.assign(items.at(id - 1));  // Ordinary command
 			}

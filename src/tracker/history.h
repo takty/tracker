@@ -3,7 +3,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <iterator>
 
 #include "file_utils.hpp"
 #include "pref.hpp"
@@ -56,7 +57,7 @@ public:
 		paths_.erase(remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
 		paths_.insert(paths_.begin(), path);  // Add
 
-		if (static_cast<int>(paths_.size()) > max_size_) {  // Maximum number of history limit
+		if (std::ssize(paths_) > max_size_) {  // Maximum number of history limit
 			paths_.resize(max_size_);
 		}
 	}

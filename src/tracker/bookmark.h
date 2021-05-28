@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <string>
+#include <iterator>
 
 #include "pref.hpp"
 
@@ -26,11 +27,11 @@ public:
 
 	Bookmark() noexcept(false) {}
 
-	void restore(Pref& data) {
+	void restore(const Pref& data) {
 		paths_ = data.load_lines<std::vector<std::wstring>>();
 	}
 
-	void store(Pref& data) {
+	void store(const Pref& data) {
 		data.save_lines(paths_);
 	}
 
@@ -43,8 +44,8 @@ public:
 	}
 
 	bool arrange(int drag, int drop) {
-		if (drag < 0 || drag >= static_cast<int>(paths_.size())) return false;
-		if (drop < 0 || drop >= static_cast<int>(paths_.size())) return false;
+		if (drag < 0 || drag >= std::ssize(paths_)) return false;
+		if (drop < 0 || drop >= std::ssize(paths_)) return false;
 		std::wstring path(paths_.at(drag));
 		paths_.erase(paths_.begin() + drag);
 		paths_.insert(paths_.begin() + drop, path);
