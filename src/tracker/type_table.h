@@ -69,7 +69,7 @@ public:
 			if (ext.empty()) continue;
 
 			std::transform(ext.begin(), ext.end(), ext.begin(), ::towlower);  // Lower case
-			std::wstring::size_type cur = 0, next = 0;
+			size_t cur{}, next{};
 			while ((next = ext.find_first_of(EXT_DIV, cur)) != std::wstring::npos) {
 				ext_to_id_[ext.substr(cur, next - cur)] = i;
 				cur = next + 1;
