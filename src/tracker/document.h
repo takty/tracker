@@ -3,7 +3,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
@@ -34,7 +34,7 @@ class Document {
 
 public:
 
-	enum class ListType { FILE, HIER = 64 };
+	enum class ListType { FILE, NAVI = 64 };
 
 private:
 
@@ -56,7 +56,7 @@ private:
 	int hierarchy_separator_option_data_;
 
 	// Make a file list of ordinary folders
-	void SetNormalFolder(const std::wstring& path) {
+	void SetNormalFolder(const std::wstring& path) noexcept {
 		// Create hierarchical list
 		const auto last = navis_.Count();
 		std::wstring cur(path);
@@ -82,7 +82,7 @@ private:
 	}
 
 	// Make a file list
-	void MakeFileList() {
+	void MakeFileList() noexcept {
 		files_.Clear();
 		navis_.Clear();
 
@@ -121,7 +121,7 @@ private:
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, Pref& bookmarkData, Pref& historyData, int special_separator_option_data, int hierarchy_separator_option_data)
+	Document(const TypeTable& exts, Pref& pref, Pref& bookmarkData, Pref& historyData, int special_separator_option_data, int hierarchy_separator_option_data) noexcept
 		: extentions_(exts), pref_(pref), bookmarkData_(bookmarkData), historyData_(historyData)
 	{
 		special_separator_option_data_ = special_separator_option_data;
@@ -133,7 +133,7 @@ public:
 		view_ = view;
 	}
 
-	void Initialize(bool firstTime = true) {
+	void Initialize(bool firstTime = true) noexcept {
 		his_.initialize(pref_);
 		if (firstTime) {
 			opt_.Restore(pref_);
@@ -142,20 +142,20 @@ public:
 		}
 	}
 
-	void Finalize() {
+	void Finalize() noexcept {
 		fav_.store(bookmarkData_);
 		his_.store(historyData_);
 		opt_.Store(pref_);
 	}
 
-	void Update() {
+	void Update() noexcept {
 		navis_.ClearSelection();
 		files_.ClearSelection();
 		MakeFileList();
 		view_->Updated();
 	}
 
-	void SetCurrentDirectory(const std::wstring& path) {
+	void SetCurrentDirectory(const std::wstring& path) noexcept {
 		if (path != currentPath_) {
 			lastCurrentPath_.assign(currentPath_);
 			currentPath_.assign(path);
@@ -164,7 +164,7 @@ public:
 	}
 
 	// Move to lower folder
-	bool MoveToLower(ListType w, int index) {
+	bool MoveToLower(ListType w, int index) noexcept {
 		const Item* f = ((w == ListType::FILE) ? files_ : navis_)[index];
 		if (f->IsEmpty()) return false;
 
@@ -195,7 +195,7 @@ public:
 	}
 
 	// Check if it is possible to move to lower folder
-	bool MovableToLower(ListType w, int index) {
+	bool MovableToLower(ListType w, int index) noexcept {
 		const Item* f = ((w == ListType::FILE) ? files_ : navis_)[index];
 
 		if (f->IsEmpty()) return false;
@@ -206,7 +206,7 @@ public:
 	}
 
 	// Set operators for multiple selected files
-	Selection& SetOperator(int index, ListType type, Selection& ope) {
+	Selection& SetOperator(int index, ListType type, Selection& ope) noexcept {
 		ope.Clear();
 		if (index == -1) return ope;
 
@@ -229,25 +229,25 @@ public:
 	}
 
 	// Add to history
-	void SetHistory(const std::wstring& path) {
+	void SetHistory(const std::wstring& path) noexcept {
 		his_.add(path);
 	}
 
 	// Delete history
-	void ClearHistory() {
+	void ClearHistory() noexcept {
 		his_.clear();
 		Update();
 	}
 
 	// Sort favorite
-	bool ArrangeFavorites(int drag, int drop) {
+	bool ArrangeFavorites(int drag, int drop) noexcept {
 		if (drag == -1 || drop == -1 || drag == drop) return false;
 		if (!InBookmark()) return false;
 		return fav_.arrange(files_[drag]->Id(), files_[drop]->Id());
 	}
 
 	// Add to / Remove from Favorites
-	void AddOrRemoveFavorite(const std::wstring& obj, ListType w, int index) {
+	void AddOrRemoveFavorite(const std::wstring& obj, ListType w, int index) noexcept {
 		auto &vec = (w == ListType::FILE) ? files_ : navis_;
 
 		if (vec[index]->IsEmpty()) return;
@@ -260,7 +260,7 @@ public:
 	}
 
 	// Select file by range specification
-	void SelectFile(int front, int back, ListType type, bool all) noexcept(false) {
+	void SelectFile(int front, int back, ListType type, bool all) noexcept {
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		vec.Select(front, back, all);
 	}
@@ -300,7 +300,7 @@ public:
 	}
 
 	// Return file information
-	Item* GetItem(ListType w, int index) {
+	Item* GetItem(ListType w, int index) noexcept {
 		return (w == ListType::FILE) ? files_[index] : navis_[index];
 	}
 

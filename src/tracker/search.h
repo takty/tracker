@@ -3,7 +3,7 @@
  * Search Functions
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -34,27 +34,27 @@ public:
 
 	Search() noexcept {}
 
-	bool Initialize(bool useMigemo) {
+	bool Initialize(bool useMigemo) noexcept {
 		useMigemo_ = (useMigemo && migemo_.loadLibrary());
 		return useMigemo_;
 	}
 
-	const std::wstring& AddKey(wchar_t key) {
-		lastTime_ = GetTickCount64();
+	const std::wstring& AddKey(wchar_t key) noexcept {
+		lastTime_ = ::GetTickCount64();
 		str_.append(1, ::_totlower(key));
 		reserveFind_ = true;  // Flag the call to findFirst using a timer
 		return str_;
 	}
 
-	const std::wstring& RemoveKey() {
+	const std::wstring& RemoveKey() noexcept {
 		if (str_.empty()) return str_;
-		lastTime_ = GetTickCount64();
+		lastTime_ = ::GetTickCount64();
 		str_.resize(str_.size() - 1);
 		reserveFind_ = !str_.empty();  // Flag the call to findFirst using a timer
 		return str_;
 	}
 
-	void ClearKey() {
+	void ClearKey() noexcept {
 		str_.clear();
 		reserveFind_ = false;
 	}
@@ -67,7 +67,7 @@ public:
 		return false;
 	}
 
-	int FindFirst(int cursorIndex, const ItemList& items) {
+	int FindFirst(int cursorIndex, const ItemList& items) noexcept {
 		reserveFind_ = false;
 		if (useMigemo_) {
 			migemo_.query(str_, query_);
@@ -75,7 +75,7 @@ public:
 		return FindNext(cursorIndex, items);
 	}
 
-	int FindNext(int cursorIndex, const ItemList& items) {
+	int FindNext(int cursorIndex, const ItemList& items) noexcept {
 		bool restart = false;
 
 		int startIndex = cursorIndex + 1;

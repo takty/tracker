@@ -3,7 +3,7 @@
  * Item list
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -39,11 +39,11 @@ public:
 		return items_.size();
 	}
 
-	Item* operator[](int index) noexcept(false) {
+	Item* operator[](int index) noexcept {
 		return items_.at(index);
 	}
 
-	const Item* operator[](int index) const noexcept(false) {
+	const Item* operator[](int index) const noexcept {
 		return items_.at(index);
 	}
 

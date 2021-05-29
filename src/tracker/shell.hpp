@@ -37,7 +37,7 @@ public:
 				auto fname = Path::name(e);
 				if (Path::is_root(e)) fname += L'\\';
 				PITEMID_CHILD id{};
-				const auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, (LPWSTR)fname.c_str(), nullptr, &id, nullptr);
+				const auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, fname.data(), nullptr, &id, nullptr);
 				if (res == S_OK) ids_.push_back(id);
 			}
 		}
@@ -62,7 +62,7 @@ public:
 
 	};
 
-	static LPSHELLFOLDER get_shell_folder(const std::wstring& path) {
+	static LPSHELLFOLDER get_shell_folder(const std::wstring& path) noexcept {
 		PIDLIST_ABSOLUTE parent_id{};
 		auto p = Path::ensure_no_unc_prefix(path);
 		auto res = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
@@ -75,7 +75,7 @@ public:
 		return parent_shf;
 	}
 
-	static LPSHELLFOLDER get_parent_shell_folder(const std::wstring& path) {
+	static LPSHELLFOLDER get_parent_shell_folder(const std::wstring& path) noexcept {
 		HRESULT res{};
 
 		PIDLIST_ABSOLUTE parent_id{};
@@ -94,14 +94,14 @@ public:
 		return parent_shf;
 	}
 
-	static LPVOID get_ole_ui_object(const std::vector<std::wstring>& paths, REFIID riid) {
+	static LPVOID get_ole_ui_object(const std::vector<std::wstring>& paths, REFIID riid) noexcept(false) {
 		ItemIdChildList sidcl(paths);
 		auto parent_shf = sidcl.parent_shell_folder();
 		const auto& cs = sidcl.child_list();
 
 		if (parent_shf == nullptr) return nullptr;
 		LPVOID ret_obj{};
-		const auto res = parent_shf->GetUIObjectOf(nullptr, cs.size(), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
+		const auto res = parent_shf->GetUIObjectOf(nullptr, cs.size(), (LPCITEMIDLIST*)(cs.data()), riid, nullptr, &ret_obj);
 		if (res == S_OK) return ret_obj;
 		return nullptr;
 	}

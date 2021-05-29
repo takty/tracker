@@ -46,7 +46,7 @@ public:
 
 	CompByType(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) noexcept(false) {
+	bool operator()(const Item* it1, const Item* it2) noexcept {
 		bool ret = false;
 		if (!it1 || !it2) return ret;
 

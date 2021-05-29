@@ -28,17 +28,17 @@ public:
 
 	const std::wstring PATH{ L":HISTORY" }, NAME{ L"History" };
 
-	History() noexcept(false) {}
+	History() noexcept {}
 
 	void initialize(Pref& pref) noexcept {
 		max_size_ = pref.get(SECTION_HISTORY, KEY_MAX_HISTORY, VAL_MAX_HISTORY);
 	}
 
-	void restore(Pref& data) {
+	void restore(Pref& data) noexcept(false) {
 		paths_ = data.load_lines<std::vector<std::wstring>>();
 	}
 
-	void store(Pref& data) {
+	void store(Pref& data) noexcept(false) {
 		data.save_lines(paths_);
 	}
 
@@ -50,7 +50,7 @@ public:
 		return paths_.at(index);
 	}
 
-	void add(const std::wstring& path) {
+	void add(const std::wstring& path) noexcept {
 		auto root = path.substr(0, 1) + L":\\";
 		if (FileSystem::is_removable(root)) return;  // Do not leave removable
 
@@ -62,7 +62,7 @@ public:
 		}
 	}
 
-	void clean_up() {
+	void clean_up() noexcept {
 		// Delete a nonexistent path
 		paths_.erase(remove_if(paths_.begin(), paths_.end(), [](std::wstring& p) {return !FileSystem::exists(p); }), paths_.end());
 	}

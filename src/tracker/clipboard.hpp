@@ -3,7 +3,7 @@
  * Clipboard Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -15,9 +15,9 @@
 #include <windows.h>
 #include <shlobj.h>
 
-#include "Path.hpp"
-#include "Link.hpp"
-#include "Shell.hpp"
+#include "path.hpp"
+#include "link.hpp"
+#include "shell.hpp"
 
 
 class Clipboard {
@@ -36,7 +36,7 @@ public:
 	~Clipboard() {}
 
 	// Copy file paths to the clipboard
-	bool copy_path(const std::vector<std::wstring>& paths) const {
+	bool copy_path(const std::vector<std::wstring>& paths) const noexcept(false) {
 		std::wstring str;
 		for (const auto& e : paths) {
 			if (1 < e.size() && e.at(e.size() - 1) == L':') {  // Drive
@@ -66,7 +66,7 @@ public:
 	}
 
 	// Paste as links in the directory
-	bool paste_as_link_in(const std::wstring& dir) const {
+	bool paste_as_link_in(const std::wstring& dir) const noexcept(false) {
 		std::vector<wchar_t> buf(MAX_PATH);
 		bool ret = false;
 

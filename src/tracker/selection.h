@@ -24,7 +24,7 @@
 
 class Selection {
 
-	static std::wstring Format(long long l) {
+	static std::wstring Format(long long l) noexcept {
 		std::wstring s;
 		for (int d = 0; l; d++, l /= 10) {
 			s = wchar_t(L'0' + (l % 10)) + (((!(d % 3) && d) ? L"," : L"") + s);
@@ -41,7 +41,7 @@ class Selection {
 	const Pref& pref_;
 
 	// Open file (specify target)
-	bool OpenFile(const std::vector<std::wstring>& objs) {
+	bool OpenFile(const std::vector<std::wstring>& objs) noexcept(false) {
 		Operation so(hWnd_);
 		const auto& obj = objs.front();
 		std::wstring cmd;
@@ -59,7 +59,7 @@ class Selection {
 	}
 
 	// Register Shell Notifications
-	void SetShellNotify(const std::wstring& path) {
+	void SetShellNotify(const std::wstring& path) noexcept(false) {
 		LPSHELLFOLDER desktopFolder{};
 		LPITEMIDLIST currentFolder{};
 		SHChangeNotifyEntry scne{};
@@ -68,7 +68,7 @@ class Selection {
 			::SHChangeNotifyDeregister(idNotify_);
 			idNotify_ = 0;
 		}
-		HRESULT r;
+		HRESULT r{};
 		if (path.empty()) {
 			r = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &currentFolder);
 		} else {
@@ -93,8 +93,8 @@ class Selection {
 	}
 
 	// Determine file size
-	bool FilesSize(uint64_t& size, const uint64_t limitTime) {
-		uint64_t s;
+	bool FilesSize(uint64_t& size, const uint64_t limitTime) noexcept {
+		uint64_t s{};
 		size = 0;
 
 		for (const auto& e : objects_) {
@@ -106,7 +106,7 @@ class Selection {
 	}
 
 	// Generate a string representing the size of the file or drive
-	std::wstring FileSizeToStr(const uint64_t& size, bool success, const wchar_t* prefix) {
+	std::wstring FileSizeToStr(const uint64_t& size, bool success, const wchar_t* prefix) noexcept(false) {
 		int f{};
 		const wchar_t* u{};
 		double val{};
@@ -151,7 +151,7 @@ class Selection {
 	}
 
 	// Generate a string representing the file's timestamp
-	std::wstring FileTimeToStr(const FILETIME& time, const wchar_t* prefix) const {
+	std::wstring FileTimeToStr(const FILETIME& time, const wchar_t* prefix) const noexcept(false) {
 		FILETIME local{};
 		SYSTEMTIME st{};
 
@@ -165,12 +165,12 @@ public:
 
 	Selection(const TypeTable& exts, const Pref& pref) noexcept : extentions_(exts), pref_(pref) {}
 
-	Selection(const Selection& inst) = delete;
-	Selection(Selection&& inst) = delete;
+	Selection(const Selection& inst)            = delete;
+	Selection(Selection&& inst)                 = delete;
 	Selection& operator=(const Selection& inst) = delete;
-	Selection& operator=(Selection&& inst) = delete;
+	Selection& operator=(Selection&& inst)      = delete;
 
-	~Selection() {
+	~Selection() noexcept {
 		if (idNotify_) ::SHChangeNotifyDeregister(idNotify_);
 	}
 
@@ -180,12 +180,12 @@ public:
 	}
 
 	// Set default application path to open file without association
-	void SetDefaultOpener(const std::wstring& path) {
+	void SetDefaultOpener(const std::wstring& path) noexcept {
 		defaultOpener_ = path;
 	}
 
 	// Add operation target file
-	void Add(const std::wstring& path) {
+	void Add(const std::wstring& path) noexcept {
 		objects_.push_back(path);
 	}
 
@@ -195,7 +195,7 @@ public:
 	}
 
 	// Reference of specified index element
-	const std::wstring& operator[](unsigned long i) const noexcept(false) {
+	const std::wstring& operator[](unsigned long i) const noexcept {
 		return objects_.at(i);
 	}
 
@@ -205,12 +205,12 @@ public:
 	}
 
 	// Open file based on association
-	bool OpenWithAssociation() {
+	bool OpenWithAssociation() noexcept(false) {
 		return OpenFile(objects_);
 	}
 
 	// Resolve the shortcut and then open
-	bool OpenAfterResolve() {
+	bool OpenAfterResolve() noexcept(false) {
 		if (!Link::is_link(objects_.at(0))) return false;  // If it is not a shortcut
 
 		// OpenBy processing
@@ -219,25 +219,25 @@ public:
 	}
 
 	// Open in shell function based on command line
-	int OpenBy(const std::wstring& line) {
+	int OpenBy(const std::wstring& line) noexcept {
 		Operation so(hWnd_);
 		return so.open(objects_, line);
 	}
 
 	// Start dragging
-	void StartDrag() {
+	void StartDrag() noexcept(false) {
 		DragFile::start(objects_);
 	}
 
 	// Display shell menu
-	void PopupShellMenu(const POINT& pt, UINT f) {
+	void PopupShellMenu(const POINT& pt, UINT f) noexcept(false) {
 		SetShellNotify(Path::parent(objects_.at(0)));
 		ContextMenu cm(hWnd_);
 		cm.popup(objects_, TPM_RIGHTBUTTON | f, pt);
 	}
 
 	// Create New
-	bool CreateNewFile(const wchar_t* org) {
+	bool CreateNewFile(const wchar_t* org) noexcept(false) {
 		if (!FileSystem::is_directory(objects_.at(0))) return false;  // Fail if not folder
 
 		std::wstring orig{ org };
@@ -255,7 +255,7 @@ public:
 	}
 
 	// Create a new folder
-	bool CreateNewFolderIn() {
+	bool CreateNewFolderIn() noexcept(false) {
 		if (!FileSystem::is_directory(objects_.at(0))) return false;  // Fail if not folder
 		auto npath = objects_.at(0) + L"\\NewFolder";
 		auto newPath = FileSystem::unique_name(npath);
@@ -266,7 +266,7 @@ public:
 	}
 
 	// Delete
-	bool DeleteFile() {
+	bool DeleteFile() noexcept(false) {
 		Operation so(hWnd_);
 		const bool ret = so.delete_files(objects_);
 		if (ret) RequestUpdate();
@@ -274,7 +274,7 @@ public:
 	}
 
 	// Make a duplicate
-	bool CloneHere() {
+	bool CloneHere() noexcept(false) {
 		bool ret = false;
 		Operation so(hWnd_);
 
@@ -290,7 +290,7 @@ public:
 	}
 
 	// Make a shortcut
-	bool CreateShortcutHere() {
+	bool CreateShortcutHere() noexcept(false) {
 		bool ret = false;
 		std::wstring path, target;
 
@@ -309,7 +309,7 @@ public:
 	}
 
 	// Copy to desktop
-	bool CopyToDesktop() {
+	bool CopyToDesktop() noexcept(false) {
 		Operation so(hWnd_);
 		bool ret = so.copy_files(objects_, FileSystem::desktop_path());
 		if (ret) RequestUpdate();
@@ -317,7 +317,7 @@ public:
 	}
 
 	// Move to desktop
-	bool MoveToDesktop() {
+	bool MoveToDesktop() noexcept(false) {
 		Operation so(hWnd_);
 		bool ret = so.move_files(objects_, FileSystem::desktop_path());
 		if (ret) RequestUpdate();
@@ -325,29 +325,29 @@ public:
 	}
 
 	// Copy path to clipboard
-	bool CopyPathInClipboard() {
+	bool CopyPathInClipboard() noexcept(false) {
 		Clipboard cb(hWnd_);
 		return cb.copy_path(objects_);
 	}
 
-	void Copy() {
+	void Copy() noexcept(false) {
 		ContextMenu cm(hWnd_);
 		cm.copy(objects_);
 	}
 
-	void Cut() {
+	void Cut() noexcept(false) {
 		ContextMenu cm(hWnd_);
 		cm.cut(objects_);
 	}
 
-	void PasteIn() {
+	void PasteIn() noexcept(false) {
 		ContextMenu cm(hWnd_);
 		SetShellNotify(objects_.at(0));
 		cm.paste_in(objects_);
 	}
 
 	// Paste as a shortcut
-	bool PasteAsShortcutIn() {
+	bool PasteAsShortcutIn() noexcept(false) {
 		Clipboard cb(hWnd_);
 		const bool ret = cb.paste_as_link_in(objects_.at(0));
 		if (ret) RequestUpdate();
@@ -355,19 +355,19 @@ public:
 	}
 
 	// Display file properties
-	void PopupFileProperty() {
+	void PopupFileProperty() noexcept(false) {
 		ContextMenu cm(hWnd_);
 		cm.show_property(objects_);
 	}
 
 	// Change the file name
-	bool Rename(const std::wstring& path, const std::wstring& newFileName) {
+	bool Rename(const std::wstring& path, const std::wstring& newFileName) noexcept(false) {
 		Operation so(hWnd_);
 		return so.rename(path, newFileName);
 	}
 
 	// Get file information string
-	void InformationStrings(std::vector<std::wstring>& items) {
+	void InformationStrings(std::vector<std::wstring>& items) noexcept(false) {
 		if (Path::is_root(objects_.at(0))) {  // When it is a drive
 			uint64_t dSize, dFree;
 			FileSystem::drive_size(objects_.at(0), dSize, dFree);
@@ -401,7 +401,7 @@ public:
 	}
 
 	// Execute a string command
-	int Command(const std::wstring& cmd) {
+	int Command(const std::wstring& cmd) noexcept(false) {
 		if (cmd.find(COM_CREATE_NEW) == 0) { CreateNewFile(cmd.substr(11).c_str()); return 1; }
 		if (cmd == COM_NEW_FOLDER)         { CreateNewFolderIn(); return 1; }
 		if (cmd == COM_DELETE)             { DeleteFile(); return 1; }

@@ -3,14 +3,14 @@
  * Utility for Temporal Error Mode Change
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-29
  *
  */
 
 
 #pragma once
 
-#include <WinBase.h>
+#include <winbase.h>
 
 
 class ErrorMode {
@@ -26,7 +26,7 @@ public:
 	ErrorMode& operator=(const ErrorMode& inst) = delete;
 	ErrorMode& operator=(ErrorMode&& inst) = delete;
 
-	~ErrorMode() {
+	~ErrorMode() noexcept {
 		::SetErrorMode(errorMode_);
 	}
 

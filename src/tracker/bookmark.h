@@ -3,7 +3,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
@@ -25,13 +25,13 @@ public:
 
 	const std::wstring PATH{ L":BOOKMARK" }, NAME{ L"Bookmark" };
 
-	Bookmark() noexcept(false) {}
+	Bookmark() noexcept {}
 
-	void restore(const Pref& data) {
+	void restore(const Pref& data) noexcept(false) {
 		paths_ = data.load_lines<std::vector<std::wstring>>();
 	}
 
-	void store(const Pref& data) {
+	void store(const Pref& data) noexcept(false) {
 		data.save_lines(paths_);
 	}
 
@@ -39,11 +39,11 @@ public:
 		return paths_.size();
 	}
 
-	std::wstring& operator[](int index) noexcept(false) {
+	std::wstring& operator[](int index) noexcept {
 		return paths_.at(index);
 	}
 
-	bool arrange(int drag, int drop) {
+	bool arrange(int drag, int drop) noexcept {
 		if (drag < 0 || drag >= std::ssize(paths_)) return false;
 		if (drop < 0 || drop >= std::ssize(paths_)) return false;
 		std::wstring path(paths_.at(drag));
@@ -52,7 +52,7 @@ public:
 		return true;
 	}
 
-	void add(const std::wstring& path) {
+	void add(const std::wstring& path) noexcept {
 		paths_.push_back(path);
 	}
 

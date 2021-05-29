@@ -26,7 +26,7 @@ class RenameEdit {
 	std::wstring renamedPath_;
 	std::wstring newFileName_;
 
-	static LRESULT CALLBACK editProc(HWND hEdit_, UINT msg, WPARAM wp, LPARAM lp) {
+	static LRESULT CALLBACK editProc(HWND hEdit_, UINT msg, WPARAM wp, LPARAM lp) noexcept {
 		auto p = (RenameEdit*) GetWindowLong(hEdit_, GWL_USERDATA);
 
 		switch (msg) {
@@ -72,7 +72,7 @@ public:
 		return ::IsWindowVisible(hEdit_) == TRUE;
 	}
 
-	void Open(const std::wstring path, int y, int width, int height) {
+	void Open(const std::wstring path, int y, int width, int height) noexcept {
 		renamedPath_.clear();
 		if (Path::is_root(path)) return;
 		renamedPath_.assign(path);
@@ -94,7 +94,7 @@ public:
 	}
 
 	// Close name change
-	void Close() {
+	void Close() noexcept {
 		if (!::IsWindowVisible(hEdit_)) return;
 
 		::ShowWindow(hEdit_, SW_HIDE);

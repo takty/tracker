@@ -3,7 +3,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -15,8 +15,8 @@
 #include <memory>
 #include <windows.h>
 
-#include "Path.hpp"
-#include "Shell.hpp"
+#include "path.hpp"
+#include "shell.hpp"
 
 
 class DragFile {
@@ -37,7 +37,7 @@ class DragFile {
 
 		virtual ~DropSource() {}
 
-		HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) override {
+		HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) noexcept(false) override {
 			if (!ppv) return E_NOINTERFACE;
 			if (iid == IID_IDropSource || iid == IID_IUnknown) {
 				AddRef();
@@ -49,11 +49,11 @@ class DragFile {
 			}
 		}
 
-		ULONG __stdcall AddRef() override {
+		ULONG __stdcall AddRef() noexcept(false) override {
 			return ::InterlockedIncrement(&refCount_);
 		}
 
-		ULONG __stdcall Release() override {
+		ULONG __stdcall Release() noexcept(false) override {
 			const auto count = ::InterlockedDecrement(&refCount_);
 			if (count == 0) delete this;
 			return count;
@@ -80,7 +80,7 @@ class DragFile {
 
 public:
 
-	static void start(const std::vector<std::wstring>& paths) {
+	static void start(const std::vector<std::wstring>& paths) noexcept(false) {
 		if (paths.empty()) return;
 
 		auto dobj = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(paths, IID_IDataObject));

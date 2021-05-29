@@ -3,7 +3,7 @@
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -38,23 +38,23 @@ public:
 
 	Migemo() noexcept {}
 
-	Migemo(const Migemo& inst) = delete;
-	Migemo(Migemo&& inst) = delete;
+	Migemo(const Migemo& inst)            = delete;
+	Migemo(Migemo&& inst)                 = delete;
 	Migemo& operator=(const Migemo& inst) = delete;
-	Migemo& operator=(Migemo&& inst) = delete;
+	Migemo& operator=(Migemo&& inst)      = delete;
 
-	~Migemo() noexcept(false) {
+	~Migemo() noexcept {
 		if (isLoaded_) freeLibrary();
 	}
 
-	bool loadLibrary(const std::wstring& dictionaryPath = std::wstring()) {
+	bool loadLibrary(const std::wstring& dictionaryPath = std::wstring()) noexcept {
 		isLoaded_ = false;
 
 		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
 		if (hMigemo_) {
-			migemoOpen_ = (MIGEMO_OPEN)::GetProcAddress(hMigemo_, "migemo_open");
-			migemoClose_ = (MIGEMO_CLOSE)::GetProcAddress(hMigemo_, "migemo_close");
-			migemoQuery_ = (MIGEMO_QUERY)::GetProcAddress(hMigemo_, "migemo_query");
+			migemoOpen_    = (MIGEMO_OPEN)   ::GetProcAddress(hMigemo_, "migemo_open");
+			migemoClose_   = (MIGEMO_CLOSE)  ::GetProcAddress(hMigemo_, "migemo_close");
+			migemoQuery_   = (MIGEMO_QUERY)  ::GetProcAddress(hMigemo_, "migemo_query");
 			migemoRelease_ = (MIGEMO_RELEASE)::GetProcAddress(hMigemo_, "migemo_release");
 
 			std::wstring dp(dictionaryPath);
@@ -68,7 +68,7 @@ public:
 		return isLoaded_;
 	}
 
-	void query(const std::wstring& searchStr, std::wstring& query) {
+	void query(const std::wstring& searchStr, std::wstring& query) noexcept {
 		auto ansi = StringConverter::to_ansi(searchStr);
 		auto q = migemoQuery_(m_, reinterpret_cast<unsigned char*>(ansi.data()));
 		std::string temp(reinterpret_cast<const char*>(q));

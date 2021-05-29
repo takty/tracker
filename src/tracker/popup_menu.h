@@ -26,7 +26,7 @@ class PopupMenu {
 	const Pref &pref_;
 
 	// Add Menu Items in INI File to Menu
-	void addTypeMenu(const std::wstring &sec, std::vector<std::wstring> &items, HMENU hMenu) {
+	void addTypeMenu(const std::wstring &sec, std::vector<std::wstring> &items, HMENU hMenu) noexcept(false) {
 		bool paste, pasteShortcut;
 		std::wstring def;
 
@@ -63,7 +63,7 @@ class PopupMenu {
 	}
 
 	// Create new file menu
-	void addNewFileMenu(HMENU hMenu, std::vector<std::wstring> &items) {
+	void addNewFileMenu(HMENU hMenu, std::vector<std::wstring> &items) noexcept {
 		std::wstring path;
 
 		auto dir = Path::parent(pref_.path()) + L"\\newfile\\";
@@ -97,7 +97,7 @@ class PopupMenu {
 	}
 
 	// Search for specified accelerator command from menu item of INI file
-	bool searchMenu(const std::wstring &sec, wchar_t accel, std::wstring &cmd) {
+	bool searchMenu(const std::wstring &sec, wchar_t accel, std::wstring &cmd) noexcept {
 		std::wstring a, def;
 
 		a.assign(_T("&")).append(1, accel);  // Make search string
@@ -118,7 +118,7 @@ public:
 	PopupMenu(HWND hWnd, const Pref *pref) noexcept : hWnd_(hWnd), pref_(*pref) {}
 
 	// Display pop-up menu and get command
-	bool popup(int type, const POINT &pt, UINT f, std::wstring& cmd, const std::vector<std::wstring> &additional) {
+	bool popup(int type, const POINT &pt, UINT f, std::wstring& cmd, const std::vector<std::wstring> &additional) noexcept {
 		bool ret = false;
 		std::vector<std::wstring> items;
 		HMENU hMenu = ::CreatePopupMenu();  // Create menu
@@ -151,7 +151,7 @@ public:
 	}
 
 	// Get command from accelerator
-	bool getAccelCommand(int type, wchar_t acce, std::wstring& cmd) {
+	bool getAccelCommand(int type, wchar_t acce, std::wstring& cmd) noexcept {
 		bool ret = false;
 
 		if (type) {  // When a menu number is specified

@@ -27,7 +27,7 @@ class TypeTable {
 	std::map<std::wstring, int> ext_to_id_;
 	std::map<int, int>          id_to_color_;
 
-	int convert_hex_to_color(const std::wstring& hex) {
+	int convert_hex_to_color(const std::wstring& hex) noexcept {
 		if (hex.empty()) return -1;
 		const std::wstring pre0{ L"0x" };
 		const std::wstring pre1{ L"#" };
@@ -58,9 +58,9 @@ class TypeTable {
 
 public:
 
-	TypeTable() noexcept(false) {}
+	TypeTable() noexcept {}
 
-	void restore(const Pref& pref) {
+	void restore(const Pref& pref) noexcept(false) {
 		ext_to_id_.clear();  // Because it may be called many times
 		id_to_color_.clear();
 
@@ -80,13 +80,13 @@ public:
 		}
 	}
 
-	int get_id(const std::wstring& ext) const {
+	int get_id(const std::wstring& ext) const noexcept(false) {
 		const auto it = ext_to_id_.find(ext);
 		if (it == ext_to_id_.end()) return -1;
 		return it->second;
 	}
 
-	int get_color(const std::wstring& ext) const {
+	int get_color(const std::wstring& ext) const noexcept(false) {
 		const int id = get_id(ext);
 		if (id == -1) return -1;
 
@@ -95,13 +95,13 @@ public:
 		return it->second;
 	}
 
-	int get_color(int id) const {
+	int get_color(int id) const noexcept(false) {
 		const auto it = id_to_color_.find(id);
 		if (it == id_to_color_.end()) return -1;
 		return it->second;
 	}
 
-	bool get_command(const Pref& pref, const std::wstring& ext, std::wstring& cmd) const {
+	bool get_command(const Pref& pref, const std::wstring& ext, std::wstring& cmd) const noexcept(false) {
 		const int type = get_id(ext) + 1;
 		if (type) {
 			cmd = pref.get(L"Extension", L"OpenBy" + std::to_wstring(type), L"");

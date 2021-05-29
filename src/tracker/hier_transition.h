@@ -3,7 +3,7 @@
  * Transition of Folder Hierarchy
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-29
  *
  */
 
@@ -27,7 +27,7 @@ class HierTransition {
 
 public:
 
-	HierTransition() noexcept(false) {
+	HierTransition() noexcept {
 		views_.resize(1);
 	}
 

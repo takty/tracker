@@ -24,7 +24,7 @@ class Operation {
 		IShellItem* si_ = nullptr;
 
 	public:
-		ShellItem(const std::wstring path) {
+		ShellItem(const std::wstring path) noexcept {
 			IShellItem* dest = nullptr;
 			auto p = Path::ensure_no_unc_prefix(path);
 			const auto res = ::SHCreateItemFromParsingName(p.c_str(), nullptr, IID_IShellItem, (void**)&dest);
@@ -64,7 +64,7 @@ class Operation {
 		ShellItemIdArray& operator=(const ShellItemIdArray& inst) = delete;
 		ShellItemIdArray& operator=(ShellItemIdArray&& inst) = delete;
 
-		~ShellItemIdArray() {
+		~ShellItemIdArray() noexcept(false) {
 			sia_->Release();
 		}
 
@@ -82,7 +82,7 @@ class Operation {
 		return false;
 	}
 
-	template<typename F> bool do_multiple_files_op(const std::vector<std::wstring>& paths, F fn) const {
+	template<typename F> bool do_multiple_files_op(const std::vector<std::wstring>& paths, F fn) const noexcept(false) {
 		if (paths.empty()) return false;
 
 		auto need_update = false;
@@ -148,7 +148,7 @@ public:
 	}
 
 	// Open file
-	bool open(const std::wstring& obj) const {
+	bool open(const std::wstring& obj) const noexcept {
 		if (FileSystem::is_directory(obj) && FileSystem::is_existing_same_name_execution_file(obj)) {
 			std::wstring qobj(L"\"");
 			qobj.append(obj).append(L"\\\"");
@@ -158,7 +158,7 @@ public:
 	}
 
 	// Open files with a specific application
-	bool open(const std::vector<std::wstring>& objs, const std::wstring& line) const {
+	bool open(const std::vector<std::wstring>& objs, const std::wstring& line) const noexcept {
 		auto ret = FileSystem::extract_command_line_string(line, objs);
 		return shell_execute(ret.first, ret.second.c_str());
 	}

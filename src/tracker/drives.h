@@ -3,7 +3,7 @@
  * Drives
  *
  * @author Takuto Yanagida
- * @version 2021-05-08
+ * @version 2021-05-29
  *
  */
 
@@ -13,7 +13,6 @@
 #include <vector>
 #include <array>
 #include <string>
-
 #include <windows.h>
 
 #include "file_utils.hpp"
@@ -32,7 +31,7 @@ public:
 
 	const std::wstring PATH{ L":DRIVES" }, NAME{ L"Drives" };
 
-	Drives() noexcept(false) {}
+	Drives() noexcept {}
 
 	int size() noexcept {
 		return paths_.size();
@@ -42,7 +41,7 @@ public:
 		return paths_.at(index);
 	}
 
-	void clean_up() {
+	void clean_up() noexcept {
 		paths_.clear();
 		std::wstring path(L"\\\\?\\A:\\");
 

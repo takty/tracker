@@ -12,6 +12,7 @@
 
 #include <string>
 #include <vector>
+#include <gsl/gsl_util>
 #include <fileapi.h>
 #include <shlobj.h>
 
@@ -21,7 +22,7 @@
 class FileSystem {
 
 	// Calculate file/directory size internally
-	static bool calc_file_size_internally(const std::wstring& path, uint64_t& size, const uint64_t& limitTime) {
+	static bool calc_file_size_internally(const std::wstring& path, uint64_t& size, const uint64_t& limitTime) noexcept {
 		if (limitTime > 0 && ::GetTickCount64() > limitTime) return false;
 		bool success = true;
 
@@ -43,7 +44,7 @@ class FileSystem {
 public:
 
 	// Extract command line string (path|opt)
-	static std::pair<std::wstring, std::wstring> extract_command_line_string(const std::wstring& line, const std::vector<std::wstring>& objs) {
+	static std::pair<std::wstring, std::wstring> extract_command_line_string(const std::wstring& line, const std::vector<std::wstring>& objs) noexcept {
 		const auto sep = line.find_first_of(L'|');
 		if (sep == std::wstring::npos) {
 			return { Path::absolute_path(line, module_file_path()), Path::space_separeted_quoted_paths_string(objs) };
@@ -69,7 +70,7 @@ public:
 	}
 
 	// Make unique new name
-	static std::wstring unique_name(const std::wstring& obj, const std::wstring& post = std::wstring()) {
+	static std::wstring unique_name(const std::wstring& obj, const std::wstring& post = std::wstring()) noexcept(false) {
 		if (Path::is_root(obj)) return L"";  // Failure
 		const auto path = Path::parent(obj);
 		auto name = Path::name(obj);
@@ -98,7 +99,7 @@ public:
 
 
 	// Check whether there is an execution file that has the same name as the name of path
-	static bool is_existing_same_name_execution_file(const std::wstring& path) {
+	static bool is_existing_same_name_execution_file(const std::wstring& path) noexcept {
 		bool ret = false;
 		auto temp = Path::parent(path);
 		if (temp.empty()) return false;  // path is root
@@ -120,13 +121,13 @@ public:
 	}
 
 	// Check whether the path is a directory
-	static bool is_directory(const std::wstring& path) {
+	static bool is_directory(const std::wstring& path) noexcept {
 		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
 		return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 
 	// Check whether the file of the path is existing
-	static bool exists(const std::wstring& path) {
+	static bool exists(const std::wstring& path) noexcept {
 		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
 		return attr != INVALID_FILE_ATTRIBUTES;
 	}
@@ -136,7 +137,7 @@ public:
 
 
 	// Get desktop directory path
-	static std::wstring desktop_path() {
+	static std::wstring desktop_path() noexcept {
 		std::wstring ret;
 		PWSTR buf = nullptr;
 		if (::SHGetKnownFolderPath(FOLDERID_Desktop, 0, nullptr, &buf) == S_OK) {
@@ -147,7 +148,7 @@ public:
 	}
 
 	// Get the exe file path
-	static std::wstring module_file_path() {
+	static std::wstring module_file_path() noexcept {
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
@@ -159,7 +160,7 @@ public:
 	}
 
 	// Get the current directory path
-	static std::wstring current_directory_path() {
+	static std::wstring current_directory_path() noexcept {
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
@@ -176,16 +177,21 @@ public:
 
 	// Get drive size
 	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) noexcept {
-		::GetDiskFreeSpaceEx(path.c_str(), (PULARGE_INTEGER)&free, (PULARGE_INTEGER)&size, nullptr);
+		ULARGE_INTEGER s{}, f{};
+		::GetDiskFreeSpaceEx(path.c_str(), &f, &s, nullptr);
+		size = gsl::narrow_cast<uint64_t>(s.QuadPart);
+		free = gsl::narrow_cast<uint64_t>(f.QuadPart);
 	}
 
 	// Calculate file/directory size
-	static bool calc_file_size(const std::wstring& path, uint64_t& size, const uint64_t& limitTime) {
+	static bool calc_file_size(const std::wstring& path, uint64_t& size, const uint64_t& limitTime) noexcept {
 		if (!is_directory(path)) {
 			auto hf = ::CreateFile(path.c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 			if (hf == INVALID_HANDLE_VALUE) return false;
-			::GetFileSizeEx(hf, (PLARGE_INTEGER)&size);
+			LARGE_INTEGER s{};
+			::GetFileSizeEx(hf, &s);
 			::CloseHandle(hf);
+			size = gsl::narrow_cast<uint64_t>(s.QuadPart);
 			return true;
 		}
 		size = 0;
@@ -197,7 +203,7 @@ public:
 
 
 	// Template version of find first file
-	template<typename F> static bool find_first_file(const std::wstring& path, F fn) {
+	template<typename F> static bool find_first_file(const std::wstring& path, F fn) noexcept(false) {
 		auto parent{ path };
 		parent += (parent.at(parent.size() - 1) == Path::PATH_SEPARATOR) ? L"*" : L"\\*";
 

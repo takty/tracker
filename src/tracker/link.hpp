@@ -12,7 +12,6 @@
 
 #include <string>
 #include <vector>
-
 #include <shlobj.h>
 
 #include "path.hpp"
@@ -24,12 +23,12 @@ class Link {
 public:
 
 	// Check whether the path is a shortcut file
-	static bool is_link(const std::wstring& path) {
+	static bool is_link(const std::wstring& path) noexcept {
 		return !FileSystem::is_directory(path) && Path::ext(path) == L"lnk";
 	}
 
 	// Create shortcut file
-	static bool create(const std::wstring& shortcut_path, const std::wstring& target) {
+	static bool create(const std::wstring& shortcut_path, const std::wstring& target) noexcept(false) {
 		IShellLink *psl = nullptr;
 		auto hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
 		if (FAILED(hr) || !psl) return false;
@@ -53,7 +52,7 @@ public:
 	}
 
 	// Resolve shortcut and get the target path
-	static std::wstring resolve(const std::wstring& path) {
+	static std::wstring resolve(const std::wstring& path) noexcept(false) {
 		std::wstring target;
 		IShellLink *psl = nullptr;
 

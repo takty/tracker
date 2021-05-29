@@ -3,7 +3,7 @@
  * Preference (Reading and writing file)
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-29
  *
  */
 
@@ -22,7 +22,7 @@
 
 class Pref {
 
-	static std::wstring get_user_name() {
+	static std::wstring get_user_name() noexcept {
 		DWORD len{ MAX_PATH };
 		std::vector<wchar_t> buf(len);
 
@@ -33,7 +33,7 @@ class Pref {
 		return std::wstring{ buf.data(), len - 1 };  // The len contains '\0'
 	}
 
-	static std::wstring trim(const std::wstring& str, const wchar_t* chars = L" \t\v\r\n") {
+	static std::wstring trim(const std::wstring& str, const wchar_t* chars = L" \t\v\r\n") noexcept {
 		const auto left = str.find_first_not_of(chars);
 		if (left == std::string::npos) {
 			return {};
@@ -54,7 +54,7 @@ class Pref {
 	mutable std::wstring last_section_{};
 	mutable size_t last_section_index_{};
 
-	size_t get_section_index(const std::wstring& sec) const {
+	size_t get_section_index(const std::wstring& sec) const noexcept {
 		if (last_section_ == sec) {
 			return last_section_index_;
 		}
@@ -100,7 +100,7 @@ class Pref {
 		return def;
 	}
 
-	void assign_item(const std::wstring& sec, const std::wstring& key, const std::wstring& val) {
+	void assign_item(const std::wstring& sec, const std::wstring& key, const std::wstring& val) noexcept(false) {
 		if (cache_.empty()) {
 			cache_ = load_lines<std::vector<std::wstring>>();
 		}
@@ -146,14 +146,14 @@ public:
 		cache_ = load_lines<std::vector<std::wstring>>();
 	}
 
-	Pref(const std::wstring& file_name) noexcept(false) {
+	Pref(const std::wstring& file_name) noexcept {
 		auto mp = FileSystem::module_file_path();
 		mp.insert(0, Path::UNC_PREFIX);  // To handle long paths
 		file_path_.assign(Path::parent(mp)).append(L"\\").append(file_name);
 	}
 
 	// Make the file path for multiple user
-	void enable_multiple_user_mode() {
+	void enable_multiple_user_mode() noexcept {
 		auto orig{ file_path_ };
 
 		// Create a file path for current user
@@ -172,7 +172,7 @@ public:
 		return file_path_;
 	}
 
-	void store() {
+	void store() noexcept(false) {
 		if (!cache_.empty() && is_modified_) {
 			save_lines(cache_);
 			is_modified_ = false;
@@ -208,7 +208,7 @@ public:
 	// ------------------------------------------------------------------------
 
 
-	template <typename Container> Container load_lines() const {
+	template <typename Container> Container load_lines() const noexcept(false) {
 		Container c{};
 		std::wifstream fs(file_path_);
 		if (!fs.is_open()) {
@@ -224,7 +224,7 @@ public:
 		return c;
 	}
 
-	template <typename Container> void save_lines(const Container& c) const {
+	template <typename Container> void save_lines(const Container& c) const noexcept(false) {
 		std::wofstream fs(file_path_);
 		if (!fs.is_open()) {
 			return;

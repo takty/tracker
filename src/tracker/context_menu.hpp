@@ -3,7 +3,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  */
 
@@ -17,14 +17,17 @@
 
 #include "Shell.hpp"
 
+class ContextMenu;
+
+using ContextMenuPtr = ContextMenu*;
 
 class ContextMenu {
 
 	static constexpr const wchar_t* const PROP_INSTANCE = L"ContextMenuInstance";
 
 	// Window Procedure that hooked to the original procedure while showing the menu
-	static LRESULT CALLBACK MenuProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) {
-		const auto cm = (ContextMenu*) ::GetProp(wnd, PROP_INSTANCE);
+	static LRESULT CALLBACK MenuProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) noexcept(false) {
+		const auto cm = static_cast<ContextMenuPtr>(::GetProp(wnd, PROP_INSTANCE));
 		if (!cm) return FALSE;
 		switch (msg) {
 		case WM_INITMENUPOPUP:
@@ -43,7 +46,7 @@ class ContextMenu {
 	LPCONTEXTMENU2 context_menu_ = nullptr;
 	WNDPROC orig_proc_ = nullptr;
 
-	HRESULT invoke(const LPCONTEXTMENU cm, const char* cmd) const {
+	HRESULT invoke(const LPCONTEXTMENU cm, const char* cmd) const noexcept(false) {
 		if (!cm) return 0;
 		CMINVOKECOMMANDINFO ici{};
 		ici.cbSize       = sizeof(ici);
@@ -56,8 +59,8 @@ class ContextMenu {
 		return cm->InvokeCommand(&ici);
 	}
 
-	HRESULT execute(const std::vector<std::wstring>& paths, const char* cmd) const {
-		const auto cm = (LPCONTEXTMENU)Shell::get_ole_ui_object(paths, IID_IContextMenu);
+	HRESULT execute(const std::vector<std::wstring>& paths, const char* cmd) const noexcept(false) {
+		const auto cm = static_cast<LPCONTEXTMENU>(Shell::get_ole_ui_object(paths, IID_IContextMenu));
 		if (!cm) return 0;
 
 		const auto res = invoke(cm, cmd);
@@ -77,13 +80,13 @@ public:
 	~ContextMenu() {}
 
 	// Popup shell context menu
-	bool popup(const std::vector<std::wstring>& paths, uint32_t flag, const POINT& pt) {
-		const auto cm = (LPCONTEXTMENU)Shell::get_ole_ui_object(paths, IID_IContextMenu);
+	bool popup(const std::vector<std::wstring>& paths, uint32_t flag, const POINT& pt) noexcept(false) {
+		const auto cm = static_cast<LPCONTEXTMENU>(Shell::get_ole_ui_object(paths, IID_IContextMenu));
 		if (!cm) return false;
 
 		// Get IContextMenu2
 		LPCONTEXTMENU2 cm2 = nullptr;
-		cm->QueryInterface(IID_IContextMenu2, (void**)&cm2);
+		cm->QueryInterface(IID_IContextMenu2, (void**)(&cm2));
 
 		// Create a menu
 		auto hMenu = ::CreatePopupMenu();
@@ -92,7 +95,7 @@ public:
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
-		orig_proc_ = (WNDPROC) ::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)MenuProc);
+		orig_proc_ = (WNDPROC)(::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)MenuProc));
 		const int id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
 		::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)orig_proc_);
@@ -111,42 +114,42 @@ public:
 	}
 
 	// Open files by context menu command
-	void open(const std::vector<std::wstring>& paths) const {
+	void open(const std::vector<std::wstring>& paths) const noexcept(false) {
 		execute(paths, "open");
 	}
 
 	// Copy files by context menu command
-	void copy(const std::vector<std::wstring>& paths) const {
+	void copy(const std::vector<std::wstring>& paths) const noexcept(false) {
 		execute(paths, "copy");
 	}
 
 	// Cut files by context menu command
-	void cut(const std::vector<std::wstring>& paths) const {
+	void cut(const std::vector<std::wstring>& paths) const noexcept(false) {
 		execute(paths, "cut");
 	}
 
 	// Paste files in the path_0 directory by context menu command
-	void paste_in(const std::vector<std::wstring>& path_0) const {
+	void paste_in(const std::vector<std::wstring>& path_0) const noexcept(false) {
 		execute(path_0, "paste");
 	}
 
 	// Paste files as links in the path_0 directory by context menu command
-	void paste_as_link_in(const std::vector<std::wstring>& path_0) const {
+	void paste_as_link_in(const std::vector<std::wstring>& path_0) const noexcept(false) {
 		execute(path_0, "pastelink");
 	}
 
 	// Delete files by context menu command
-	void delete_files(const std::vector<std::wstring>& paths) const {
+	void delete_files(const std::vector<std::wstring>& paths) const noexcept(false) {
 		execute(paths, "delete");
 	}
 
 	// Show the property of files
-	void show_property(const std::vector<std::wstring>& objs) const {
+	void show_property(const std::vector<std::wstring>& objs) const noexcept(false) {
 		// Instead of calling execute function with command "properties"...
-		const auto cm = (LPDATAOBJECT)Shell::get_ole_ui_object(objs, IID_IDataObject);
-		if (!cm) return;
-		::SHMultiFileProperties(cm, 0);
-		cm->Release();
+		const auto obj = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(objs, IID_IDataObject));
+		if (!obj) return;
+		::SHMultiFileProperties(obj, 0);
+		obj->Release();
 	}
 
 };

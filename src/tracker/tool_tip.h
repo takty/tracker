@@ -3,7 +3,7 @@
  * Tool Tip
  *
  * @author Takuto Yanagida
- * @version 2021-05-09
+ * @version 2021-05-29
  *
  * Need to add to stdafx.h
  * #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -20,8 +20,8 @@
 
 class ToolTip {
 
-	HWND hWnd_ = nullptr;
-	HWND hHint_ = nullptr;
+	HWND hWnd_     = nullptr;
+	HWND hHint_    = nullptr;
 	bool isActive_ = false;
 
 public:
@@ -46,8 +46,8 @@ public:
 		ti.uId      = 1;
 		ti.rect     = rect;
 		ti.hinst    = nullptr;
-		ti.lpszText = (LPTSTR)str.c_str();
-		SendMessage(hHint_, TTM_ADDTOOL, 0, (LPARAM)&ti);
+		ti.lpszText = (LPWSTR)str.data();
+		::SendMessage(hHint_, TTM_ADDTOOL, 0, (LPARAM)(&ti));
 
 		isActive_ = true;
 	}
@@ -61,7 +61,7 @@ public:
 		ti.cbSize = sizeof(TOOLINFO);
 		ti.hwnd   = hWnd_;
 		ti.uId    = 1;
-		SendMessage(hHint_, TTM_DELTOOL, 0, (LPARAM)&ti);
+		::SendMessage(hHint_, TTM_DELTOOL, 0, (LPARAM)(&ti));
 	}
 
 };
