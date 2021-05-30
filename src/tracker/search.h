@@ -3,7 +3,7 @@
  * Search Functions
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -14,6 +14,7 @@
 #include <string>
 #include <algorithm>
 #include <regex>
+#include <optional>
 #include <windows.h>
 
 #include "item_list.h"
@@ -24,9 +25,9 @@
 class Search {
 
 	Migemo       migemo_;
-	ULONGLONG    lastTime_ = 0;
-	bool         useMigemo_ = false;
-	bool         reserveFind_ = false;
+	ULONGLONG    last_time_ = 0;
+	bool         use_migemo_ = false;
+	bool         reserve_find_ = false;
 	std::wstring str_;
 	std::wstring query_;
 
@@ -34,84 +35,82 @@ public:
 
 	Search() noexcept {}
 
-	bool Initialize(bool useMigemo) noexcept {
-		useMigemo_ = (useMigemo && migemo_.loadLibrary());
-		return useMigemo_;
+	bool initialize(bool use_migemo) noexcept {
+		use_migemo_ = (use_migemo && migemo_.load_library());
+		return use_migemo_;
 	}
 
-	const std::wstring& AddKey(wchar_t key) noexcept {
-		lastTime_ = ::GetTickCount64();
+	const std::wstring& add_key(wchar_t key) noexcept {
+		last_time_ = ::GetTickCount64();
 		str_.append(1, ::_totlower(key));
-		reserveFind_ = true;  // Flag the call to findFirst using a timer
+		reserve_find_ = true;  // Flag the call to findFirst using a timer
 		return str_;
 	}
 
-	const std::wstring& RemoveKey() noexcept {
+	const std::wstring& remove_key() noexcept {
 		if (str_.empty()) return str_;
-		lastTime_ = ::GetTickCount64();
+		last_time_ = ::GetTickCount64();
 		str_.resize(str_.size() - 1);
-		reserveFind_ = !str_.empty();  // Flag the call to findFirst using a timer
+		reserve_find_ = !str_.empty();  // Flag the call to findFirst using a timer
 		return str_;
 	}
 
-	void ClearKey() noexcept {
+	void clear_key() noexcept {
 		str_.clear();
-		reserveFind_ = false;
+		reserve_find_ = false;
 	}
 
-	bool IsReserved() noexcept {
-		if (reserveFind_) {
+	bool is_reserved() noexcept {
+		if (reserve_find_) {
 			const auto time = GetTickCount64();
-			if (time - lastTime_ > 500) return true;
+			if (time - last_time_ > 500) return true;
 		}
 		return false;
 	}
 
-	int FindFirst(int cursorIndex, const ItemList& items) noexcept {
-		reserveFind_ = false;
-		if (useMigemo_) {
+	std::optional<size_t> find_first(const size_t from, const ItemList& items) noexcept {
+		reserve_find_ = false;
+		if (use_migemo_) {
 			migemo_.query(str_, query_);
 		}
-		return FindNext(cursorIndex, items);
+		return find_next(from, items);
 	}
 
-	int FindNext(int cursorIndex, const ItemList& items) noexcept {
+	std::optional<size_t> find_next(size_t from, const ItemList& items) noexcept {
 		bool restart = false;
+		if (from == items.size()) from = 0U;
 
-		int startIndex = cursorIndex + 1;
-		if (startIndex == items.Count()) startIndex = 0;
-
-		if (useMigemo_) {
+		if (use_migemo_) {
 			std::wregex re(query_, std::regex_constants::icase);
-			for (int i = startIndex; ; ++i) {
-				if (i >= items.Count()) {
-					i = 0;
+			for (size_t i = from; ; ++i) {
+				if (i >= items.size()) {
+					i = 0U;
 					restart = true;
 				}
-				if (restart && i == startIndex) break;
+				if (restart && i == from) break;
 
 				std::wsmatch m{};
-				if (std::regex_search(items[i]->Name(), m, re)) {
+				if (std::regex_search(items.at(i)->name(), m, re)) {
 					return i;
 				}
 			}
 		}
 		else {
-			for (int i = startIndex; ; ++i) {
-				if (i >= items.Count()) {
-					i = 0;
+			for (size_t i = from; ; ++i) {
+				if (i >= items.size()) {
+					i = 0U;
 					restart = true;
 				}
-				if (restart && i == startIndex) break;
+				if (restart && i == from) break;
 
-				std::wstring name(items[i]->Name());
+				std::wstring name{ items.at(i)->name() };
 				std::transform(name.begin(), name.end(), name.begin(), ::_totlower);  // Lower case
 				if (name.find(str_) != std::wstring::npos) {
 					return i;
 				}
 			}
 		}
-		return -1;
+		return std::nullopt;
 	}
 
 };

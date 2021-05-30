@@ -3,7 +3,7 @@
  * Transition of Folder Hierarchy
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -17,13 +17,16 @@ class HierTransition {
 
 	struct ViewData {
 		std::wstring path_;
-		unsigned int index_;
-		ViewData() noexcept : index_(0U) {}
-		void set(const std::wstring& path, unsigned int index) { path_.assign(path), index_ = index; }
+		size_t index_{};
+		ViewData() noexcept {}
+		void set(const std::wstring& path, const size_t index) {
+			path_.assign(path);
+			index_ = index;
+		}
 	};
 
 	std::vector<ViewData> views_;
-	unsigned int currentViewIndex_{};
+	size_t cur_view_idx_{};
 
 public:
 
@@ -32,32 +35,32 @@ public:
 	}
 
 	unsigned int index() const noexcept(false) {
-		return views_.at(currentViewIndex_).index_;
+		return views_.at(cur_view_idx_).index_;
 	}
 
-	void setIndex(unsigned int index) noexcept(false) {
-		views_.at(currentViewIndex_).index_ = index;
+	void set_index(const size_t index) noexcept(false) {
+		views_.at(cur_view_idx_).index_ = index;
 	}
 
-	bool canGoBack() const noexcept {
-		return currentViewIndex_ > 0;
+	bool can_go_back() const noexcept {
+		return cur_view_idx_ > 0;
 	}
 
-	std::wstring& goBack() noexcept(false) {
-		--currentViewIndex_;
-		return views_.at(currentViewIndex_).path_;
+	std::wstring& go_back() noexcept(false) {
+		--cur_view_idx_;
+		return views_.at(cur_view_idx_).path_;
 	}
 
-	void goForward(unsigned int index, const std::wstring& path) {
-		if (canGoBack() && views_.at(currentViewIndex_ - 1).path_ == path) return;
-		views_.at(currentViewIndex_).set(path, index);
-		++currentViewIndex_;
-		views_.resize(currentViewIndex_ + 1);
+	void go_forward(const size_t index, const std::wstring& path) {
+		if (can_go_back() && views_.at(cur_view_idx_ - 1).path_ == path) return;
+		views_.at(cur_view_idx_).set(path, index);
+		++cur_view_idx_;
+		views_.resize(cur_view_idx_ + 1);
 	}
 
-	void clearIndexes() noexcept(false) {
+	void clear_indexes() noexcept(false) {
 		for (auto i = 0U; i < views_.size(); ++i) {
-			if (i != currentViewIndex_) views_.at(i).index_ = 0U;
+			if (i != cur_view_idx_) views_.at(i).index_ = 0U;
 		}
 	}
 

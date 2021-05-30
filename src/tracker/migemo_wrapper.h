@@ -3,7 +3,7 @@
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -25,13 +25,13 @@ class Migemo {
 	typedef unsigned char* (*MIGEMO_QUERY)(migemo* object, unsigned char* query);
 	typedef void(*MIGEMO_RELEASE)(migemo* object, unsigned char* string);
 
-	MIGEMO_OPEN    migemoOpen_    = nullptr;
-	MIGEMO_CLOSE   migemoClose_   = nullptr;
-	MIGEMO_QUERY   migemoQuery_   = nullptr;
-	MIGEMO_RELEASE migemoRelease_ = nullptr;
+	MIGEMO_OPEN    migemo_open_    = nullptr;
+	MIGEMO_CLOSE   migemo_close_   = nullptr;
+	MIGEMO_QUERY   migemo_query_   = nullptr;
+	MIGEMO_RELEASE migemo_release_ = nullptr;
 
-	bool      isLoaded_ = false;
-	HINSTANCE hMigemo_  = nullptr;
+	bool      is_loaded_ = false;
+	HINSTANCE hmigemo_  = nullptr;
 	migemo*   m_        = nullptr;
 
 public:
@@ -44,50 +44,50 @@ public:
 	Migemo& operator=(Migemo&& inst)      = delete;
 
 	~Migemo() noexcept {
-		if (isLoaded_) freeLibrary();
+		if (is_loaded_) free_library();
 	}
 
-	bool loadLibrary(const std::wstring& dictionaryPath = std::wstring()) noexcept {
-		isLoaded_ = false;
+	bool load_library(const std::wstring& dictionaryPath = std::wstring()) noexcept {
+		is_loaded_ = false;
 
-		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
-		if (hMigemo_) {
-			migemoOpen_    = (MIGEMO_OPEN)   ::GetProcAddress(hMigemo_, "migemo_open");
-			migemoClose_   = (MIGEMO_CLOSE)  ::GetProcAddress(hMigemo_, "migemo_close");
-			migemoQuery_   = (MIGEMO_QUERY)  ::GetProcAddress(hMigemo_, "migemo_query");
-			migemoRelease_ = (MIGEMO_RELEASE)::GetProcAddress(hMigemo_, "migemo_release");
+		hmigemo_ = ::LoadLibrary(_T("Migemo.dll"));
+		if (hmigemo_) {
+			migemo_open_    = (MIGEMO_OPEN)   ::GetProcAddress(hmigemo_, "migemo_open");
+			migemo_close_   = (MIGEMO_CLOSE)  ::GetProcAddress(hmigemo_, "migemo_close");
+			migemo_query_   = (MIGEMO_QUERY)  ::GetProcAddress(hmigemo_, "migemo_query");
+			migemo_release_ = (MIGEMO_RELEASE)::GetProcAddress(hmigemo_, "migemo_release");
 
 			std::wstring dp(dictionaryPath);
 			if (dp.empty()) {
 				dp = Path::parent(FileSystem::module_file_path()).append(_T("\\Dict\\migemo-dict"));
 			}
-			m_ = migemoOpen_((char*)StringConverter::to_ansi(dp.c_str()).c_str());
+			m_ = migemo_open_((char*)StringConverter::to_ansi(dp.c_str()).c_str());
 			if (m_ == nullptr) return false;
-			isLoaded_ = true;
+			is_loaded_ = true;
 		}
-		return isLoaded_;
+		return is_loaded_;
 	}
 
 	void query(const std::wstring& searchStr, std::wstring& query) noexcept {
 		auto ansi = StringConverter::to_ansi(searchStr);
-		auto q = migemoQuery_(m_, reinterpret_cast<unsigned char*>(ansi.data()));
+		auto q = migemo_query_(m_, reinterpret_cast<unsigned char*>(ansi.data()));
 		std::string temp(reinterpret_cast<const char*>(q));
-		migemoRelease_(m_, q);
+		migemo_release_(m_, q);
 		query.assign(StringConverter::to_wide(temp));
 		query = std::regex_replace(query, std::wregex(L"\\{"), L"\\{");
 		query = std::regex_replace(query, std::wregex(L"\\}"), L"\\}");
 	}
 
-	void freeLibrary() noexcept {
-		if (isLoaded_) {
-			migemoClose_(m_);
-			::FreeLibrary(hMigemo_);
-			isLoaded_ = false;
+	void free_library() noexcept {
+		if (is_loaded_) {
+			migemo_close_(m_);
+			::FreeLibrary(hmigemo_);
+			is_loaded_ = false;
 		}
 	}
 
-	bool isStandBy() noexcept {
-		return isLoaded_;
+	bool is_loaded() noexcept {
+		return is_loaded_;
 	}
 
 };

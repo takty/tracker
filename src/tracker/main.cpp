@@ -3,7 +3,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -56,7 +56,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ in
 BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
 	WNDCLASS wc{};
 	wc.style         = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc   = (WNDPROC)wndProc;
+	wc.lpfnWndProc   = (WNDPROC)WndProc;
 	wc.hInstance     = hInst;
 	wc.hIcon         = nullptr;
 	wc.hCursor       = ::LoadCursor(nullptr, IDC_ARROW);  // Mouse cursor (standard arrow)
@@ -66,36 +66,36 @@ BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
 	return ::RegisterClass(&wc);
 }
 
-LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	auto view = (View*)::GetWindowLong(hWnd, GWL_USERDATA);
 
 	switch (msg) {
 	case WM_CREATE:            new View(hWnd); break;
 	case WM_DESTROY:           delete view; break;
-	case WM_DPICHANGED:        view->wmDpiChanged(LOWORD(wp), HIWORD(wp)); break;
-	case WM_WINDOWPOSCHANGING: view->wmWindowPosChanging((LPWINDOWPOS)lp); break;
-	case WM_SIZE:              view->wmSize(LOWORD(lp), HIWORD(lp)); break;
-	case WM_PAINT:             view->wmPaint(); break;
-	case WM_ACTIVATEAPP:       view->wmActivateApp((BOOL)wp == TRUE); break;
-	case WM_TIMER:             view->wmTimer(); break;
-	case WM_HOTKEY:            view->wmHotKey(wp); break;
-	case WM_SHOWWINDOW:        view->wmShowWindow((BOOL)wp); break;
-	case WM_LBUTTONDOWN:       view->wmButtonDown(VK_LBUTTON, LOWORD(lp), HIWORD(lp)); break;
-	case WM_RBUTTONDOWN:       view->wmButtonDown(VK_RBUTTON, LOWORD(lp), HIWORD(lp)); break;
-	case WM_MBUTTONDOWN:       view->wmButtonDown(VK_MBUTTON, LOWORD(lp), HIWORD(lp)); break;
-	case WM_MOUSEMOVE:         view->wmMouseMove(wp, LOWORD(lp), HIWORD(lp)); break;
-	case WM_LBUTTONUP:         view->wmButtonUp(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_RBUTTONUP:         view->wmButtonUp(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_MOUSEWHEEL:        view->wmMouseWheel((short)HIWORD(wp)); break;
-	case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
-	case WM_ENDSESSION:        view->wmEndSession(); break;
-	case WM_REQUESTUPDATE:     view->wmRequestUpdate(); break;
-	case WM_RENAMEEDITCLOSED:  view->wmRenameEditClosed(); break;
-	case WM_KEYDOWN:           view->wmKeyDown(wp); break;
-	case WM_ENTERMENULOOP:     view->wmMenuLoop(true); break;
-	case WM_EXITMENULOOP:      view->wmMenuLoop(false); break;
-	case WM_CLOSE:             view->wmClose(); break;
+	case WM_DPICHANGED:        view->wm_dpi_changed(LOWORD(wp), HIWORD(wp)); break;
+	case WM_WINDOWPOSCHANGING: view->wm_window_pos_changing((LPWINDOWPOS)lp); break;
+	case WM_SIZE:              view->wm_size(LOWORD(lp), HIWORD(lp)); break;
+	case WM_PAINT:             view->wm_paint(); break;
+	case WM_ACTIVATEAPP:       view->wm_activate_app((BOOL)wp == TRUE); break;
+	case WM_TIMER:             view->wm_timer(); break;
+	case WM_HOTKEY:            view->wm_hot_key(wp); break;
+	case WM_SHOWWINDOW:        view->wm_show_window((BOOL)wp); break;
+	case WM_LBUTTONDOWN:       view->wm_button_down(VK_LBUTTON, LOWORD(lp), HIWORD(lp)); break;
+	case WM_RBUTTONDOWN:       view->wm_button_down(VK_RBUTTON, LOWORD(lp), HIWORD(lp)); break;
+	case WM_MBUTTONDOWN:       view->wm_button_down(VK_MBUTTON, LOWORD(lp), HIWORD(lp)); break;
+	case WM_MOUSEMOVE:         view->wm_mouse_move(wp, LOWORD(lp), HIWORD(lp)); break;
+	case WM_LBUTTONUP:         view->wm_button_up(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
+	case WM_RBUTTONUP:         view->wm_button_up(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
+	case WM_MBUTTONUP:         view->wm_button_up(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
+	case WM_MOUSEWHEEL:        view->wm_mouse_wheel((short)HIWORD(wp)); break;
+	case WM_VSCROLL:           view->wm_mouse_wheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
+	case WM_ENDSESSION:        view->wm_end_session(); break;
+	case WM_REQUESTUPDATE:     view->wm_request_update(); break;
+	case WM_RENAMEEDITCLOSED:  view->wm_rename_edit_closed(); break;
+	case WM_KEYDOWN:           view->wm_key_down(wp); break;
+	case WM_ENTERMENULOOP:     view->wm_menu_loop(true); break;
+	case WM_EXITMENULOOP:      view->wm_menu_loop(false); break;
+	case WM_CLOSE:             view->wm_close(); break;
 	case WM_LBUTTONDBLCLK:
 	case WM_RBUTTONDBLCLK:
 	case WM_MBUTTONDBLCLK:

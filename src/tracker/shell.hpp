@@ -3,7 +3,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -42,10 +42,10 @@ public:
 			}
 		}
 
-		ItemIdChildList(const ItemIdChildList& inst) = delete;
-		ItemIdChildList(ItemIdChildList&& inst) = delete;
+		ItemIdChildList(const ItemIdChildList& inst)            = delete;
+		ItemIdChildList(ItemIdChildList&& inst)                 = delete;
 		ItemIdChildList& operator=(const ItemIdChildList& inst) = delete;
-		ItemIdChildList& operator=(ItemIdChildList&& inst) = delete;
+		ItemIdChildList& operator=(ItemIdChildList&& inst)      = delete;
 
 		const LPSHELLFOLDER parent_shell_folder() noexcept {
 			return parent_shf_;

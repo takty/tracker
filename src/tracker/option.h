@@ -3,7 +3,7 @@
  * Document Options
  *
  * @author Takuto Yanagida
- * @version 2021-05-16
+ * @version 2021-05-30
  *
  */
 
@@ -19,78 +19,78 @@
 
 class Option {
 
-	bool showHidden_, sortRev_;
-	int sortBy_;
+	bool show_hidden_, sort_rev_;
+	int sort_by_;
 
-	bool sortHis_, sortHisRev_;
-	int sortHisBy_;
+	bool sort_his_, sort_his_rev_;
+	int sort_his_by_;
 
 public:
 
-	enum {sbName, sbType, sbDate, sbSize};  // Sort type
+	enum { ST_NAME, ST_TYPE, ST_DATE, ST_SIZE };  // Sort type
 
-	void Restore(Pref& pref) {
-		showHidden_ = pref.get(SECTION_WINDOW, KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
-		sortRev_    = pref.get(SECTION_WINDOW, KEY_SORT_REV,    VAL_SORT_REV)    != 0;
-		sortBy_     = pref.get(SECTION_WINDOW, KEY_SORT_BY,     VAL_SORT_BY);
+	void restore(const Pref& pref) {
+		show_hidden_ = pref.get(SECTION_WINDOW, KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
+		sort_rev_    = pref.get(SECTION_WINDOW, KEY_SORT_REV,    VAL_SORT_REV)    != 0;
+		sort_by_     = pref.get(SECTION_WINDOW, KEY_SORT_BY,     VAL_SORT_BY);
 
-		sortHis_    = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
-		sortHisRev_ = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
-		sortHisBy_  = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
+		sort_his_     = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
+		sort_his_rev_ = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
+		sort_his_by_  = pref.get(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
 	}
 
-	void Store(Pref& pref) {
-		pref.set(SECTION_WINDOW, KEY_SHOW_HIDDEN, showHidden_);
-		pref.set(SECTION_WINDOW, KEY_SORT_REV,    sortRev_);
-		pref.set(SECTION_WINDOW, KEY_SORT_BY,     sortBy_);
+	void store(Pref& pref) {
+		pref.set(SECTION_WINDOW, KEY_SHOW_HIDDEN, show_hidden_);
+		pref.set(SECTION_WINDOW, KEY_SORT_REV,    sort_rev_);
+		pref.set(SECTION_WINDOW, KEY_SORT_BY,     sort_by_);
 
-		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY,     sortHis_);
-		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sortHisRev_);
-		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sortHisBy_);
+		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY,     sort_his_);
+		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sort_his_rev_);
+		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sort_his_by_);
 	}
 
-	int GetSortType() noexcept {
-		return sortBy_;
+	int get_sort_type() noexcept {
+		return sort_by_;
 	}
 
-	bool GetSortOrder() noexcept {
-		return sortRev_;
+	bool get_sort_order() noexcept {
+		return sort_rev_;
 	}
 
-	bool IsShowHidden() noexcept {
-		return showHidden_;
+	bool is_hidden_shown() noexcept {
+		return show_hidden_;
 	}
 
-	int SetSortType(int t) noexcept {
-		return sortBy_ = t;
+	int set_sort_type(int t) noexcept {
+		return sort_by_ = t;
 	}
 
-	bool SetSortOrder(bool f)noexcept {
-		return sortRev_ = f;
+	bool set_sort_order(bool f)noexcept {
+		return sort_rev_ = f;
 	}
 
-	bool SetShowHidden(bool f) noexcept {
-		return showHidden_ = f;
+	bool set_hidden_shown(bool f) noexcept {
+		return show_hidden_ = f;
 	}
 
-	void SortFiles(ItemList& files) {
-		switch (sortBy_) {
-		case 0: files.Sort(CompByName(sortRev_)); break;
-		case 1: files.Sort(CompByType(sortRev_)); break;
-		case 2: files.Sort(CompByDate(sortRev_)); break;
-		case 3: files.Sort(CompBySize(sortRev_)); break;
-		default: files.Sort(CompByName(sortRev_)); break;
+	void sort_files(ItemList& files) {
+		switch (sort_by_) {
+		case 0: files.sort(CompByName(sort_rev_)); break;
+		case 1: files.sort(CompByType(sort_rev_)); break;
+		case 2: files.sort(CompByDate(sort_rev_)); break;
+		case 3: files.sort(CompBySize(sort_rev_)); break;
+		default: files.sort(CompByName(sort_rev_)); break;
 		}
 	}
 
-	void SortHistory(ItemList& files) {
-		if (!sortHis_) return;
-		switch (sortHisBy_) {
-		case 0: files.Sort(CompByName(sortHisRev_)); break;
-		case 1: files.Sort(CompByType(sortHisRev_)); break;
-		case 2: files.Sort(CompByDate(sortHisRev_)); break;
-		case 3: files.Sort(CompBySize(sortHisRev_)); break;
-		default: files.Sort(CompByName(sortHisRev_)); break;
+	void sort_history(ItemList& files) {
+		if (!sort_his_) return;
+		switch (sort_his_by_) {
+		case 0: files.sort(CompByName(sort_his_rev_)); break;
+		case 1: files.sort(CompByType(sort_his_rev_)); break;
+		case 2: files.sort(CompByDate(sort_his_rev_)); break;
+		case 3: files.sort(CompBySize(sort_his_rev_)); break;
+		default: files.sort(CompByName(sort_his_rev_)); break;
 		}
 	}
 

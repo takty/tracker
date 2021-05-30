@@ -3,7 +3,7 @@
  * Observer
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2021-05-30
  *
  */
 
@@ -14,6 +14,6 @@ class Observer {
 
 public:
 
-	virtual void Updated() = 0;
+	virtual void updated() = 0;
 
 };

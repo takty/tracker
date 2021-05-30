@@ -3,7 +3,7 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -20,99 +20,103 @@
 class RenameEdit {
 
 	int          msg_;
-	HWND         hWnd_    = nullptr;
-	HWND         hEdit_   = nullptr;
-	WNDPROC      orgProc_ = nullptr;
-	std::wstring renamedPath_;
-	std::wstring newFileName_;
+	HWND         hwnd_    = nullptr;
+	HWND         hedit_   = nullptr;
+	WNDPROC      orig_proc_ = nullptr;
+	std::wstring renamed_path_;
+	std::wstring new_file_name_;
 
-	static LRESULT CALLBACK editProc(HWND hEdit_, UINT msg, WPARAM wp, LPARAM lp) noexcept {
-		auto p = (RenameEdit*) GetWindowLong(hEdit_, GWL_USERDATA);
+	static LRESULT CALLBACK edit_proc(HWND hedit_, UINT msg, WPARAM wp, LPARAM lp) noexcept {
+		auto p = (RenameEdit*) GetWindowLong(hedit_, GWL_USERDATA);
 
 		switch (msg) {
 		case WM_KEYDOWN:
 			if (wp == VK_RETURN) {
-				p->Close();
+				p->hide();
 				break;
 			} else if (wp == VK_ESCAPE) {
-				::ShowWindow(hEdit_, SW_HIDE);
+				::ShowWindow(hedit_, SW_HIDE);
 				break;
 			}
 			[[fallthrough]];
 		default:
-			return ::CallWindowProc(p->orgProc_, hEdit_, msg, wp, lp);
+			return ::CallWindowProc(p->orig_proc_, hedit_, msg, wp, lp);
 		}
 		return 0;
 	}
 
 public:
 
-	RenameEdit(int msg) noexcept : msg_(msg) {
+	RenameEdit(int msg) noexcept : msg_(msg) {}
+
+	void initialize(HWND hwnd) noexcept {
+		hwnd_ = hwnd;
+		auto hInst = (HINSTANCE)::GetWindowLong(hwnd, GWL_HINSTANCE);
+		hedit_ = ::CreateWindowEx(
+			WS_EX_CLIENTEDGE,
+			_T("EDIT"),
+			_T(""),
+			WS_CHILD | ES_AUTOHSCROLL,
+			0, 0, 0, 0, hwnd, nullptr, hInst, nullptr
+		);
+		orig_proc_ = (WNDPROC)::GetWindowLong(hedit_, GWL_WNDPROC);
+		::SetWindowLong(hedit_, GWL_USERDATA, (LONG)this);
+		::SetWindowLong(hedit_, GWL_WNDPROC, (LONG)RenameEdit::edit_proc);
 	}
 
-	void Initialize(HWND hWnd) noexcept {
-		hWnd_ = hWnd;
-		auto hInst = (HINSTANCE)::GetWindowLong(hWnd, GWL_HINSTANCE);
-		hEdit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
-			0, 0, 0, 0, hWnd, nullptr, hInst, nullptr);
-		orgProc_ = (WNDPROC)::GetWindowLong(hEdit_, GWL_WNDPROC);
-		::SetWindowLong(hEdit_, GWL_USERDATA, (LONG)this);
-		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG)RenameEdit::editProc);
+	void finalize() noexcept {
+		::SetWindowLong(hedit_, GWL_WNDPROC, (LONG)orig_proc_);
 	}
 
-	void Finalize() noexcept {
-		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG)orgProc_);
+	void set_font(const HFONT hItemFont) const noexcept {
+		::SendMessage(hedit_, WM_SETFONT, (WPARAM)hItemFont, 0);
 	}
 
-	void SetFont(const HFONT hItemFont) const noexcept {
-		::SendMessage(hEdit_, WM_SETFONT, (WPARAM)hItemFont, 0);
+	bool is_active() noexcept {
+		return ::IsWindowVisible(hedit_) == TRUE;
 	}
 
-	bool IsActive() noexcept {
-		return ::IsWindowVisible(hEdit_) == TRUE;
-	}
-
-	void Open(const std::wstring path, int y, int width, int height) noexcept {
-		renamedPath_.clear();
+	void show(const std::wstring path, int y, int width, int height) noexcept {
+		renamed_path_.clear();
 		if (Path::is_root(path)) return;
-		renamedPath_.assign(path);
-		auto fname = Path::name(renamedPath_);
+		renamed_path_.assign(path);
+		auto fname = Path::name(renamed_path_);
 
 		auto len = fname.size();
-		if (Link::is_link(renamedPath_)) {
+		if (Link::is_link(renamed_path_)) {
 			fname.resize(fname.size() - 4);  // If it is a shortcut, remove the extension from the file name
 		} else {
 			auto exe = Path::ext(fname);
 			if (!exe.empty()) len -= exe.size() + 1;
 		}
-		::SetWindowText(hEdit_, fname.c_str());
-		::SendMessage(hEdit_, EM_SETSEL, 0, len);
+		::SetWindowText(hedit_, fname.c_str());
+		::SendMessage(hedit_, EM_SETSEL, 0, len);
 
-		::MoveWindow(hEdit_, 0, y, width, height, TRUE);
-		::ShowWindow(hEdit_, SW_SHOWNORMAL);
-		::SetFocus(hEdit_);
+		::MoveWindow(hedit_, 0, y, width, height, TRUE);
+		::ShowWindow(hedit_, SW_SHOWNORMAL);
+		::SetFocus(hedit_);
 	}
 
 	// Close name change
-	void Close() noexcept {
-		if (!::IsWindowVisible(hEdit_)) return;
+	void hide() noexcept {
+		if (!::IsWindowVisible(hedit_)) return;
 
-		::ShowWindow(hEdit_, SW_HIDE);
-		if (!::SendMessage(hEdit_, EM_GETMODIFY, 0, 0) || renamedPath_.empty()) return;
-		const auto len = ::GetWindowTextLength(hEdit_);  // Not including terminal NULL
+		::ShowWindow(hedit_, SW_HIDE);
+		if (!::SendMessage(hedit_, EM_GETMODIFY, 0, 0) || renamed_path_.empty()) return;
+		const auto len = ::GetWindowTextLength(hedit_);  // Not including terminal NULL
 		const auto fname = std::make_unique<wchar_t[]>(len + 1);  // Add terminal NULL
-		::GetWindowText(hEdit_, fname.get(), len + 1);  // Add terminal NULL
-		newFileName_.assign(fname.get());
-		if (Link::is_link(renamedPath_)) newFileName_.append(_T(".lnk"));
-		::SendMessage(hWnd_, msg_, 0, 0);
+		::GetWindowText(hedit_, fname.get(), len + 1);  // Add terminal NULL
+		new_file_name_.assign(fname.get());
+		if (Link::is_link(renamed_path_)) new_file_name_.append(_T(".lnk"));
+		::SendMessage(hwnd_, msg_, 0, 0);
 	}
 
-	const std::wstring& GetRenamePath() noexcept {
-		return renamedPath_;
+	const std::wstring& get_renamed_path() noexcept {
+		return renamed_path_;
 	}
 
-	const std::wstring& GetNewFileName() noexcept {
-		return newFileName_;
+	const std::wstring& get_new_file_name() noexcept {
+		return new_file_name_;
 	}
 
 };

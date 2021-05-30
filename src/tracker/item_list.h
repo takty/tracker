@@ -3,7 +3,7 @@
  * Item list
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -11,43 +11,58 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
 
-#include "Item.h"
+#include "item.h"
 
 
 class ItemList {
 
 	std::vector<Item*> buf_;
 	std::vector<Item*> items_;
-	int selNum_;
+	size_t sel_num_{};
 
-	void DeleteItem(Item *f) {
-		if (buf_.size() >= 1024) delete f;
-		else buf_.push_back(f);
+	void delete_item(Item *f) {
+		if (buf_.size() >= 1024) {
+			delete f;
+		}
+		else {
+			buf_.push_back(f);
+		}
 	}
 
 public:
 
-	ItemList() noexcept : selNum_(0) {}
+	ItemList() noexcept {}
 
 	~ItemList() {
-		for (auto& i : items_) delete i;
-		for (auto& i : buf_) delete i;
+		for (auto& it : items_) delete it;
+		for (auto& it : buf_) delete it;
 	}
 
-	int Count() const noexcept {
+	auto size() const noexcept {
 		return items_.size();
 	}
 
-	Item* operator[](int index) noexcept {
+	auto at(size_t index) noexcept {
 		return items_.at(index);
 	}
 
-	const Item* operator[](int index) const noexcept {
+	const auto at(size_t index) const noexcept {
 		return items_.at(index);
 	}
 
-	Item* CreateItem() {
+	auto begin() noexcept {
+		return items_.begin();
+	}
+
+	auto end() noexcept {
+		return items_.end();
+	}
+
+	// ---------------------------------------------------------------------------
+
+	Item* create_item() {
 		Item* f = nullptr;
 		if (buf_.empty()) {
 			f = new Item();
@@ -56,53 +71,53 @@ public:
 			buf_.pop_back();
 		}
 		if (!f) return nullptr;
-		f->Clear();
+		f->clear();
 		return f;
 	}
 
-	void Add(Item* item) {
+	void add(Item* item) {
 		items_.push_back(item);
 	}
 
-	void Insert(int index, Item* item) {
+	void insert(size_t index, Item* item) {
 		items_.insert(items_.begin() + index, item);
 	}
 
-	void Clear() {
-		for (auto& i : items_) DeleteItem(i);
+	void clear() {
+		for (auto& i : items_) delete_item(i);
 		items_.clear();
 	}
 
-	template<class Pred> void Sort(Pred p) {
-		sort(items_.begin(), items_.end(), p);
+	template<class Pred> void sort(Pred p) {
+		std::sort(items_.begin(), items_.end(), p);
 	}
 
-	int Select(int front, int back, bool all) noexcept(false) {
-		if (front == -1 || back == -1) return selNum_;
+	size_t select(size_t front, size_t back, bool all) noexcept(false) {
+		if (front == -1 || back == -1) return sel_num_;
 		if (back < front) std::swap(front, back);
 		if (all) {
-			for (int i = front; i <= back; ++i) {
+			for (size_t i = front; i <= back; ++i) {
 				if (items_.at(i)->data() != 0) continue;
-				items_.at(i)->SetSelected(true);
+				items_.at(i)->set_selected(true);
 			}
-			selNum_ = back - front + 1;
+			sel_num_ = back - front + 1;
 		} else {
-			for (int i = front; i <= back; ++i) {
+			for (size_t i = front; i <= back; ++i) {
 				auto& fd = items_.at(i);
 				if (fd->data() != 0) continue;
-				fd->SetSelected(!fd->IsSelected());
-				selNum_ += (fd->IsSelected() ? 1 : -1);
+				fd->set_selected(!fd->is_selected());
+				sel_num_ += (fd->is_selected() ? 1 : -1);
 			}
 		}
-		return selNum_;
+		return sel_num_;
 	}
 
-	void ClearSelection() noexcept {
-		selNum_ = 0;
+	void clear_selection() noexcept {
+		sel_num_ = 0U;
 	}
 
-	int SelectionCount() noexcept {
-		return selNum_;
+	size_t selected_size() noexcept {
+		return sel_num_;
 	}
 
 };

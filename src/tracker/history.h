@@ -3,7 +3,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -22,7 +22,7 @@
 class History {
 
 	std::vector<std::wstring> paths_;
-	int max_size_{};
+	size_t max_size_{};
 
 public:
 
@@ -30,25 +30,37 @@ public:
 
 	History() noexcept {}
 
-	void initialize(Pref& pref) noexcept {
-		max_size_ = pref.get(SECTION_HISTORY, KEY_MAX_HISTORY, VAL_MAX_HISTORY);
+	void initialize(const Pref& pref) noexcept {
+		max_size_ = gsl::narrow_cast<size_t>(pref.get(SECTION_HISTORY, KEY_MAX_HISTORY, VAL_MAX_HISTORY));
 	}
 
-	void restore(Pref& data) noexcept(false) {
+	void restore(const Pref& data) noexcept(false) {
 		paths_ = data.load_lines<std::vector<std::wstring>>();
 	}
 
-	void store(Pref& data) noexcept(false) {
+	void store(const Pref& data) noexcept(false) {
 		data.save_lines(paths_);
 	}
 
-	int size() noexcept {
+	// ---------------------------------------------------------------------------
+
+	auto size() const noexcept {
 		return paths_.size();
 	}
 
-	std::wstring& operator[](int index) noexcept(false) {
+	auto at(size_t index) noexcept {
 		return paths_.at(index);
 	}
+
+	auto begin() noexcept {
+		return paths_.begin();
+	}
+
+	auto end() noexcept {
+		return paths_.end();
+	}
+
+	// ---------------------------------------------------------------------------
 
 	void add(const std::wstring& path) noexcept {
 		auto root = path.substr(0, 1) + L":\\";
@@ -57,14 +69,21 @@ public:
 		paths_.erase(remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
 		paths_.insert(paths_.begin(), path);  // Add
 
-		if (std::ssize(paths_) > max_size_) {  // Maximum number of history limit
+		if (paths_.size() > max_size_) {  // Maximum number of history limit
 			paths_.resize(max_size_);
 		}
 	}
 
 	void clean_up() noexcept {
 		// Delete a nonexistent path
-		paths_.erase(remove_if(paths_.begin(), paths_.end(), [](std::wstring& p) {return !FileSystem::exists(p); }), paths_.end());
+		paths_.erase(
+			remove_if(
+				paths_.begin(),
+				paths_.end(),
+				[](std::wstring& p) { return !FileSystem::exists(p); }
+			),
+			paths_.end()
+		);
 	}
 
 	void clear() noexcept {

@@ -3,7 +3,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -24,16 +24,16 @@ class DragFile {
 	// Implementation of OLE IDropSource
 	class DropSource : public IDropSource {
 
-		ULONG refCount_;
+		ULONG ref_count_;
 
 	public:
 
-		DropSource() noexcept : refCount_(1) {}
+		DropSource() noexcept : ref_count_(1) {}
 
-		DropSource(const DropSource& inst) = delete;
-		DropSource(DropSource&& inst) = delete;
+		DropSource(const DropSource& inst)            = delete;
+		DropSource(DropSource&& inst)                 = delete;
 		DropSource& operator=(const DropSource& inst) = delete;
-		DropSource& operator=(DropSource&& inst) = delete;
+		DropSource& operator=(DropSource&& inst)      = delete;
 
 		virtual ~DropSource() {}
 
@@ -50,11 +50,11 @@ class DragFile {
 		}
 
 		ULONG __stdcall AddRef() noexcept(false) override {
-			return ::InterlockedIncrement(&refCount_);
+			return ::InterlockedIncrement(&ref_count_);
 		}
 
 		ULONG __stdcall Release() noexcept(false) override {
-			const auto count = ::InterlockedDecrement(&refCount_);
+			const auto count = ::InterlockedDecrement(&ref_count_);
 			if (count == 0) delete this;
 			return count;
 		}
@@ -87,9 +87,9 @@ public:
 		if (!dobj) return;
 
 		auto ds = new DropSource();
-		const bool notDrive = !Path::is_root(paths.front());
-		DWORD dwEffect = 0;
-		::DoDragDrop(dobj, ds, DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
+		const bool not_drive{ !Path::is_root(paths.front()) };
+		DWORD effect{};
+		::DoDragDrop(dobj, ds, DROPEFFECT_MOVE * not_drive | DROPEFFECT_COPY | DROPEFFECT_LINK, &effect);
 		ds->Release();
 
 		dobj->Release();

@@ -3,7 +3,7 @@
  * Shortcut File Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -39,16 +39,14 @@ public:
 		}
 		IPersistFile* ppf = nullptr;
 		hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
-		if (SUCCEEDED(hr) && ppf) {
+		const bool suucess = SUCCEEDED(hr) && ppf;
+		if (suucess) {
 			auto sp = shortcut_path.c_str();
 			ppf->Save(sp, TRUE);
 			ppf->Release();
-			psl->Release();
-			return true;
-		} else {
-			psl->Release();
-			return false;
 		}
+		psl->Release();
+		return suucess;
 	}
 
 	// Resolve shortcut and get the target path

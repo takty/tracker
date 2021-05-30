@@ -3,7 +3,7 @@
  * String Converter
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 

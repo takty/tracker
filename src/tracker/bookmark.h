@@ -3,7 +3,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -35,29 +35,41 @@ public:
 		data.save_lines(paths_);
 	}
 
-	int size() noexcept {
+	// ---------------------------------------------------------------------------
+
+	auto size() const noexcept {
 		return paths_.size();
 	}
 
-	std::wstring& operator[](int index) noexcept {
+	auto at(const size_t index) noexcept {
 		return paths_.at(index);
 	}
 
-	bool arrange(int drag, int drop) noexcept {
-		if (drag < 0 || drag >= std::ssize(paths_)) return false;
-		if (drop < 0 || drop >= std::ssize(paths_)) return false;
-		std::wstring path(paths_.at(drag));
-		paths_.erase(paths_.begin() + drag);
-		paths_.insert(paths_.begin() + drop, path);
-		return true;
+	auto begin() noexcept {
+		return paths_.begin();
 	}
+
+	auto end() noexcept {
+		return paths_.end();
+	}
+
+	// ---------------------------------------------------------------------------
 
 	void add(const std::wstring& path) noexcept {
 		paths_.push_back(path);
 	}
 
-	void remove(int index) noexcept {
+	void remove(const size_t index) noexcept {
 		paths_.erase(paths_.begin() + index);
+	}
+
+	bool arrange(const size_t drag, const size_t drop) noexcept {
+		if (drag >= paths_.size()) return false;
+		if (drop >= paths_.size()) return false;
+		std::wstring path{ paths_.at(drag) };
+		paths_.erase(paths_.begin() + drag);
+		paths_.insert(paths_.begin() + drop, path);
+		return true;
 	}
 
 };

@@ -3,7 +3,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -31,10 +31,10 @@ class Operation {
 			if (res == S_OK) si_ = dest;
 		}
 
-		ShellItem(const ShellItem& inst) = delete;
-		ShellItem(ShellItem&& inst) = delete;
+		ShellItem(const ShellItem& inst)            = delete;
+		ShellItem(ShellItem&& inst)                 = delete;
 		ShellItem& operator=(const ShellItem& inst) = delete;
-		ShellItem& operator=(ShellItem&& inst) = delete;
+		ShellItem& operator=(ShellItem&& inst)      = delete;
 
 		~ShellItem() noexcept(false) {
 			if (si_) si_->Release();
@@ -59,10 +59,10 @@ class Operation {
 			}
 		}
 
-		ShellItemIdArray(const ShellItemIdArray& inst) = delete;
-		ShellItemIdArray(ShellItemIdArray&& inst) = delete;
+		ShellItemIdArray(const ShellItemIdArray& inst)            = delete;
+		ShellItemIdArray(ShellItemIdArray&& inst)                 = delete;
 		ShellItemIdArray& operator=(const ShellItemIdArray& inst) = delete;
-		ShellItemIdArray& operator=(ShellItemIdArray&& inst) = delete;
+		ShellItemIdArray& operator=(ShellItemIdArray&& inst)      = delete;
 
 		~ShellItemIdArray() noexcept(false) {
 			sia_->Release();
@@ -73,7 +73,7 @@ class Operation {
 		}
 	};
 
-	HWND            hWnd_    = nullptr;
+	HWND            hwnd_    = nullptr;
 	IFileOperation* file_op_ = nullptr;
 
 	bool perform() const {
@@ -110,7 +110,7 @@ class Operation {
 		SHELLEXECUTEINFO sei{};
 		sei.cbSize       = sizeof(SHELLEXECUTEINFO);
 		sei.fMask        = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC | SEE_MASK_FLAG_LOG_USAGE;  // To suppress that a caution dialog is shown
-		sei.hwnd         = hWnd_;
+		sei.hwnd         = hwnd_;
 		sei.lpVerb       = nullptr;
 		sei.lpFile       = obj.c_str();
 		sei.lpParameters = opt;  // A nullptr and an empty string make difference
@@ -129,7 +129,7 @@ class Operation {
 public:
 
 	Operation(HWND hWnd = nullptr) noexcept(false) {
-		hWnd_ = hWnd;
+		hwnd_ = hWnd;
 		IFileOperation* obj = nullptr;
 		auto res = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, (void**)&obj);
 		if (SUCCEEDED(res) && obj) {

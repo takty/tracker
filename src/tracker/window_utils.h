@@ -3,7 +3,7 @@
  * Window Utilities
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -17,11 +17,10 @@ class WindowUtils {
 
 public:
 
-	WindowUtils() noexcept {
-	}
+	WindowUtils() noexcept {}
 
 	// Whether the topmost window is full screen
-	static bool IsForegroundWindowFullScreen() noexcept {
+	static bool is_foreground_window_full_screen() noexcept {
 		HWND fw = ::GetForegroundWindow();
 		RECT wr{};
 		::GetWindowRect(fw, &wr);
@@ -38,7 +37,7 @@ public:
 	}
 
 	// Move the window to the corner of the screen (Win10 compatible)
-	static void MoveWindowToCorner(HWND hWnd, int popupPos) noexcept {
+	static void move_window_to_corner(HWND hWnd, int popupPos) noexcept {
 		const int sw = ::GetSystemMetrics(SM_CXSCREEN), sh = ::GetSystemMetrics(SM_CYSCREEN);
 		RECT out{}, in{};
 		::GetWindowRect(hWnd, &out);
@@ -57,7 +56,7 @@ public:
 	}
 
 	// Bring the window completely to the front
-	static void ForegroundWindow(HWND hWnd) noexcept {
+	static void foreground_window(HWND hWnd) noexcept {
 		DWORD t{};
 		const DWORD forId = ::GetWindowThreadProcessId(::GetForegroundWindow(), nullptr);
 		const DWORD tarId = ::GetWindowThreadProcessId(hWnd, nullptr);
@@ -70,11 +69,11 @@ public:
 		::AttachThreadInput(tarId, forId, FALSE);
 	}
 
-	static bool CtrlPressed() noexcept {
+	static bool is_ctrl_pressed() noexcept {
 		return (::GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
 	}
 
-	static POINT GetDPI(HWND hWnd) noexcept {
+	static POINT get_dpi(HWND hWnd) noexcept {
 		auto monitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
 		UINT fx, fy;
 		::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &fx, &fy);
@@ -84,7 +83,7 @@ public:
 		return dpi;
 	}
 
-	static void DrawGrayText(HDC dc, RECT r, const wchar_t* str) noexcept {
+	static void draw_gray_text(HDC dc, RECT r, const wchar_t* str) noexcept {
 		::SetBkMode(dc, TRANSPARENT);
 		r.left += 2, r.top += 1;
 		::SetTextColor(dc, GetSysColor(COLOR_HIGHLIGHTTEXT));

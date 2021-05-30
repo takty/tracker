@@ -3,7 +3,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2021-05-29
+ * @version 2021-05-30
  *
  */
 
@@ -26,7 +26,7 @@ class ContextMenu {
 	static constexpr const wchar_t* const PROP_INSTANCE = L"ContextMenuInstance";
 
 	// Window Procedure that hooked to the original procedure while showing the menu
-	static LRESULT CALLBACK MenuProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) noexcept(false) {
+	static LRESULT CALLBACK menu_proc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) noexcept(false) {
 		const auto cm = static_cast<ContextMenuPtr>(::GetProp(wnd, PROP_INSTANCE));
 		if (!cm) return FALSE;
 		switch (msg) {
@@ -72,10 +72,10 @@ public:
 
 	ContextMenu(HWND wnd) noexcept : wnd_(wnd) {}
 
-	ContextMenu(const ContextMenu& inst) = delete;
-	ContextMenu(ContextMenu&& inst) = delete;
+	ContextMenu(const ContextMenu& inst)            = delete;
+	ContextMenu(ContextMenu&& inst)                 = delete;
 	ContextMenu& operator=(const ContextMenu& inst) = delete;
-	ContextMenu& operator=(ContextMenu&& inst) = delete;
+	ContextMenu& operator=(ContextMenu&& inst)      = delete;
 
 	~ContextMenu() {}
 
@@ -89,14 +89,14 @@ public:
 		cm->QueryInterface(IID_IContextMenu2, (void**)(&cm2));
 
 		// Create a menu
-		auto hMenu = ::CreatePopupMenu();
-		cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, CMF_NORMAL);
+		auto hmenu = ::CreatePopupMenu();
+		cm->QueryContextMenu(hmenu, 0, 1, 0x7fff, CMF_NORMAL);
 
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
-		orig_proc_ = (WNDPROC)(::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)MenuProc));
-		const int id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
+		orig_proc_ = (WNDPROC)(::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)menu_proc));
+		const int id = ::TrackPopupMenu(hmenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
 		::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)orig_proc_);
 		::RemoveProp(wnd_, PROP_INSTANCE);
@@ -107,7 +107,7 @@ public:
 				res = true;
 			}
 		}
-		::DestroyMenu(hMenu);
+		::DestroyMenu(hmenu);
 		if (cm2) cm2->Release();
 		cm->Release();
 		return res;
