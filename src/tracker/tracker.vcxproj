@@ -144,6 +144,7 @@
     <ClInclude Include="observer.h" />
     <ClInclude Include="view.h" />
     <ClInclude Include="window_utils.h" />
+    <ClInclude Include="paint.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

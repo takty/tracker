@@ -140,6 +140,9 @@
     <ClInclude Include="option.h">
       <Filter>Header Files\Document</Filter>
     </ClInclude>
+    <ClInclude Include="paint.h">
+      <Filter>Header Files\View</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
