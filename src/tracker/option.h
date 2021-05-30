@@ -49,15 +49,15 @@ public:
 		pref.set(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sort_his_by_);
 	}
 
-	int get_sort_type() noexcept {
+	int get_sort_type() const noexcept {
 		return sort_by_;
 	}
 
-	bool get_sort_order() noexcept {
+	bool get_sort_order() const noexcept {
 		return sort_rev_;
 	}
 
-	bool is_hidden_shown() noexcept {
+	bool is_hidden_shown() const noexcept {
 		return show_hidden_;
 	}
 
@@ -73,7 +73,7 @@ public:
 		return show_hidden_ = f;
 	}
 
-	void sort_files(ItemList& files) {
+	void sort_files(ItemList& files) const {
 		switch (sort_by_) {
 		case 0: files.sort(CompByName(sort_rev_)); break;
 		case 1: files.sort(CompByType(sort_rev_)); break;
@@ -83,7 +83,7 @@ public:
 		}
 	}
 
-	void sort_history(ItemList& files) {
+	void sort_history(ItemList& files) const {
 		if (!sort_his_) return;
 		switch (sort_his_by_) {
 		case 0: files.sort(CompByName(sort_his_rev_)); break;

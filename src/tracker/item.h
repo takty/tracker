@@ -188,4 +188,8 @@ public:
 		return (style_ & HIDE) != 0;
 	}
 
+	bool is_special() const noexcept {
+		return path_.starts_with(L":");
+	}
+
 };

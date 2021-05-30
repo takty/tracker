@@ -216,7 +216,10 @@ public:
 
 		// When index is not selected (including hierarchy) -> Single file is selected alone
 		if (!list.at(index)->is_selected()) {
-			ope.add(list.at(index)->path());
+			const auto& it = list.at(index);
+			if (!it->is_special()) {
+				ope.add(it->path());
+			}
 			return ope;
 		}
 		// Copy selected file name
@@ -270,23 +273,27 @@ public:
 		return opt_;
 	}
 
+	const Option& get_option() const noexcept {
+		return opt_;
+	}
+
 	// Return the number of selected files
-	size_t selected_size() noexcept {
+	size_t selected_size() const noexcept {
 		return files_.selected_size();
 	}
 
 	// The current directory is a bookmark
-	bool in_bookmark() noexcept {
+	bool in_bookmark() const noexcept {
 		return cur_path_ == fav_.PATH;
 	}
 
 	// Current directory is history
-	bool in_history() noexcept {
+	bool in_history() const noexcept {
 		return cur_path_ == his_.PATH;
 	}
 
 	// Current directory is drive
-	bool in_drives() noexcept {
+	bool in_drives() const noexcept {
 		return cur_path_ == dri_.PATH;
 	}
 

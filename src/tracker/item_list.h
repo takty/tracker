@@ -116,7 +116,7 @@ public:
 		sel_num_ = 0U;
 	}
 
-	size_t selected_size() noexcept {
+	size_t selected_size() const noexcept {
 		return sel_num_;
 	}
 

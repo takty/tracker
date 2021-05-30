@@ -93,7 +93,7 @@ class Selection {
 	}
 
 	// Determine file size
-	bool files_size(uint64_t& size, const uint64_t limit_time) noexcept {
+	bool files_size(uint64_t& size, const uint64_t limit_time) const noexcept {
 		uint64_t s{};
 		size = 0;
 
@@ -106,7 +106,7 @@ class Selection {
 	}
 
 	// Generate a string representing the size of the file or drive
-	std::wstring file_size_to_string(const uint64_t& size, bool success, const wchar_t* prefix) noexcept(false) {
+	std::wstring file_size_to_string(const uint64_t& size, bool success, const wchar_t* prefix) const noexcept(false) {
 		int f{};
 		const wchar_t* u{};
 		double val{};
@@ -372,7 +372,7 @@ public:
 	}
 
 	// Display file properties
-	void popup_file_property() noexcept(false) {
+	void popup_file_property() const noexcept(false) {
 		ContextMenu cm(hwnd_);
 		cm.show_property(objects_);
 	}
@@ -384,7 +384,7 @@ public:
 	}
 
 	// Get file information string
-	void make_info_strings(std::vector<std::wstring>& items) noexcept(false) {
+	void make_info_strings(std::vector<std::wstring>& items) const noexcept(false) {
 		if (Path::is_root(objects_.at(0))) {  // When it is a drive
 			uint64_t dSize, dFree;
 			FileSystem::drive_size(objects_.at(0), dSize, dFree);
