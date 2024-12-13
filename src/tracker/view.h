@@ -3,7 +3,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2024-12-13
  *
  */
 
@@ -188,6 +188,7 @@ public:
 			loadPropData(false);
 			::ShowWindow(hWnd_, SW_SHOW);
 		} else {
+			doc_.Finalize();
 			::DestroyWindow(hWnd_);
 		}
 	}

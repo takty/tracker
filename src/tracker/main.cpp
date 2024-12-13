@@ -3,7 +3,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2020-03-23
+ * @version 2024-12-13
  *
  */
 
@@ -91,6 +91,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_MOUSEWHEEL:        view->wmMouseWheel((short)HIWORD(wp)); break;
 	case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
+	case WM_QUERYENDSESSION:   view->wmEndSession(); return 1;
 	case WM_ENDSESSION:        view->wmEndSession(); break;
 	case WM_REQUESTUPDATE:     view->wmRequestUpdate(); break;
 	case WM_RENAMEEDITCLOSED:  view->wmRenameEditClosed(); break;
