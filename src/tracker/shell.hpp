@@ -95,7 +95,7 @@ public:
 
 		if (parent_shf == nullptr) return nullptr;
 		LPVOID ret_obj = nullptr;
-		auto res = parent_shf->GetUIObjectOf(nullptr, cs.size(), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
+		auto res = parent_shf->GetUIObjectOf(nullptr, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
 		if (res == S_OK) return ret_obj;
 		return nullptr;
 	}

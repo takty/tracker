@@ -3,7 +3,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -34,11 +34,11 @@ public:
 		pref.set_items(paths_, SECTION_BOOKMARK, KEY_FILE);
 	}
 
-	int size() {
+	size_t size() {
 		return paths_.size();
 	}
 
-	std::wstring& operator[](int index) {
+	std::wstring& operator[](size_t index) {
 		return paths_[index];
 	}
 

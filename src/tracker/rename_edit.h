@@ -3,7 +3,7 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -27,7 +27,7 @@ class RenameEdit {
 	std::wstring newFileName_;
 
 	static LRESULT CALLBACK editProc(HWND hEdit_, UINT msg, WPARAM wp, LPARAM lp) {
-		auto p = (RenameEdit*)GetWindowLong(hEdit_, GWL_USERDATA);
+		auto p = (RenameEdit*)GetWindowLongPtr(hEdit_, GWLP_USERDATA);
 
 		switch (msg) {
 		case WM_KEYDOWN:
@@ -38,6 +38,7 @@ class RenameEdit {
 				::ShowWindow(hEdit_, SW_HIDE);
 				break;
 			}
+			// Fall through
 		default:
 			return ::CallWindowProc(p->orgProc_, hEdit_, msg, wp, lp);
 		}
@@ -51,16 +52,16 @@ public:
 
 	void Initialize(HWND hWnd) {
 		hWnd_ = hWnd;
-		auto hInst = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
+		auto hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 		hEdit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
 			0, 0, 0, 0, hWnd, nullptr, hInst, nullptr);
-		orgProc_ = (WNDPROC)::GetWindowLong(hEdit_, GWL_WNDPROC);
-		::SetWindowLong(hEdit_, GWL_USERDATA, (LONG)this);
-		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG)RenameEdit::editProc);
+		orgProc_ = (WNDPROC)::GetWindowLongPtr(hEdit_, GWLP_WNDPROC);
+		::SetWindowLongPtr(hEdit_, GWLP_USERDATA, (LONG_PTR)this);
+		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, (LONG_PTR)RenameEdit::editProc);
 	}
 
 	void Finalize() {
-		::SetWindowLong(hEdit_, GWL_WNDPROC, (LONG)orgProc_);
+		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, (LONG_PTR)orgProc_);
 	}
 
 	void SetFont(HFONT hItemFont) {

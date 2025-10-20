@@ -3,7 +3,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2024-12-13
+ * @version 2025-10-21
  *
  */
 
@@ -47,13 +47,13 @@ class View : public Observer {
 	int mouseDownTopIndex_ = -1;
 	Document::ListType mouseDownListType_ = Document::ListType::FILE;
 
-	int scrollListTopIndex_ = 0;
+	size_t scrollListTopIndex_ = 0;
 	int listCursorIndex_    = 0;
 	Document::ListType listCursorSwitch_ = Document::ListType::FILE;
 
 	int cxSide_ = 0, cyItem_ = 0, cxScrollBar_ = 0;
 	HFONT hMarkFont_ = nullptr, hItemFont_ = nullptr;
-	int scrollListLineNum_ = 0;
+	size_t scrollListLineNum_ = 0;
 	RECT listRect_;
 
 	Pref pref_;
@@ -89,16 +89,16 @@ public:
 				int h = ::GetSystemMetrics(SM_CYSCREEN);
 				pos->y = h - (r.bottom - r.top);
 			}
-			return ::CallWindowProc((WNDPROC)::GetWindowLong(hMenu, GWL_USERDATA), hMenu, msg, wp, lp);
+			return ::CallWindowProc((WNDPROC)::GetWindowLongPtr(hMenu, GWLP_USERDATA), hMenu, msg, wp, lp);
 		}
-		return ::CallWindowProc((WNDPROC)::GetWindowLong(hMenu, GWL_USERDATA), hMenu, msg, wp, lp);
+		return ::CallWindowProc((WNDPROC)::GetWindowLongPtr(hMenu, GWLP_USERDATA), hMenu, msg, wp, lp);
 	}
 
 	View(const HWND hWnd) : doc_(extentions_, pref_, SEPA, (SEPA | HIER)), ope_(extentions_, pref_), re_(WM_RENAMEEDITCLOSED) {
 		doc_.SetView(this);
 
 		hWnd_ = hWnd;
-		::SetWindowLong(hWnd, GWL_USERDATA, (LONG)this);  // Set the window a property
+		::SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this);  // Set the window a property
 		ope_.SetWindowHandle(hWnd);
 		re_.Initialize(hWnd);
 		tt_.Initialize(hWnd);
@@ -227,7 +227,7 @@ public:
 		}
 	}
 
-	void wmHotKey(int id) {
+	void wmHotKey(WPARAM id) {
 		if (id == IDHK) {
 			if (::IsWindowVisible(hWnd_)) suppressPopup_ = true;
 			::ShowWindow(hWnd_, ::IsWindowVisible(hWnd_) ? SW_HIDE : SW_SHOW);
@@ -259,10 +259,10 @@ public:
 
 		if (!::IsWindow(hMenu)) return;
 		if (enter) {
-			::SetWindowLong(hMenu, GWL_USERDATA, (LONG)::GetWindowLong(hMenu, GWL_WNDPROC));
-			::SetWindowLong(hMenu, GWL_WNDPROC, (LONG)View::menuProc);
+			::SetWindowLongPtr(hMenu, GWLP_USERDATA, (LONG_PTR)::GetWindowLongPtr(hMenu, GWLP_WNDPROC));
+			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, (LONG_PTR)View::menuProc);
 		} else {
-			::SetWindowLong(hMenu, GWL_WNDPROC, (LONG)::GetWindowLong(hMenu, GWL_USERDATA));
+			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, (LONG_PTR)::GetWindowLongPtr(hMenu, GWLP_USERDATA));
 		}
 	}
 
@@ -282,14 +282,14 @@ public:
 
 		if (ps.rcPaint.right > rc.right - cxScrollBar_) drawScrollBar(dc);
 		if (ps.rcPaint.left < rc.right - cxScrollBar_) {
-			int begin = ps.rcPaint.top / cyItem_;
-			int end = ps.rcPaint.bottom / cyItem_;
+			size_t begin = ps.rcPaint.top / cyItem_;
+			size_t end = ps.rcPaint.bottom / cyItem_;
 			RECT r;
-			r.top = begin * cyItem_, r.bottom = r.top + cyItem_, r.left = 0, r.right = rc.right - cxScrollBar_;
+			r.top = (LONG)(begin * cyItem_), r.bottom = r.top + cyItem_, r.left = 0, r.right = rc.right - cxScrollBar_;
 
 			const ItemList &navis = doc_.GetNavis(), &files = doc_.GetFiles();
 
-			for (int i = begin; i <= end; ++i) {
+			for (size_t i = begin; i <= end; ++i) {
 				if (i < navis.Count()) {
 					const Item *fd = navis[i];
 					if ((fd->data() & SEPA) != 0) {
@@ -340,7 +340,8 @@ public:
 
 	// Draw a separator
 	void drawSeparator(HDC dc, RECT r, bool isHier) {
-		TCHAR str[4], *sortBy = _T("nedsNEDS");
+		TCHAR str[4]{};
+		TCHAR sortBy[] = _T("nedsNEDS");
 		SIZE font;
 		const ItemList& files = doc_.GetFiles();
 
@@ -356,7 +357,7 @@ public:
 				}
 			}
 			num.append(std::to_wstring(files.Count()));
-			::GetTextExtentPoint32(dc, num.c_str(), num.size(), &font);
+			::GetTextExtentPoint32(dc, num.c_str(), static_cast<int>(num.size()), &font);
 			RECT nr = r;
 			nr.left = nr.right - font.cx - 3;
 			WindowUtils::DrawGrayText(dc, nr, num.c_str());
@@ -365,7 +366,7 @@ public:
 
 			r.left += 3;
 			WindowUtils::DrawGrayText(dc, r, str);
-			::GetTextExtentPoint32(dc, str, ::_tcslen(str), &font);
+			::GetTextExtentPoint32(dc, str, static_cast<int>(::_tcslen(str)), &font);
 			r.left = font.cx + 2;
 		}
 		if (doc_.InHistory()) {
@@ -380,7 +381,7 @@ public:
 
 	// Draw an item
 	void DrawItem(HDC dc, RECT r, const Item *fd, bool cur) {
-		::FillRect(dc, &r, (HBRUSH)((cur ? COLOR_HIGHLIGHT : COLOR_MENU) + 1));  // Draw the background
+		::FillRect(dc, &r, ::GetSysColorBrush(cur ? COLOR_HIGHLIGHT : COLOR_MENU));  // Draw the background
 		if (fd->IsEmpty()) {
 			::SetTextColor(dc, GetSysColor(COLOR_GRAYTEXT));
 			::SetBkMode(dc, TRANSPARENT);
@@ -410,7 +411,7 @@ public:
 		if (fd->IsDir()) r.right -= cxSide_;
 		SIZE font;
 		if (cur) {
-			::GetTextExtentPoint32(dc, fd->Name().c_str(), fd->Name().size(), &font);
+			::GetTextExtentPoint32(dc, fd->Name().c_str(), static_cast<int>(fd->Name().size()), &font);
 			curSelIsLong_ = font.cx > r.right - r.left;  // File name at cursor position is out
 		}
 		::DrawText(dc, fd->Name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (cursorAlign_ * curSelIsLong_ * cur));
@@ -418,16 +419,16 @@ public:
 
 	// Draw a mark
 	void drawMark(HDC dc, RECT r, IconType type, int color, bool cur, bool sel, bool dir) {
-		TCHAR *c = nullptr;
+		TCHAR c[2]{};
 		RECT rl = r, rr = r;
 
 		rl.right = cxSide_, rr.left = r.right - cxSide_;
 		::SetBkMode(dc, TRANSPARENT);
 		::SelectObject(dc, hMarkFont_);  // Select font for symbols
-		if (type == IconType::SQUARE)       c = _T("g");
-		else if (type == IconType::CIRCLE)  c = _T("n");
-		else if (type == IconType::SCIRCLE) c = _T("i");
-		if (c) {
+		if (type == IconType::SQUARE)       c[0] = _T('g');
+		else if (type == IconType::CIRCLE)  c[0] = _T('n');
+		else if (type == IconType::SCIRCLE) c[0] = _T('i');
+		if (c[0]) {
 			::SetTextColor(dc, color);
 			::DrawText(dc, c, 1, &rl, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 		}
@@ -510,7 +511,7 @@ public:
 		mouseDownY_ = mouseDownArea_ = mouseDownIndex_ = mouseDownTopIndex_ = -1;
 	}
 
-	void wmMouseMove(int mkey, int x, int y) {
+	void wmMouseMove(WPARAM mkey, int x, int y) {
 		if (re_.IsActive()) return;  // Reject while renaming
 
 		if (mouseDownY_ != -1 && mouseDownArea_ == 1) {  // Scroller
@@ -590,7 +591,7 @@ public:
 	}
 
 	// Event Handler of WM_*BUTTONUP
-	void wmButtonUp(int vkey, int x, int y, int mkey) {
+	void wmButtonUp(int vkey, int x, int y, WPARAM mkey) {
 		if (re_.IsActive()) {
 			re_.Close();
 			return;  // Reject while renaming
@@ -675,7 +676,7 @@ public:
 		return true;
 	}
 
-	void wmKeyDown(int key) {
+	void wmKeyDown(WPARAM key) {
 		bool ctrl = WindowUtils::CtrlPressed();
 		if (ctrl || key == VK_APPS || key == VK_DELETE || key == VK_RETURN) {
 			if (listCursorIndex_ == -1) return;

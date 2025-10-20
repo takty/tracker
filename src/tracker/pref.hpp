@@ -75,7 +75,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), buf.size(), iniPath_.c_str());
+			auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), MAX_PATH, iniPath_.c_str());
 			if (outLen != buf.size() - 1) break;
 			buf.resize(buf.size() * 2);
 		}

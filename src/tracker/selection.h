@@ -3,7 +3,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-23
+ * @version 2025-10-21
  *
  */
 
@@ -170,12 +170,12 @@ public:
 	}
 
 	// Reference of specified index element
-	const std::wstring& operator[](unsigned long i) const {
+	const std::wstring& operator[](size_t i) const {
 		return objects_[i];
 	}
 
 	// Size
-	unsigned long Count() const {
+	size_t Count() const {
 		return objects_.size();
 	}
 

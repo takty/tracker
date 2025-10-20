@@ -96,7 +96,7 @@ public:
 		return this;
 	}
 
-	Item* SetFileItem(const std::wstring& path, const TypeTable& exts, int id = 0) {
+	Item* SetFileItem(const std::wstring& path, const TypeTable& exts, size_t id = 0) {
 		Assign(path, exts);
 		style_ |= MAKELONG(0, id);
 		data_ = 0;

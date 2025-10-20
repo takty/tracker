@@ -3,7 +3,7 @@
  * Clipboard Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -76,7 +76,7 @@ public:
 				if ((int)buf.size() < len + 1) {
 					buf.resize(len + 1);  // add end NULL
 				}
-				::DragQueryFile(hDrop, i, buf.data(), buf.size());
+				::DragQueryFile(hDrop, i, buf.data(), MAX_PATH);
 				std::wstring target{ buf.data() };
 				auto name = Path::name(target);
 				if (Link::is_link(target)) {

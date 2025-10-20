@@ -3,7 +3,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -94,14 +94,14 @@ private:
 
 		ErrorMode em;
 		if (currentPath_ == fav_.PATH) {
-			for (int i = 0; i < fav_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(fav_[i], extentions_, i));
+			for (size_t i = 0; i < fav_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(fav_[i], extentions_, i));
 		} else if (currentPath_ == his_.PATH) {
 			his_.clean_up();
-			for (int i = 0; i < his_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(his_[i], extentions_, i));
+			for (size_t i = 0; i < his_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(his_[i], extentions_, i));
 			opt_.SortHistory(files_);
 		} else if (currentPath_ == dri_.PATH) {
 			dri_.clean_up();
-			for (int i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));
+			for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));
 		} else {
 			while (!currentPath_.empty()) {  // Go back to the folder where the file exists
 				if (FileSystem::is_existing(currentPath_)) break;
@@ -110,7 +110,7 @@ private:
 			if (!currentPath_.empty()) SetNormalFolder(currentPath_);  // Folder found
 			else {
 				dri_.clean_up();
-				for (int i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));
+				for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));
 			}
 		}
 		if (files_.Count() == 0) files_.Add(files_.CreateItem()->SetEmptyItem());
@@ -215,7 +215,7 @@ public:
 		}
 		// Copy selected file name
 		ope.Add(vec[index]->Path());  // Copy the file specified by index to the beginning
-		for (int i = 0; i < vec.Count(); i++) {
+		for (size_t i = 0; i < vec.Count(); i++) {
 			if (vec[i]->IsSelected() && i != index) {
 				ope.Add(vec[i]->Path());
 			}
@@ -265,7 +265,7 @@ public:
 	}
 
 	// Return the number of selected files
-	int SelectedCount() {
+	size_t SelectedCount() {
 		return files_.SelectionCount();
 	}
 

@@ -3,7 +3,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -47,12 +47,12 @@ class PopupMenu {
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addTypeMenu(sec.substr(1), items, hSubMenu);
-				::AppendMenu(hMenu, MF_POPUP, (UINT)hSubMenu, name.c_str());
+				::AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, name.c_str());
 			} else if (path == _T("<New>")) {  // New file menu
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addNewFileMenu(hSubMenu, items);
-				::AppendMenu(hMenu, MF_POPUP, (UINT)hSubMenu, name.c_str());
+				::AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, name.c_str());
 			} else {  // Normal menu item
 				UINT flag = MF_STRING;
 				if ((!paste && path == _T("<Paste>")) || (!pasteShortcut && path == _T("<PasteShortcut>"))) {

@@ -16,7 +16,7 @@ _[Dd]ebugPublic/
 _[Rr]elease/
 _[Rr]eleases/
 x64/
-x86/
+Win32/
 bld/
 [Bb]in/
 [Oo]bj/

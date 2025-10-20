@@ -47,7 +47,7 @@ class Operation {
 			auto parent_shf = iicl_.parent_shell_folder();
 			const auto& cs = iicl_.child_list();
 			if (parent_shf != nullptr && !cs.empty()) {
-				auto res = ::SHCreateShellItemArray(nullptr, parent_shf, cs.size(), (LPCITEMIDLIST*)cs.data(), &sia_);
+				auto res = ::SHCreateShellItemArray(nullptr, parent_shf, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), &sia_);
 				if (res != S_OK) sia_ = nullptr;
 			}
 		}

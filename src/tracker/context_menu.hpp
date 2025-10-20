@@ -3,7 +3,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -86,10 +86,10 @@ public:
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
-		orig_proc_ = (WNDPROC)::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)MenuProc);
+		orig_proc_ = (WNDPROC)::SetWindowLongPtr(wnd_, GWLP_WNDPROC, (LONG_PTR)MenuProc);
 		auto id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
-		::SetWindowLong(wnd_, GWL_WNDPROC, (LONG)orig_proc_);
+		::SetWindowLongPtr(wnd_, GWLP_WNDPROC, (LONG_PTR)orig_proc_);
 		::RemoveProp(wnd_, PROP_INSTANCE);
 
 		bool res = false;

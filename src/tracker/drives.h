@@ -33,11 +33,11 @@ public:
 
 	Drives() : slowDrives_() {}
 
-	int size() {
+	size_t size() {
 		return paths_.size();
 	}
 
-	std::wstring& operator[](int index) {
+	std::wstring& operator[](size_t index) {
 		return paths_[index];
 	}
 

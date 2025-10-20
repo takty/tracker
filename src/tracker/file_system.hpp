@@ -143,7 +143,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			::GetModuleFileName(nullptr, buf.data(), buf.size());
+			::GetModuleFileName(nullptr, buf.data(), MAX_PATH);
 			if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) break;
 			buf.resize(buf.size() * 2);
 		}
@@ -155,7 +155,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			auto len = ::GetCurrentDirectory(buf.size(), buf.data());
+			auto len = ::GetCurrentDirectory(MAX_PATH, buf.data());
 			if (len < buf.size()) break;
 			buf.resize(len);
 		}

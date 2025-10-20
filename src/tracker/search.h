@@ -3,7 +3,7 @@
  * Search Functions
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -68,12 +68,12 @@ public:
 		int jumpTo = -1;
 		bool restart = false;
 
-		int startIndex = (cursorIndex == -1) ? 0 : cursorIndex + 1;
+		size_t startIndex = (cursorIndex == -1) ? 0 : cursorIndex + 1;
 		if (startIndex == items.Count()) startIndex = 0;
 
 		if (useMigemo_) {
 			Pattern pat(regex_, mkey_);
-			for (int i = startIndex; ; ++i) {
+			for (size_t i = startIndex; ; ++i) {
 				if (i >= items.Count()) {
 					i = 0;
 					restart = true;
@@ -86,7 +86,7 @@ public:
 				}
 			}
 		} else {
-			for (int i = startIndex; ; ++i) {
+			for (size_t i = startIndex; ; ++i) {
 				if (i >= items.Count()) {
 					i = 0;
 					restart = true;

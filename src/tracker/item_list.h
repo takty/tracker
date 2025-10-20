@@ -3,7 +3,7 @@
  * Item list
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -19,7 +19,7 @@ class ItemList {
 
 	std::vector<Item*> buf_;
 	std::vector<Item*> items_;
-	int selNum_;
+	size_t selNum_;
 
 	void DeleteItem(Item *f) {
 		if (buf_.size() >= 1024) delete f;
@@ -35,15 +35,15 @@ public:
 		for (auto& i : buf_) delete i;
 	}
 
-	int Count() const {
+	size_t Count() const {
 		return items_.size();
 	}
 
-	Item* operator[](int index) {
+	Item* operator[](size_t index) {
 		return items_[index];
 	}
 
-	const Item* operator[](int index) const {
+	const Item* operator[](size_t index) const {
 		return items_[index];
 	}
 
@@ -63,7 +63,7 @@ public:
 		items_.push_back(item);
 	}
 
-	void Insert(int index, Item* item) {
+	void Insert(size_t index, Item* item) {
 		items_.insert(items_.begin() + index, item);
 	}
 
@@ -76,7 +76,7 @@ public:
 		sort(items_.begin(), items_.end(), p);
 	}
 
-	int Select(int front, int back, bool all) {
+	size_t Select(int front, int back, bool all) {
 		if (front == -1 || back == -1) return selNum_;
 		if (back < front) std::swap(front, back);
 		if (all) {
@@ -100,7 +100,7 @@ public:
 		selNum_ = 0;
 	}
 
-	int SelectionCount() {
+	size_t SelectionCount() {
 		return selNum_;
 	}
 

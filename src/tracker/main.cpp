@@ -3,7 +3,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2024-12-13
+ * @version 2025-10-21
  *
  */
 
@@ -11,7 +11,7 @@
 #include "stdafx.h"
 #include "View.h"
 
-const wchar_t MUTEX[]       = _T("TRACKER500_20200323");
+const wchar_t MUTEX[]       = _T("TRACKER510_20251020");
 const wchar_t CLASS_NAME[]  = _T("Tracker");
 const wchar_t WINDOW_NAME[] = _T("Tracker");
 
@@ -69,7 +69,7 @@ BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) {
 }
 
 LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
-	auto view = (View*)::GetWindowLong(hWnd, GWL_USERDATA);
+	auto view = (View*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
 	switch (msg) {
 	case WM_CREATE:            new View(hWnd); break;
