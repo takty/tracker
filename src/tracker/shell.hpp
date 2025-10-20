@@ -3,7 +3,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-20
  *
  */
 
@@ -60,8 +60,7 @@ public:
 
 	static LPSHELLFOLDER get_shell_folder(const std::wstring& path) {
 		PIDLIST_ABSOLUTE parent_id;
-		auto p = Path::ensure_no_unc_prefix(path);
-		auto res = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
+		auto res = ::SHParseDisplayName(path.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 
 		LPSHELLFOLDER parent_shf = nullptr;
 		if (res == S_OK) {
@@ -78,7 +77,7 @@ public:
 		if (Path::is_root(path)) {
 			res = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &parent_id);
 		} else {
-			auto p = Path::ensure_no_unc_prefix(Path::parent(path));
+			auto p = Path::parent(path);
 			res = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 		}
 		LPSHELLFOLDER parent_shf = nullptr;

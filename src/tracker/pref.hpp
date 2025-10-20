@@ -3,7 +3,7 @@
  * Preference (Reading and writing INI file)
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-20
  *
  */
 
@@ -41,7 +41,6 @@ public:
 
 	Pref() {
 		iniPath_ = FileSystem::module_file_path();
-		iniPath_.insert(0, Path::UNC_PREFIX);  // To handle long paths
 		iniPath_.resize(iniPath_.size() - 3);
 		iniPath_.append(L"ini");
 	}

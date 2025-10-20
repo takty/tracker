@@ -3,7 +3,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-23
+ * @version 2025-10-20
  *
  */
 
@@ -27,8 +27,7 @@ class Operation {
 	public:
 		ShellItem(const std::wstring path) {
 			IShellItem* dest = nullptr;
-			auto p = Path::ensure_no_unc_prefix(path);
-			auto res = ::SHCreateItemFromParsingName(p.c_str(), nullptr, IID_IShellItem, (void**)&dest);
+			auto res = ::SHCreateItemFromParsingName(path.c_str(), nullptr, IID_IShellItem, (void**)&dest);
 			if (res == S_OK) si_ = dest;
 		}
 		IShellItem* ptr() const {

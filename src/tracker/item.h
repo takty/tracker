@@ -3,7 +3,7 @@
  * File Item
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-20
  *
  */
 
@@ -50,8 +50,8 @@ class Item {
 		path_ = filePath;
 		name_ = Path::name(path_);
 
-		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path_).c_str());
-		auto isDir = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		auto attr     = ::GetFileAttributes(path_.c_str());
+		auto isDir    = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 		auto isHidden = (attr & FILE_ATTRIBUTE_HIDDEN) != 0;
 
 		// When there is no file
@@ -72,7 +72,7 @@ class Item {
 		if (!isDir && ext == L"lnk") {  // When it is a link
 			name_.resize(name_.size() - 4);  // remove .lnk
 			auto linkPath = Link::resolve(path_);
-			auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(linkPath).c_str());
+			auto attr     = ::GetFileAttributes(linkPath.c_str());
 			if (attr == INVALID_FILE_ATTRIBUTES) {  // When the link is broken
 				style_ = LINK | HIDE;
 				color_ = -1;

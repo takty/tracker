@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-20
  *
  */
 
@@ -117,13 +117,13 @@ public:
 
 	// Check whether the path is a directory
 	static bool is_directory(const std::wstring& path) {
-		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
+		auto attr = ::GetFileAttributes(path.c_str());
 		return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 
 	// Check whether the file of the path is existing
 	static bool is_existing(const std::wstring& path) {
-		auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
+		auto attr = ::GetFileAttributes(path.c_str());
 		return (int)attr != -1;
 	}
 

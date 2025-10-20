@@ -3,7 +3,7 @@
  * Drives
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-20
  *
  */
 
@@ -43,7 +43,7 @@ public:
 
 	void clean_up() {
 		paths_.clear();
-		std::wstring path(L"\\\\?\\A:\\");
+		std::wstring path(L"A:\\");
 
 		for (wchar_t c = FIRST_LETTER; c <= LAST_LETTER; ++c) {
 			path[path.size() - 3] = c;
