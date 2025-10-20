@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-20
+ * @version 2025-10-21
  *
  */
 
@@ -46,7 +46,7 @@ public:
 	static std::pair<std::wstring, std::wstring> extract_command_line_string(const std::wstring& line, const std::vector<std::wstring>& objs) {
 		auto sep = line.find_first_of(L'|');
 		if (sep == std::wstring::npos) {
-			return { Path::absolute_path(line, module_file_path()), Path::space_separeted_quoted_paths_string(objs) };
+			return { Path::absolute_path(line, module_file_path()), Path::space_separated_quoted_paths_string(objs) };
 		}
 		auto opt = line.substr(sep + 1);
 
@@ -58,7 +58,7 @@ public:
 		// %paths% Å® "path\file1" "path\file2"...
 		pos = opt.find(L"%paths%");
 		if (pos != std::wstring::npos) {
-			opt.replace(pos, 7, Path::space_separeted_quoted_paths_string(objs));
+			opt.replace(pos, 7, Path::space_separated_quoted_paths_string(objs));
 		}
 		// %file% Å® "file"
 		pos = opt.find(L"%file%");

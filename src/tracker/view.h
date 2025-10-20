@@ -71,7 +71,7 @@ class View : public Observer {
 
 	HierTransition ht_;
 	Document doc_;
-	TypeTable extentions_;
+	TypeTable extensions_;
 	Selection ope_;
 	RenameEdit re_;
 	Search search_;
@@ -94,7 +94,7 @@ public:
 		return ::CallWindowProc((WNDPROC)::GetWindowLongPtr(hMenu, GWLP_USERDATA), hMenu, msg, wp, lp);
 	}
 
-	View(const HWND hWnd) : doc_(extentions_, pref_, SEPA, (SEPA | HIER)), ope_(extentions_, pref_), re_(WM_RENAMEEDITCLOSED) {
+	View(const HWND hWnd) : doc_(extensions_, pref_, SEPA, (SEPA | HIER)), ope_(extensions_, pref_), re_(WM_RENAMEEDITCLOSED) {
 		doc_.SetView(this);
 
 		hWnd_ = hWnd;
@@ -150,7 +150,7 @@ public:
 		re_.SetFont(hItemFont_);
 
 		search_.Initialize(useMigemo);
-		extentions_.restore(pref_);  // Load extension color
+		extensions_.restore(pref_);  // Load extension color
 
 		doc_.Initialize(firstTime);
 	}
@@ -804,7 +804,7 @@ public:
 		doc_.SetOperator(index, w, ope_);
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
-		int type = extentions_.get_id(ext) + 1;
+		int type = extensions_.get_id(ext) + 1;
 		UINT f;
 		POINT pt = popupPt(w, index, f);
 		wstring cmd;
@@ -819,7 +819,7 @@ public:
 		doc_.SetOperator(index, w, ope_);
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
-		int type = extentions_.get_id(ext) + 1;
+		int type = extensions_.get_id(ext) + 1;
 		wstring cmd;
 		PopupMenu pm(hWnd_, &pref_);
 		if (pm.getAccelCommand(type, accelerator, cmd)) action(ope_, cmd, w, index);

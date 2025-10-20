@@ -40,7 +40,7 @@ public:
 private:
 
 	Observer* view_;
-	const TypeTable& extentions_;
+	const TypeTable& extensions_;
 	Pref& pref_;
 
 	Bookmark fav_;
@@ -61,7 +61,7 @@ private:
 		std::wstring cur(path);
 
 		while (!cur.empty()) {
-			navis_.Insert(last, navis_.CreateItem()->SetFileItem(cur, extentions_));
+			navis_.Insert(last, navis_.CreateItem()->SetFileItem(cur, extensions_));
 			cur = Path::parent(cur);
 		}
 		auto* item = navis_.CreateItem();// ->SetSeparatorItem(true);
@@ -72,7 +72,7 @@ private:
 		FileSystem::find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			bool isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
 			if (!isHidden || opt_.IsShowHidden()) {
-				files_.Add(files_.CreateItem()->SetFileItem(parent, wfd, extentions_));
+				files_.Add(files_.CreateItem()->SetFileItem(parent, wfd, extensions_));
 			}
 			return true;  // continue
 		});
@@ -94,14 +94,14 @@ private:
 
 		ErrorMode em;
 		if (currentPath_ == fav_.PATH) {
-			for (size_t i = 0; i < fav_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(fav_[i], extentions_, i));
+			for (size_t i = 0; i < fav_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(fav_[i], extensions_, i));
 		} else if (currentPath_ == his_.PATH) {
 			his_.clean_up();
-			for (size_t i = 0; i < his_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(his_[i], extentions_, i));
+			for (size_t i = 0; i < his_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(his_[i], extensions_, i));
 			opt_.SortHistory(files_);
 		} else if (currentPath_ == dri_.PATH) {
 			dri_.clean_up();
-			for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));
+			for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extensions_));
 		} else {
 			while (!currentPath_.empty()) {  // Go back to the folder where the file exists
 				if (FileSystem::is_existing(currentPath_)) break;
@@ -110,7 +110,7 @@ private:
 			if (!currentPath_.empty()) SetNormalFolder(currentPath_);  // Folder found
 			else {
 				dri_.clean_up();
-				for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extentions_));
+				for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extensions_));
 			}
 		}
 		if (files_.Count() == 0) files_.Add(files_.CreateItem()->SetEmptyItem());
@@ -118,7 +118,7 @@ private:
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extentions_(exts), pref_(pref) {
+	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extensions_(exts), pref_(pref) {
 		special_separator_option_data_ = special_separator_option_data;
 		hierarchy_separator_option_data_ = hierarchy_separator_option_data;
 		currentPath_ = dri_.PATH;

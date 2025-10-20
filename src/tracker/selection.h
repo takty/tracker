@@ -35,7 +35,7 @@ class Selection {
 	std::wstring defaultOpener_;
 	ULONG idNotify_ = 0;
 
-	const TypeTable& extentions_;
+	const TypeTable& extensions_;
 	const Pref& pref_;
 
 	// Open file (specify target)
@@ -44,7 +44,7 @@ class Selection {
 		const auto& obj = objs.front();
 		std::wstring cmd;
 		auto ext = FileSystem::is_directory(obj) ? PATH_EXT_DIR : Path::ext(obj);
-		if (extentions_.get_command(pref_, ext, cmd)) {
+		if (extensions_.get_command(pref_, ext, cmd)) {
 			return so.open(objs, cmd);
 		}
 		// Normal file open behavior
@@ -143,7 +143,7 @@ class Selection {
 
 public:
 
-	Selection(const TypeTable& exts, const Pref& pref) : extentions_(exts), pref_(pref) {}
+	Selection(const TypeTable& exts, const Pref& pref) : extensions_(exts), pref_(pref) {}
 
 	~Selection() {
 		if (idNotify_) ::SHChangeNotifyDeregister(idNotify_);

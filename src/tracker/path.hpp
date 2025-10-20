@@ -3,7 +3,7 @@
  * File Path Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-20
+ * @version 2025-10-21
  *
  */
 
@@ -111,7 +111,7 @@ public:
 	}
 
 	// Make quoted and space-separated path string
-	static std::wstring space_separeted_quoted_paths_string(const std::vector<std::wstring>& paths) {
+	static std::wstring space_separated_quoted_paths_string(const std::vector<std::wstring>& paths) {
 		std::wstring ret;
 		for (const auto& path : paths) {
 			ret.append(1, L'\"').append(path);
