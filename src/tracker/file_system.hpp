@@ -50,17 +50,17 @@ public:
 		}
 		auto opt = line.substr(sep + 1);
 
-		// %path%  ¨ "path\file"
+		// %path%  -> "path\file"
 		auto pos = opt.find(L"%path%");
 		if (pos != std::wstring::npos) {
 			opt.replace(pos, 6, Path::quote(objs.front()));
 		}
-		// %paths% ¨ "path\file1" "path\file2"...
+		// %paths% -> "path\file1" "path\file2"...
 		pos = opt.find(L"%paths%");
 		if (pos != std::wstring::npos) {
 			opt.replace(pos, 7, Path::space_separated_quoted_paths_string(objs));
 		}
-		// %file% ¨ "file"
+		// %file% -> "file"
 		pos = opt.find(L"%file%");
 		if (pos != std::wstring::npos) {
 			opt.replace(pos, 6, Path::quote(Path::name(objs.front())));
