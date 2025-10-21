@@ -3,7 +3,7 @@
  * String Converter
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -22,15 +22,19 @@ class StringConverter {
 
 public:
 
-	StringConverter() {
-	}
+	StringConverter() noexcept = default;
+
+	StringConverter(const StringConverter&) = delete;
+	StringConverter& operator=(const StringConverter&) = delete;
+	StringConverter(StringConverter&&) = delete;
+	StringConverter& operator=(StringConverter&&) = delete;
 
 	~StringConverter() {
 		if (buf_ != nullptr) delete[] buf_;
 	}
 
 	const char* convert(const std::wstring& str) {
-		int size = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
+		const int size = ::WideCharToMultiByte(CP_THREAD_ACP, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
 		if (size_ < size) {
 			if (buf_ != nullptr) delete[] buf_;
 			buf_  = new char[size];

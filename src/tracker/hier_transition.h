@@ -3,7 +3,7 @@
  * Transition of Folder Hierarchy
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -17,45 +17,45 @@ class HierTransition {
 
 	struct ViewData {
 		std::wstring path_;
-		unsigned int index_;
-		ViewData() : index_(0U) {}
-		void set(const std::wstring& path, unsigned int index) { path_.assign(path), index_ = index; }
+		size_t index_;
+		ViewData() noexcept : index_(0U) {}
+		void set(const std::wstring& path, size_t index) { path_.assign(path), index_ = index; }
 	};
 
 	std::vector<ViewData> views_;
-	unsigned int currentViewIndex_ = 0U;
+	size_t currentViewIndex_ = 0U;
 
 public:
 
-	HierTransition() {
+	HierTransition() noexcept {
 		views_.resize(1);
 	}
 
-	unsigned int index() const {
+	size_t index() const noexcept {
 		return views_[currentViewIndex_].index_;
 	}
 
-	void setIndex(unsigned int index) {
+	void setIndex(size_t index) noexcept {
 		views_[currentViewIndex_].index_ = index;
 	}
 
-	bool canGoBack() const {
+	bool canGoBack() const noexcept {
 		return currentViewIndex_ > 0;
 	}
 
-	std::wstring& goBack() {
+	std::wstring& goBack() noexcept {
 		--currentViewIndex_;
 		return views_[currentViewIndex_].path_;
 	}
 
-	void goForward(unsigned int index, const std::wstring& path) {
+	void goForward(size_t index, const std::wstring& path) {
 		if (canGoBack() && views_[currentViewIndex_ - 1].path_ == path) return;
 		views_[currentViewIndex_].set(path, index);
 		++currentViewIndex_;
 		views_.resize(currentViewIndex_ + 1);
 	}
 
-	void clearIndexes() {
+	void clearIndexes() noexcept {
 		for (auto i = 0U; i < views_.size(); ++i) {
 			if (i != currentViewIndex_) views_[i].index_ = 0U;
 		}

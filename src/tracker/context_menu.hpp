@@ -25,18 +25,27 @@ class ContextMenu {
 
 	// Window Procedure that hooked to the original procedure while showing the menu
 	static LRESULT CALLBACK MenuProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) {
-		const auto cm = (ContextMenu*)::GetProp(wnd, PROP_INSTANCE);
-		switch (msg) {
-		case WM_INITMENUPOPUP:
-			cm->context_menu_->HandleMenuMsg(msg, wp, lp);
-			return FALSE;
-		case WM_DRAWITEM:
-		case WM_MEASUREITEM:
-			cm->context_menu_->HandleMenuMsg(msg, wp, lp);
-			return TRUE;
-		default:
-			return CallWindowProc(cm->orig_proc_, wnd, msg, wp, lp);
+		if (wnd == nullptr) {
+			return 0;
 		}
+		auto prop = ::GetProp(wnd, PROP_INSTANCE);
+		if (prop != nullptr) {
+			auto cm = static_cast<ContextMenu*>(prop);
+			if (cm != nullptr) {
+				switch (msg) {
+				case WM_INITMENUPOPUP:
+					if (cm->context_menu_) cm->context_menu_->HandleMenuMsg(msg, wp, lp);
+					return FALSE;
+				case WM_DRAWITEM:
+				case WM_MEASUREITEM:
+					if (cm->context_menu_) cm->context_menu_->HandleMenuMsg(msg, wp, lp);
+					return TRUE;
+				default:
+					if (cm->orig_proc_) return CallWindowProc(cm->orig_proc_, wnd, msg, wp, lp);
+				}
+			}
+		}
+		return CallWindowProc(DefWindowProc, wnd, msg, wp, lp);
 	}
 
 	const HWND wnd_              = nullptr;
@@ -44,7 +53,8 @@ class ContextMenu {
 	WNDPROC orig_proc_           = nullptr;
 
 	HRESULT invoke(const LPCONTEXTMENU cm, const char* cmd) const {
-		CMINVOKECOMMANDINFO ici;
+		if (!cm) return 0;
+		CMINVOKECOMMANDINFO ici{};
 		ici.cbSize       = sizeof(ici);
 		ici.fMask        = 0;
 		ici.hwnd         = nullptr;
@@ -56,38 +66,48 @@ class ContextMenu {
 	}
 
 	HRESULT execute(const std::vector<std::wstring>& paths, const char* cmd) const {
-		auto cm = (LPCONTEXTMENU)Shell::get_ole_ui_object(paths, IID_IContextMenu);
+		auto cm = static_cast<LPCONTEXTMENU>(Shell::get_ole_ui_object(paths, IID_IContextMenu));
 		if (!cm) return 0;
 
-		auto res = invoke(cm, cmd);
+		const auto res = invoke(cm, cmd);
 		cm->Release();
 		return res;
 	}
 
 public:
 
-	ContextMenu(HWND wnd) : wnd_(wnd) {}
+	ContextMenu(HWND wnd) noexcept : wnd_(wnd) {}
 
-	~ContextMenu() {}
+	ContextMenu(const ContextMenu&) = delete;
+	ContextMenu& operator=(const ContextMenu&) = delete;
+	ContextMenu(ContextMenu&&) = delete;
+	ContextMenu& operator=(ContextMenu&&) = delete;
 
-	// Popup shell context menu
+	~ContextMenu() = default;
+
 	bool popup(const std::vector<std::wstring>& paths, uint32_t flag, const POINT& pt) {
-		auto cm = (LPCONTEXTMENU)Shell::get_ole_ui_object(paths, IID_IContextMenu);
+		if (!wnd_) return false;
+		auto cm = static_cast<LPCONTEXTMENU>(Shell::get_ole_ui_object(paths, IID_IContextMenu));
 		if (!cm) return false;
 
 		// Get IContextMenu2
 		LPCONTEXTMENU2 cm2 = nullptr;
-		cm->QueryInterface(IID_IContextMenu2, (void**)&cm2);
+		cm->QueryInterface(IID_IContextMenu2, reinterpret_cast<void**>(&cm2));
 
 		// Create a menu
 		auto hMenu = ::CreatePopupMenu();
+		if (hMenu == nullptr) {
+			if (cm2) cm2->Release();
+			cm->Release();
+			return false;
+		}
 		cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, CMF_NORMAL);
 
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
-		orig_proc_ = (WNDPROC)::SetWindowLongPtr(wnd_, GWLP_WNDPROC, (LONG_PTR)MenuProc);
-		auto id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
+		orig_proc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(MenuProc)));
+		const auto id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
 		::SetWindowLongPtr(wnd_, GWLP_WNDPROC, (LONG_PTR)orig_proc_);
 		::RemoveProp(wnd_, PROP_INSTANCE);
@@ -133,7 +153,7 @@ public:
 	// Show the property of files
 	void show_property(const std::vector<std::wstring>& objs) const {
 		// Instead of calling execute function with command "properties"...
-		auto cm = (LPDATAOBJECT)Shell::get_ole_ui_object(objs, IID_IDataObject);
+		auto cm = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(objs, IID_IDataObject));
 		if (!cm) return;
 		::SHMultiFileProperties(cm, 0);
 		cm->Release();

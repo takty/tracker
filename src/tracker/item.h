@@ -50,7 +50,7 @@ class Item {
 		path_ = filePath;
 		name_ = Path::name(path_);
 
-		auto attr     = ::GetFileAttributes(path_.c_str());
+		const auto attr     = ::GetFileAttributes(path_.c_str());
 		auto isDir    = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 		auto isHidden = (attr & FILE_ATTRIBUTE_HIDDEN) != 0;
 
@@ -72,7 +72,7 @@ class Item {
 		if (!isDir && ext == L"lnk") {  // When it is a link
 			name_.resize(name_.size() - 4);  // remove .lnk
 			auto linkPath = Link::resolve(path_);
-			auto attr     = ::GetFileAttributes(linkPath.c_str());
+			const auto attr     = ::GetFileAttributes(linkPath.c_str());
 			if (attr == INVALID_FILE_ATTRIBUTES) {  // When the link is broken
 				style_ = LINK | HIDE;
 				color_ = -1;
@@ -88,7 +88,7 @@ class Item {
 
 public:
 
-	Item() : date_({ 0 }) {}
+	Item() noexcept : date_({ 0 }) {}
 
 	Item* SetFileItem(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
 		Assign(parentPath, wfd, exts);
@@ -124,24 +124,24 @@ public:
 	//	return this;
 	//}
 
-	int& data() {
+	int& data() noexcept {
 		return data_;
 	}
 
-	const int& data() const {
+	const int& data() const noexcept {
 		return data_;
 	}
 
 
-	void SetId(int i) {
+	void SetId(int i) noexcept {
 		style_ |= MAKELONG(0, i);
 	}
 
-	void SetSelected(bool f) {
+	void SetSelected(bool f) noexcept {
 		f ? (style_ |= SEL) : (style_ &= ~SEL);
 	}
 
-	void Clear() {
+	void Clear() noexcept {
 		path_.clear();
 		name_.clear();
 		color_ = style_ = 0;
@@ -149,27 +149,27 @@ public:
 		date_.dwLowDateTime = date_.dwHighDateTime = 0;
 	}
 
-	const std::wstring& Path() const {
+	const std::wstring& Path() const noexcept {
 		return path_;
 	}
 
-	const std::wstring& Name() const {
+	const std::wstring& Name() const noexcept {
 		return name_;
 	}
 
-	unsigned long long Size() const {
+	unsigned long long Size() const noexcept {
 		return size_;
 	}
 
-	const FILETIME& Date() const {
+	const FILETIME& Date() const noexcept {
 		return date_;
 	}
 
-	int Color() const {
+	int Color() const noexcept {
 		return color_;
 	}
 
-	int Id() const {
+	int Id() const noexcept {
 		return HIWORD(style_);
 	}
 
@@ -177,27 +177,27 @@ public:
 	//	return (style_ & SEPA) != 0;
 	//}
 
-	bool IsEmpty() const {
+	bool IsEmpty() const noexcept {
 		return (style_ & EMPTY) != 0;
 	}
 
-	bool IsSelected() const {
+	bool IsSelected() const noexcept {
 		return (style_ & SEL) != 0;
 	}
 
-	bool IsLink() const {
+	bool IsLink() const noexcept {
 		return (style_ & LINK) != 0;
 	}
 
-	bool IsDir() const {
+	bool IsDir() const noexcept {
 		return (style_ & DIR) != 0;
 	}
 
-	bool IsHidden() const {
+	bool IsHidden() const noexcept {
 		return (style_ & HIDE) != 0;
 	}
 
-	bool IsHier() const {
+	bool IsHier() const noexcept {
 		return (style_ & HIER) != 0;
 	}
 

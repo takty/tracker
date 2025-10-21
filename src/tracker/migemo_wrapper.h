@@ -3,7 +3,7 @@
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -35,8 +35,12 @@ class Migemo {
 
 public:
 
-	Migemo() {
-	}
+	Migemo() noexcept = default;
+
+	Migemo(const Migemo&) = delete;
+	Migemo& operator=(const Migemo&) = delete;
+	Migemo(Migemo&&) = delete;
+	Migemo& operator=(Migemo&&) = delete;
 
 	~Migemo() {
 		if (standBy_) freeLibrary();
@@ -70,7 +74,7 @@ public:
 		migemoRelease_(m_, p);
 	}
 
-	void freeLibrary() {
+	void freeLibrary() noexcept {
 		if (standBy_) {
 			migemoClose_(m_);
 			FreeLibrary(hMigemo_);
@@ -78,7 +82,7 @@ public:
 		}
 	}
 
-	bool isStandBy() {
+	bool isStandBy() const noexcept {
 		return standBy_;
 	}
 

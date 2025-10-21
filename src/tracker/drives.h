@@ -31,13 +31,13 @@ public:
 
 	const std::wstring PATH{ L":DRIVES" }, NAME{ L"Drives" };
 
-	Drives() : slowDrives_() {}
+	Drives() noexcept : slowDrives_() {}
 
-	size_t size() {
+	size_t size() noexcept {
 		return paths_.size();
 	}
 
-	std::wstring& operator[](size_t index) {
+	std::wstring& operator[](size_t index) noexcept {
 		return paths_[index];
 	}
 
@@ -47,12 +47,12 @@ public:
 
 		for (wchar_t c = FIRST_LETTER; c <= LAST_LETTER; ++c) {
 			path[path.size() - 3] = c;
-			auto type = ::GetDriveType(path.c_str());
+			const auto type = ::GetDriveType(path.c_str());
 			if (type == DRIVE_NO_ROOT_DIR) continue;
 			if (type == DRIVE_REMOVABLE) {
 				if (!slowDrives_[c - FIRST_LETTER]) {
-					auto startTime = ::GetTickCount64();
-					bool can = (::GetDiskFreeSpace(path.c_str(), nullptr, nullptr, nullptr, nullptr) != 0);
+					const auto startTime = ::GetTickCount64();
+					const bool can = (::GetDiskFreeSpace(path.c_str(), nullptr, nullptr, nullptr, nullptr) != 0);
 					if (::GetTickCount64() - startTime > WAITING_TIME) {  // If it takes time
 						slowDrives_[c - FIRST_LETTER] = true;
 					} else {

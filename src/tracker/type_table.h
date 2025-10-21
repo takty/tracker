@@ -3,7 +3,7 @@
  * Table for Managing File Types
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -58,7 +58,7 @@ class TypeTable {
 
 public:
 
-	TypeTable() {}
+	TypeTable() noexcept {}
 
 	void restore(Pref& pref) {
 		pref.set_current_section(EXT_SECTION);
@@ -82,28 +82,28 @@ public:
 	}
 
 	int get_id(const std::wstring& ext) const {
-		auto it = ext_to_id_.find(ext);
+		const auto it = ext_to_id_.find(ext);
 		if (it == ext_to_id_.end()) return -1;
 		return it->second;
 	}
 
 	int get_color(const std::wstring& ext) const {
-		int id = get_id(ext);
+		const int id = get_id(ext);
 		if (id == -1) return -1;
 
-		auto it = id_to_color_.find(id);
+		const auto it = id_to_color_.find(id);
 		if (it == id_to_color_.end()) return -1;
 		return it->second;
 	}
 
 	int get_color(int id) const {
-		auto it = id_to_color_.find(id);
+		const auto it = id_to_color_.find(id);
 		if (it == id_to_color_.end()) return -1;
 		return it->second;
 	}
 
 	bool get_command(const Pref& pref, const std::wstring& ext, std::wstring& cmd) const {
-		int type = get_id(ext) + 1;
+		const int type = get_id(ext) + 1;
 		if (type) {
 			cmd = pref.item(L"Extention", L"OpenBy" + std::to_wstring(type), L"");
 			return !cmd.empty();

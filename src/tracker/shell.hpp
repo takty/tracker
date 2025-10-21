@@ -37,28 +37,35 @@ public:
 			for (const auto& e : paths) {
 				auto fname = Path::name(e);
 				if (Path::is_root(e)) fname += L'\\';
+				std::vector<wchar_t> fname_buf(fname.begin(), fname.end());
+				fname_buf.push_back(L'\0');
 				PITEMID_CHILD id;
-				auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, (LPWSTR)fname.c_str(), nullptr, &id, nullptr);
+				const HRESULT res = parent_shf_->ParseDisplayName(nullptr, nullptr, fname_buf.data(), nullptr, &id, nullptr);
 				if (res == S_OK) ids_.push_back(id);
 			}
 		}
 
-		const LPSHELLFOLDER parent_shell_folder() {
-			return parent_shf_;
-		}
-
-		const std::vector<PITEMID_CHILD>& child_list() {
-			return ids_;
-		}
+		ItemIdChildList(const ItemIdChildList&) = delete;
+		ItemIdChildList& operator=(const ItemIdChildList&) = delete;
+		ItemIdChildList(ItemIdChildList&&) = delete;
+		ItemIdChildList& operator=(ItemIdChildList&&) = delete;
 
 		~ItemIdChildList() {
 			for (auto e : ids_) ::CoTaskMemFree(e);
 			parent_shf_->Release();
 		}
 
+		const LPSHELLFOLDER parent_shell_folder() const noexcept {
+			return parent_shf_;
+		}
+
+		const std::vector<PITEMID_CHILD>& child_list() const noexcept {
+			return ids_;
+		}
+
 	};
 
-	static LPSHELLFOLDER get_shell_folder(const std::wstring& path) {
+	static LPSHELLFOLDER get_shell_folder(const std::wstring& path) noexcept {
 		PIDLIST_ABSOLUTE parent_id;
 		auto res = ::SHParseDisplayName(path.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 
@@ -71,7 +78,7 @@ public:
 	}
 
 	static LPSHELLFOLDER get_parent_shell_folder(const std::wstring& path) {
-		HRESULT res;
+		HRESULT res{};
 
 		PIDLIST_ABSOLUTE parent_id;
 		if (Path::is_root(path)) {
@@ -95,7 +102,7 @@ public:
 
 		if (parent_shf == nullptr) return nullptr;
 		LPVOID ret_obj = nullptr;
-		auto res = parent_shf->GetUIObjectOf(nullptr, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
+		const auto res = parent_shf->GetUIObjectOf(nullptr, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
 		if (res == S_OK) return ret_obj;
 		return nullptr;
 	}

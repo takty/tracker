@@ -28,12 +28,12 @@ class FileSystem {
 
 		find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				if (!calc_file_size_internally(parent + wfd.cFileName, size, limitTime)) {
+				if (!calc_file_size_internally(parent + std::wstring{ &wfd.cFileName[0] }, size, limitTime)) {
 					success = false;
 					return false;  // break
 				}
 			} else {
-				size += ((uint64_t)wfd.nFileSizeHigh << 32) + wfd.nFileSizeLow;
+				size += (static_cast<uint64_t>(wfd.nFileSizeHigh) << 32) + wfd.nFileSizeLow;
 			}
 			return true;  // continue
 		});
@@ -44,7 +44,7 @@ public:
 
 	// Extract command line string (path|opt)
 	static std::pair<std::wstring, std::wstring> extract_command_line_string(const std::wstring& line, const std::vector<std::wstring>& objs) {
-		auto sep = line.find_first_of(L'|');
+		const auto sep = line.find_first_of(L'|');
 		if (sep == std::wstring::npos) {
 			return { Path::absolute_path(line, module_file_path()), Path::space_separated_quoted_paths_string(objs) };
 		}
@@ -100,7 +100,7 @@ public:
 		if (temp.empty()) return false;  // path is root
 
 		find_first_file(temp, [&](const std::wstring&, const WIN32_FIND_DATA& wfd) {
-			auto e = Path::ext(wfd.cFileName);
+			auto e = Path::ext(std::wstring{ &wfd.cFileName[0] });
 			if (e == L"exe" || e == L"bat") {
 				ret = true;
 				return false;  // break;
@@ -111,20 +111,20 @@ public:
 	}
 
 	// Check whether the path is a removable disk
-	static bool is_removable(const std::wstring& path) {
+	static bool is_removable(const std::wstring& path) noexcept {
 		return ::GetDriveType(path.c_str()) == DRIVE_REMOVABLE;
 	}
 
 	// Check whether the path is a directory
-	static bool is_directory(const std::wstring& path) {
-		auto attr = ::GetFileAttributes(path.c_str());
+	static bool is_directory(const std::wstring& path) noexcept {
+		const auto attr = ::GetFileAttributes(path.c_str());
 		return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 
 	// Check whether the file of the path is existing
-	static bool is_existing(const std::wstring& path) {
-		auto attr = ::GetFileAttributes(path.c_str());
-		return (int)attr != -1;
+	static bool is_existing(const std::wstring& path) noexcept {
+		const auto attr = ::GetFileAttributes(path.c_str());
+		return attr != INVALID_FILE_ATTRIBUTES;
 	}
 
 	// Get desktop directory path
@@ -139,7 +139,7 @@ public:
 	}
 
 	// Get the exe file path
-	static std::wstring module_file_path() {
+	static std::wstring module_file_path() noexcept {
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
@@ -155,7 +155,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			auto len = ::GetCurrentDirectory(MAX_PATH, buf.data());
+			const auto len = ::GetCurrentDirectory(MAX_PATH, buf.data());
 			if (len < buf.size()) break;
 			buf.resize(len);
 		}
@@ -163,8 +163,8 @@ public:
 	}
 
 	// Get drive size
-	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) {
-		::GetDiskFreeSpaceEx(path.c_str(), (PULARGE_INTEGER)&free, (PULARGE_INTEGER)&size, nullptr);
+	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) noexcept {
+		::GetDiskFreeSpaceEx(path.c_str(), reinterpret_cast<PULARGE_INTEGER>(&free), reinterpret_cast<PULARGE_INTEGER>(&size), nullptr);
 	}
 
 	// Calculate file/directory size
@@ -183,14 +183,14 @@ public:
 	// Template version of find first file
 	template<typename F> static bool find_first_file(const std::wstring& path, F fn) {
 		auto parent{ path };
-		parent += (parent[parent.size() - 1] == Path::PATH_SEPARATOR) ? L"*" : L"\\*";
+		parent += (parent.back() == Path::PATH_SEPARATOR) ? L"*" : L"\\*";
 
-		WIN32_FIND_DATA wfd;
+		WIN32_FIND_DATA wfd{};
 		auto sh = ::FindFirstFileEx(parent.c_str(), FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 		if (sh == INVALID_HANDLE_VALUE) return false;
 		parent.resize(parent.size() - 1);
 		do {
-			if (!::lstrcmp(wfd.cFileName, L".") || !::lstrcmp(wfd.cFileName, L"..")) continue;
+			if (!::lstrcmp(&wfd.cFileName[0], L".") || !::lstrcmp(&wfd.cFileName[0], L"..")) continue;
 			if (!fn(parent, wfd)) break;
 		} while (::FindNextFile(sh, &wfd));
 		::FindClose(sh);

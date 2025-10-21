@@ -3,7 +3,7 @@
  * Bregexp Wrapper
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -33,14 +33,18 @@ class Regex {
 
 public:
 
-	Regex() : bregexpMatch_(0), bregexpFree_(0) {
-	}
+	Regex() noexcept : bregexpMatch_(nullptr), bregexpFree_(nullptr) {}
+
+	Regex(const Regex&) = delete;
+	Regex& operator=(const Regex&) = delete;
+	Regex(Regex&&) = delete;
+	Regex& operator=(Regex&&) = delete;
 
 	~Regex() {
 		if (standBy_) freeLibrary();
 	}
 
-	bool loadLibrary() {
+	bool loadLibrary() noexcept {
 		standBy_ = false;
 
 		hBregexp_ = ::LoadLibrary(_T("Bregexp.dll"));
@@ -52,14 +56,14 @@ public:
 		return standBy_;
 	}
 
-	void freeLibrary() {
+	void freeLibrary() noexcept {
 		if(standBy_) {
 			FreeLibrary(hBregexp_);
 			standBy_ = false;
 		}
 	}
 
-	bool isStandBy() {
+	bool isStandBy() const noexcept {
 		return standBy_;
 	}
 
@@ -78,8 +82,7 @@ class Pattern {
 
 public:
 
-	Pattern() : bm_(nullptr), rxp_(nullptr), refCount_(new int), msg_("") {
-	}
+	Pattern() : bm_(nullptr), rxp_(nullptr), refCount_(new int), msg_("") {}
 
 	Pattern(Regex& bm, const std::string& pattern) : bm_(&bm), pattern_(pattern), rxp_(nullptr), refCount_(new int), msg_("") {
 		char str[] = " ";
@@ -90,6 +93,9 @@ public:
 	Pattern(const Pattern& p) : bm_(p.bm_), pattern_(p.pattern_), rxp_(p.rxp_), refCount_(p.refCount_), msg_("") {
 		if (refCount_ != nullptr) ++(*refCount_);
 	}
+
+	Pattern(Pattern&&) = delete;
+	Pattern& operator=(Pattern&&) = delete;
 
 	~Pattern() {
 		if (refCount_ != nullptr && --(*refCount_) == 0) {

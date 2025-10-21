@@ -3,7 +3,7 @@
  * Utility for Temporal Error Mode Change
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -19,7 +19,12 @@ class ErrorMode {
 
 public:
 
-	ErrorMode() : errorMode_(::SetErrorMode(SEM_FAILCRITICALERRORS)) {}
+	ErrorMode() noexcept : errorMode_(::SetErrorMode(SEM_FAILCRITICALERRORS)) {}
+
+	ErrorMode(const ErrorMode&) = delete;
+	ErrorMode& operator=(const ErrorMode&) = delete;
+	ErrorMode(ErrorMode&&) = delete;
+	ErrorMode& operator=(ErrorMode&&) = delete;
 
 	~ErrorMode() {
 		::SetErrorMode(errorMode_);

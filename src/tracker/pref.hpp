@@ -39,7 +39,7 @@ class Pref {
 
 public:
 
-	Pref() {
+	Pref() noexcept {
 		iniPath_ = FileSystem::module_file_path();
 		iniPath_.resize(iniPath_.size() - 3);
 		iniPath_.append(L"ini");
@@ -65,7 +65,7 @@ public:
 	}
 
 	// Get INI file path
-	const std::wstring& path() const { return iniPath_; }
+	const std::wstring& path() const noexcept { return iniPath_; }
 
 	// Set the current section
 	void set_current_section(const std::wstring& sec) { curSec_.assign(sec); }
@@ -75,7 +75,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), MAX_PATH, iniPath_.c_str());
+			const auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), MAX_PATH, iniPath_.c_str());
 			if (outLen != buf.size() - 1) break;
 			buf.resize(buf.size() * 2);
 		}
@@ -98,32 +98,32 @@ public:
 	}
 
 	// Write a string item
-	void set_item(const std::wstring& str, const std::wstring& sec, const std::wstring& key) {
+	void set_item(const std::wstring& str, const std::wstring& sec, const std::wstring& key) noexcept {
 		::WritePrivateProfileString(sec.c_str(), key.c_str(), str.c_str(), iniPath_.c_str());
 	}
 
 	// Write a string item
-	void set_item(const std::wstring& str, const std::wstring& key) {
+	void set_item(const std::wstring& str, const std::wstring& key) noexcept {
 		set_item(str, curSec_, key);
 	}
 
 	// Get integer item
-	int item_int(const wchar_t* sec, const wchar_t* key, int def) {
+	int item_int(const wchar_t* sec, const wchar_t* key, int def) noexcept {
 		return ::GetPrivateProfileInt(sec, key, def, iniPath_.c_str());
 	}
 
 	// Get integer item
-	int item_int(const std::wstring& sec, const std::wstring& key, int def) {
+	int item_int(const std::wstring& sec, const std::wstring& key, int def) noexcept {
 		return item_int(sec.c_str(), key.c_str(), def);
 	}
 
 	// Get integer item
-	int item_int(const wchar_t* key, int def) {
+	int item_int(const wchar_t* key, int def) noexcept {
 		return item_int(curSec_.c_str(), key, def);
 	}
 
 	// Get integer item
-	int item_int(const std::wstring& key, int def) {
+	int item_int(const std::wstring& key, int def) noexcept {
 		return item_int(curSec_.c_str(), key.c_str(), def);
 	}
 
@@ -139,7 +139,7 @@ public:
 
 	// Get section content
 	template <typename Container> auto items(const std::wstring& sec, const std::wstring& key, int max) -> Container {
-		Container c;
+		Container c{};
 		std::wstring def;
 		for (int i = 0; i < max; ++i) {
 			auto temp = item(sec, key + std::to_wstring(i + 1), def);

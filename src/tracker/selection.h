@@ -58,17 +58,17 @@ class Selection {
 
 	// Register Shell Notifications
 	void SetShellNotify(const std::wstring& path) {
-		LPSHELLFOLDER desktopFolder;
-		LPITEMIDLIST currentFolder;
-		SHChangeNotifyEntry scne;
+		LPSHELLFOLDER desktopFolder{};
+		LPITEMIDLIST currentFolder{};
+		SHChangeNotifyEntry scne{};
 
 		if (idNotify_) {
 			::SHChangeNotifyDeregister(idNotify_);
 			idNotify_ = 0;
 		}
-		HRESULT r;
+		HRESULT r{};
 		if (path.empty()) {
-			r = ::SHGetSpecialFolderLocation(hWnd_, CSIDL_DRIVES, &currentFolder);
+			r = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &currentFolder);
 		} else {
 			if (::SHGetDesktopFolder(&desktopFolder) != NOERROR) return;
 			wchar_t* wideName = (wchar_t*)path.c_str();
@@ -85,7 +85,7 @@ class Selection {
 	}
 
 	// Manually request an update
-	void RequestUpdate() {
+	void RequestUpdate() const noexcept {
 		::SendMessage(hWnd_, WM_REQUESTUPDATE, 0, 0);
 	}
 
@@ -95,7 +95,7 @@ class Selection {
 		size = 0;
 
 		for (const auto& e : objects_) {
-			bool success = FileSystem::calc_file_size(e, s, limitTime);
+			const bool success = FileSystem::calc_file_size(e, s, limitTime);
 			size += s;
 			if (!success) return false;
 		}
@@ -112,45 +112,50 @@ class Selection {
 		if (size >= (1 << 30)) f = 3;
 		else if (size >= (1 << 20)) f = 2;
 		else if (size >= (1 << 10)) f = 1;
-		double val = double(size) / (1ULL << s[f]);
+		const double val = double(size) / (1ULL << s[f]);
 
 		int pre = 0;
 		if (val < 100) ++pre;
 		if (val < 10) ++pre;
 		if (val < 1) ++pre;
 
-		wchar_t format[100], temp[100];
-		swprintf_s(format, 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, u[f]);
-		swprintf_s(temp, 100, format, val);
-		dest.assign(temp);
+		wchar_t format[100]{}, temp[100]{};
+		swprintf_s(&format[0], 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, u[f]);
+		swprintf_s(&temp[0], 100, &format[0], val);
+		dest.assign(&temp[0]);
 		if (f != 0 && f != 3) dest.append(L" (").append(Format(size)).append(L" Bytes)");
 		return dest;
 	}
 
 	// Generate a string representing the file's timestamp
-	std::wstring& FileTimeToStr(FILETIME& time, const wchar_t* prefix, std::wstring& dest) {
+	std::wstring& FileTimeToStr(const FILETIME& time, const wchar_t* prefix, std::wstring& dest) {
 		FILETIME local;
 		SYSTEMTIME st;
 
 		::FileTimeToLocalFileTime(&time, &local);
 		::FileTimeToSystemTime(&local, &st);
 
-		wchar_t temp[100];  // pre + 19 characters
-		swprintf_s(temp, 100, L"%s%d/%02d/%02d (%02d:%02d:%02d)", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-		dest.assign(temp);
+		wchar_t temp[100]{};  // pre + 19 characters
+		swprintf_s(&temp[0], 100, L"%s%d/%02d/%02d (%02d:%02d:%02d)", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+		dest.assign(&temp[0]);
 		return dest;
 	}
 
 public:
 
-	Selection(const TypeTable& exts, const Pref& pref) : extensions_(exts), pref_(pref) {}
+	Selection(const TypeTable& exts, const Pref& pref) noexcept : extensions_(exts), pref_(pref) {}
+
+	Selection(const Selection&) = delete;
+	Selection& operator=(const Selection&) = delete;
+	Selection(Selection&&) = delete;
+	Selection& operator=(Selection&&) = delete;
 
 	~Selection() {
 		if (idNotify_) ::SHChangeNotifyDeregister(idNotify_);
 	}
 
 	// Specify a window handle.
-	void SetWindowHandle(HWND hWnd) {
+	void SetWindowHandle(HWND hWnd) noexcept {
 		hWnd_ = hWnd;
 	}
 
@@ -165,17 +170,17 @@ public:
 	}
 
 	// Clear operation target file
-	void Clear() {
+	void Clear() noexcept {
 		objects_.clear();
 	}
 
 	// Reference of specified index element
-	const std::wstring& operator[](size_t i) const {
+	const std::wstring& operator[](size_t i) const noexcept {
 		return objects_[i];
 	}
 
 	// Size
-	size_t Count() const {
+	size_t Count() const noexcept {
 		return objects_.size();
 	}
 
@@ -200,12 +205,12 @@ public:
 	}
 
 	// Start dragging
-	void StartDrag() {
+	void StartDrag() const {
 		DragFile::start(objects_);
 	}
 
 	// Display shell menu
-	void PopupShellMenu(POINT& pt, UINT f) {
+	void PopupShellMenu(const POINT& pt, UINT f) {
 		SetShellNotify(Path::parent(objects_[0]));
 		ContextMenu cm(hWnd_);
 		cm.popup(objects_, TPM_RIGHTBUTTON | f, pt);
@@ -223,7 +228,7 @@ public:
 
 		auto new_fname = Path::name(newPath);
 		Operation so(hWnd_);
-		bool ret = so.copy_one_file(orig, objects_[0], new_fname);
+		const bool ret = so.copy_one_file(orig, objects_[0], new_fname);
 
 		if (ret) RequestUpdate();
 		return ret;
@@ -235,7 +240,7 @@ public:
 		auto npath = objects_[0] + L"\\NewFolder";
 		auto newPath = FileSystem::unique_name(npath);
 
-		BOOL ret = ::CreateDirectory(newPath.c_str(), nullptr);
+		const BOOL ret = ::CreateDirectory(newPath.c_str(), nullptr);
 		if (ret) RequestUpdate();
 		return ret == TRUE;
 	}
@@ -243,7 +248,7 @@ public:
 	// Delete
 	bool DeleteFile() {
 		Operation so(hWnd_);
-		bool ret = so.delete_files(objects_);
+		const bool ret = so.delete_files(objects_);
 		if (ret) RequestUpdate();
 		return ret;
 	}
@@ -269,7 +274,7 @@ public:
 		bool ret = false;
 		std::wstring path, target;
 
-		for (auto obj : objects_) {
+		for (auto& obj : objects_) {
 			if (Link::is_link(obj)) {  // When it is a link
 				target = Link::resolve(obj);
 				path.assign(obj);
@@ -286,7 +291,7 @@ public:
 	// Copy to desktop
 	bool CopyToDesktop() {
 		Operation so(hWnd_);
-		bool ret = so.copy_files(objects_, FileSystem::desktop_path());
+		const bool ret = so.copy_files(objects_, FileSystem::desktop_path());
 		if (ret) RequestUpdate();
 		return ret;
 	}
@@ -294,44 +299,44 @@ public:
 	// Move to desktop
 	bool MoveToDesktop() {
 		Operation so(hWnd_);
-		bool ret = so.move_files(objects_, FileSystem::desktop_path());
+		const bool ret = so.move_files(objects_, FileSystem::desktop_path());
 		if (ret) RequestUpdate();
 		return ret;
 	}
 
 	// Copy path to clipboard
 	bool CopyPathInClipboard() {
-		Clipboard cb(hWnd_);
+		const Clipboard cb(hWnd_);
 		return cb.copy_path(objects_);
 	}
 
 	void Copy() {
-		ContextMenu cm(hWnd_);
+		const ContextMenu cm(hWnd_);
 		cm.copy(objects_);
 	}
 
 	void Cut() {
-		ContextMenu cm(hWnd_);
+		const ContextMenu cm(hWnd_);
 		cm.cut(objects_);
 	}
 
 	void PasteIn() {
-		ContextMenu cm(hWnd_);
+		const ContextMenu cm(hWnd_);
 		SetShellNotify(objects_[0]);
 		cm.paste_in(objects_);
 	}
 
 	// Paste as a shortcut
 	bool PasteAsShortcutIn() {
-		Clipboard cb(hWnd_);
-		bool ret = cb.paste_as_link_in(objects_[0]);
+		const Clipboard cb(hWnd_);
+		const bool ret = cb.paste_as_link_in(objects_[0]);
 		if (ret) RequestUpdate();
 		return ret;
 	}
 
 	// Display file properties
 	void PopupFileProperty() {
-		ContextMenu cm(hWnd_);
+		const ContextMenu cm(hWnd_);
 		cm.show_property(objects_);
 	}
 
@@ -353,7 +358,7 @@ public:
 		} else {  // When it is a normal file
 			std::wstring ctStr, mtStr;
 			uint64_t size;
-			bool suc = FilesSize(size, ::GetTickCount64() + 1000);
+			const bool suc = FilesSize(size, ::GetTickCount64() + 1000);
 			items.push_back(FileSizeToStr(size, suc, L"Size:\t"));
 
 			// Get date
@@ -369,7 +374,7 @@ public:
 	}
 
 	// Perform processing after update notification
-	void DoneRequest() {
+	void DoneRequest() noexcept {
 		if (idNotify_) {
 			::SHChangeNotifyDeregister(idNotify_);
 			idNotify_ = 0;

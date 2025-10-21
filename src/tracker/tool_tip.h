@@ -26,10 +26,10 @@ class ToolTip {
 
 public:
 
-	ToolTip() {
+	ToolTip() noexcept {
 	}
 
-	void Initialize(HWND hWnd) {
+	void Initialize(HWND hWnd) noexcept {
 		HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 		hWnd_  = hWnd;
 		hHint_ = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
@@ -38,7 +38,7 @@ public:
 	}
 
 	//  Display Tool Tips
-	void Activate(const std::wstring& str, const RECT& rect) {
+	void Activate(const std::wstring& str, const RECT& rect) noexcept {
 		TOOLINFO ti = { 0 };
 		ti.cbSize   = sizeof(TOOLINFO);
 		ti.uFlags   = TTF_SUBCLASS | TTF_TRANSPARENT;
@@ -53,11 +53,11 @@ public:
 	}
 
 	// Hide Tool Tips
-	void Inactivate() {
+	void Inactivate() noexcept {
 		if (!isActive_) return;
 		isActive_ = false;
 
-		TOOLINFO ti;
+		TOOLINFO ti{};
 		ti.cbSize = sizeof(TOOLINFO);
 		ti.hwnd   = hWnd_;
 		ti.uId    = 1;

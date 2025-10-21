@@ -19,7 +19,7 @@ const std::wstring PATH_EXT_DIR(L"<folder>");
 
 class Path {
 
-	Path() {}
+	Path() noexcept = default;
 
 public:
 
@@ -44,7 +44,7 @@ public:
 	// Extract file name without extention
 	static std::wstring name_without_ext(const std::wstring& path) {
 		auto ret = name(path);
-		auto pos = ret.find_last_of(EXT_PREFIX);
+		const auto pos = ret.find_last_of(EXT_PREFIX);
 		if (pos != std::wstring::npos) ret.resize(pos);
 		return ret;
 	}
@@ -52,7 +52,7 @@ public:
 	// Extract file extention
 	static std::wstring ext(const std::wstring& path) {
 		auto n = name(path);
-		auto pos = n.find_last_of(EXT_PREFIX);
+		const auto pos = n.find_last_of(EXT_PREFIX);
 
 		if (pos == std::wstring::npos) {  // No extention
 			return L"";  // Return empty
@@ -64,8 +64,8 @@ public:
 
 	// Extract parent path
 	static std::wstring parent(const std::wstring& path) {
-		auto size = path.size();
-		auto pos = path.find_last_of(PATH_SEPARATOR);
+		const auto size = path.size();
+		const auto pos = path.find_last_of(PATH_SEPARATOR);
 
 		if (pos == std::wstring::npos) {  // Abnormal
 			return L"";  // Return empty
@@ -139,8 +139,8 @@ public:
 	}
 
 	// Check whether the path is root
-	static bool is_root(const std::wstring& path) {
-		auto size = path.size();
+	static bool is_root(const std::wstring& path) noexcept {
+		const auto size = path.size();
 		return
 			(1 < size && path[size - 2] == DRIVE_IDENTIFIER && path[size - 1] == PATH_SEPARATOR) ||
 			(0 < size && path[size - 1] == DRIVE_IDENTIFIER);

@@ -16,45 +16,45 @@ const wchar_t CLASS_NAME[]  = _T("Tracker");
 const wchar_t WINDOW_NAME[] = _T("Tracker");
 
 
-int WINAPI WinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
-	::CreateMutex(nullptr, FALSE, MUTEX);
+int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
+	::CreateMutex(nullptr, FALSE, &MUTEX[0]);
 	if (::GetLastError() == ERROR_ALREADY_EXISTS) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
-	auto res = ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);  // For shell context menu
+	const auto res = ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);  // For shell context menu
 	if (FAILED(res)) return 0;
-	auto hr = ::OleInitialize(nullptr);  // For supporting drag
+	const auto hr = ::OleInitialize(nullptr);  // For supporting drag
 	if (FAILED(hr)) return 0;
 
 	// For supporting tool tip
-	INITCOMMONCONTROLSEX iccex;
+	INITCOMMONCONTROLSEX iccex{};
 	iccex.dwICC  = ICC_WIN95_CLASSES;
 	iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
 	::InitCommonControlsEx(&iccex);
 
-	if (!InitApplication(hInst, CLASS_NAME)) {
+	if (!InitApplication(hInst, &CLASS_NAME[0])) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
 	// Create main window
-	HWND hWnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, CLASS_NAME, WINDOW_NAME, WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, hInst, nullptr);
+	const HWND hWnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, &CLASS_NAME[0], &WINDOW_NAME[0], WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, hInst, nullptr);
 	if (!hWnd) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
-	MSG msg;
+	MSG msg{};
 	while (::GetMessage(&msg, nullptr, 0, 0) > 0) {  // Exit with WM_QUIT or error
 		::TranslateMessage(&msg);
 		::DispatchMessage(&msg);
 	}
 	::OleUninitialize();  // For supporting drag
 	::CoUninitialize();
-	return msg.wParam;
+	return static_cast<int>(msg.wParam);
 }
 
 BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) {
-	WNDCLASS wc;
+	WNDCLASS wc{};
 	wc.style         = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc   = (WNDPROC)wndProc;
 	wc.cbClsExtra    = 0;

@@ -38,7 +38,7 @@ class RenameEdit {
 				::ShowWindow(hEdit_, SW_HIDE);
 				break;
 			}
-			// Fall through
+			[[fallthrough]];
 		default:
 			return ::CallWindowProc(p->orgProc_, hEdit_, msg, wp, lp);
 		}
@@ -47,10 +47,10 @@ class RenameEdit {
 
 public:
 
-	RenameEdit(int msg) : msg_(msg) {
+	RenameEdit(int msg) noexcept : msg_(msg) {
 	}
 
-	void Initialize(HWND hWnd) {
+	void Initialize(HWND hWnd) noexcept {
 		hWnd_ = hWnd;
 		auto hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 		hEdit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
@@ -60,15 +60,15 @@ public:
 		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, (LONG_PTR)RenameEdit::editProc);
 	}
 
-	void Finalize() {
+	void Finalize() const noexcept {
 		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, (LONG_PTR)orgProc_);
 	}
 
-	void SetFont(HFONT hItemFont) {
+	void SetFont(HFONT hItemFont) const noexcept {
 		::SendMessage(hEdit_, WM_SETFONT, (WPARAM)hItemFont, 0);
 	}
 
-	bool IsActive() {
+	bool IsActive() const noexcept {
 		return ::IsWindowVisible(hEdit_) == TRUE;
 	}
 
@@ -99,7 +99,7 @@ public:
 
 		::ShowWindow(hEdit_, SW_HIDE);
 		if (!::SendMessage(hEdit_, EM_GETMODIFY, 0, 0) || renamedPath_.empty()) return;
-		auto len = ::GetWindowTextLength(hEdit_);  // Not including terminal NULL
+		const auto len = ::GetWindowTextLength(hEdit_);  // Not including terminal NULL
 		auto fname = new wchar_t[len + 1];  // Add terminal NULL
 		::GetWindowText(hEdit_, fname, len + 1);  // Add terminal NULL
 		newFileName_.assign(fname);
@@ -108,11 +108,11 @@ public:
 		::SendMessage(hWnd_, msg_, 0, 0);
 	}
 
-	const std::wstring& GetRenamePath() {
+	const std::wstring& GetRenamePath() noexcept {
 		return renamedPath_;
 	}
 
-	const std::wstring& GetNewFileName() {
+	const std::wstring& GetNewFileName() noexcept {
 		return newFileName_;
 	}
 

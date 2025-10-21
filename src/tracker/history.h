@@ -27,9 +27,9 @@ public:
 
 	const std::wstring PATH{ L":HISTORY" }, NAME{ L"History" };
 
-	History() {}
+	History() noexcept {}
 
-	void initialize(Pref& pref) {
+	void initialize(Pref& pref) noexcept {
 		max_size_ = pref.item_int(KEY_MAX_HISTORY, VAL_MAX_HISTORY);
 	}
 
@@ -37,15 +37,15 @@ public:
 		paths_ = pref.items<std::vector<std::wstring>>(SECTION_HISTORY, KEY_FILE, MAX_HISTORY);
 	}
 
-	void store(Pref& pref) {
+	void store(Pref& pref) const {
 		pref.set_items(paths_, SECTION_HISTORY, KEY_FILE);
 	}
 
-	size_t size() {
+	size_t size() noexcept {
 		return paths_.size();
 	}
 
-	std::wstring& operator[](size_t index) {
+	std::wstring& operator[](size_t index) noexcept {
 		return paths_[index];
 	}
 
@@ -63,10 +63,10 @@ public:
 
 	void clean_up() {
 		// Delete a nonexistent path
-		paths_.erase(remove_if(paths_.begin(), paths_.end(), [](std::wstring& p) {return !FileSystem::is_existing(p); }), paths_.end());
+		paths_.erase(remove_if(paths_.begin(), paths_.end(), [](std::wstring& p) noexcept {return !FileSystem::is_existing(p); }), paths_.end());
 	}
 
-	void clear() {
+	void clear() noexcept {
 		paths_.clear();
 	}
 

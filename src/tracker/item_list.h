@@ -28,22 +28,27 @@ class ItemList {
 
 public:
 
-	ItemList() : selNum_(0) {}
+	ItemList() noexcept : selNum_(0) {}
+
+	ItemList(const ItemList&) = delete;
+	ItemList& operator=(const ItemList&) = delete;
+	ItemList(ItemList&&) = delete;
+	ItemList& operator=(ItemList&&) = delete;
 
 	~ItemList() {
 		for (auto& i : items_) delete i;
 		for (auto& i : buf_) delete i;
 	}
 
-	size_t Count() const {
+	size_t Count() const noexcept {
 		return items_.size();
 	}
 
-	Item* operator[](size_t index) {
+	Item* operator[](size_t index) noexcept {
 		return items_[index];
 	}
 
-	const Item* operator[](size_t index) const {
+	const Item* operator[](size_t index) const noexcept {
 		return items_[index];
 	}
 
@@ -76,7 +81,7 @@ public:
 		sort(items_.begin(), items_.end(), p);
 	}
 
-	size_t Select(int front, int back, bool all) {
+	size_t Select(int front, int back, bool all) noexcept {
 		if (front == -1 || back == -1) return selNum_;
 		if (back < front) std::swap(front, back);
 		if (all) {
@@ -84,7 +89,7 @@ public:
 				if (items_[i]->data() != 0) continue;
 				items_[i]->SetSelected(true);
 			}
-			selNum_ = back - front + 1;
+			selNum_ = static_cast<size_t>(back) - front + 1;
 		} else {
 			for (int i = front; i <= back; ++i) {
 				auto& fd = items_[i];
@@ -96,11 +101,11 @@ public:
 		return selNum_;
 	}
 
-	void ClearSelection() {
+	void ClearSelection() noexcept {
 		selNum_ = 0;
 	}
 
-	size_t SelectionCount() {
+	size_t SelectionCount() const noexcept {
 		return selNum_;
 	}
 

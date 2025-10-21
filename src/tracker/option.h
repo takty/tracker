@@ -3,7 +3,7 @@
  * Document Options
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -40,7 +40,7 @@ public:
 		sortHisBy_  = pref.item_int(KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
 	}
 
-	void Store(Pref& pref) {
+	void Store(Pref& pref) const {
 		pref.set_item_int(SECTION_WINDOW, KEY_SHOW_HIDDEN, showHidden_);
 		pref.set_item_int(SECTION_WINDOW, KEY_SORT_REV,    sortRev_);
 		pref.set_item_int(SECTION_WINDOW, KEY_SORT_BY,     sortBy_);
@@ -50,46 +50,48 @@ public:
 		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sortHisBy_);
 	}
 
-	int GetSortType() {
+	int GetSortType() const noexcept {
 		return sortBy_;
 	}
 
-	bool GetSortOrder() {
+	bool GetSortOrder() const noexcept {
 		return sortRev_;
 	}
 
-	bool IsShowHidden() {
+	bool IsShowHidden() const noexcept {
 		return showHidden_;
 	}
 
-	int SetSortType(int t) {
+	int SetSortType(int t) noexcept {
 		return sortBy_ = t;
 	}
 
-	bool SetSortOrder(bool f) {
+	bool SetSortOrder(bool f) noexcept {
 		return sortRev_ = f;
 	}
 
-	bool SetShowHidden(bool f) {
+	bool SetShowHidden(bool f) noexcept {
 		return showHidden_ = f;
 	}
 
-	void SortFiles(ItemList& files) {
+	void SortFiles(ItemList& files) const {
 		switch (sortBy_) {
 		case 0: files.Sort(CompByName(sortRev_)); break;
 		case 1: files.Sort(CompByType(sortRev_)); break;
 		case 2: files.Sort(CompByDate(sortRev_)); break;
 		case 3: files.Sort(CompBySize(sortRev_)); break;
+		default: break;
 		}
 	}
 
-	void SortHistory(ItemList& files) {
+	void SortHistory(ItemList& files) const {
 		if (!sortHis_) return;
 		switch (sortHisBy_) {
 		case 0: files.Sort(CompByName(sortHisRev_)); break;
 		case 1: files.Sort(CompByType(sortHisRev_)); break;
 		case 2: files.Sort(CompByDate(sortHisRev_)); break;
 		case 3: files.Sort(CompBySize(sortHisRev_)); break;
+		default: break;
 		}
 	}
 

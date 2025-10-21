@@ -33,7 +33,7 @@ class Search {
 
 public:
 
-	Search() {
+	Search() noexcept {
 	}
 
 	bool Initialize(bool useMigemo) {
@@ -42,17 +42,17 @@ public:
 	}
 
 	// Key input search
-	void KeySearch(int key) {
-		auto time = GetTickCount64();
+	void KeySearch(WPARAM key) {
+		const auto time = GetTickCount64();
 		if (time - lastKeySearchTime_ > 1000) searchWord_.clear();
 		lastKeySearchTime_ = time;
 		searchWord_.append(1, ::_totlower((wint_t)key));
 		reserveFind_ = true;  // Flag the call to findFirst using a timer
 	}
 
-	bool IsReserved() {
+	bool IsReserved() const noexcept {
 		if (reserveFind_) {
-			auto time = GetTickCount64();
+			const auto time = GetTickCount64();
 			if (time - lastKeySearchTime_ > 500) return true;
 		}
 		return false;
@@ -68,7 +68,7 @@ public:
 		int jumpTo = -1;
 		bool restart = false;
 
-		size_t startIndex = (cursorIndex == -1) ? 0 : cursorIndex + 1;
+		size_t startIndex = (cursorIndex == -1) ? 0 : static_cast<size_t>(cursorIndex) + 1;
 		if (startIndex == items.Count()) startIndex = 0;
 
 		if (useMigemo_) {

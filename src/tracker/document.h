@@ -57,7 +57,7 @@ private:
 	// Make a file list of ordinary folders
 	void SetNormalFolder(const std::wstring& path) {
 		// Create hierarchical list
-		auto last = navis_.Count();
+		const auto last = navis_.Count();
 		std::wstring cur(path);
 
 		while (!cur.empty()) {
@@ -70,7 +70,7 @@ private:
 
 		// Add files
 		FileSystem::find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
-			bool isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
+			const bool isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
 			if (!isHidden || opt_.IsShowHidden()) {
 				files_.Add(files_.CreateItem()->SetFileItem(parent, wfd, extensions_));
 			}
@@ -92,7 +92,7 @@ private:
 		item->data() = special_separator_option_data_;
 		navis_.Add(item);
 
-		ErrorMode em;
+		const ErrorMode em;
 		if (currentPath_ == fav_.PATH) {
 			for (size_t i = 0; i < fav_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(fav_[i], extensions_, i));
 		} else if (currentPath_ == his_.PATH) {
@@ -118,13 +118,13 @@ private:
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extensions_(exts), pref_(pref) {
+	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extensions_(exts), pref_(pref), opt_(), view_() {
 		special_separator_option_data_ = special_separator_option_data;
 		hierarchy_separator_option_data_ = hierarchy_separator_option_data;
 		currentPath_ = dri_.PATH;
 	}
 
-	void SetView(Observer* view) {
+	void SetView(Observer* view) noexcept {
 		view_ = view;
 	}
 
@@ -160,7 +160,8 @@ public:
 
 	// Move to lower folder
 	bool MoveToLower(ListType w, int index) {
-		Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		const Item* f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		if (f == nullptr) return false;
 		if (f->IsEmpty()) return false;
 
 		if (f->IsDir()) {
@@ -191,7 +192,8 @@ public:
 
 	// Check if it is possible to move to lower folder
 	bool MovableToLower(ListType w, int index) {
-		Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		const Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		if (f == nullptr) return false;
 
 		if (f->IsEmpty()) return false;
 		if (f->IsDir()) return true;
@@ -260,50 +262,50 @@ public:
 		vec.Select(front, back, all);
 	}
 
-	Option& GetOpt() {
+	Option& GetOpt() noexcept {
 		return opt_;
 	}
 
 	// Return the number of selected files
-	size_t SelectedCount() {
+	size_t SelectedCount() noexcept {
 		return files_.SelectionCount();
 	}
 
 	// The current directory is a bookmark
-	bool InBookmark() {
+	bool InBookmark() noexcept {
 		return currentPath_ == fav_.PATH;
 	}
 
 	// Current directory is history
-	bool InHistory() {
+	bool InHistory() noexcept {
 		return currentPath_ == his_.PATH;
 	}
 
 	// Current directory is drive
-	bool InDrives() {
+	bool InDrives() noexcept {
 		return currentPath_ == dri_.PATH;
 	}
 
 	// Return the current path
-	std::wstring& CurrentPath() {
+	std::wstring& CurrentPath() noexcept {
 		return currentPath_;
 	}
 
 	// Return the previous current path
-	std::wstring& LastCurrentPath() {
+	std::wstring& LastCurrentPath() noexcept {
 		return lastCurrentPath_;
 	}
 
 	// Return file information
-	Item* GetItem(ListType w, int index) {
+	Item* GetItem(ListType w, int index) noexcept {
 		return (w == ListType::FILE) ? files_[index] : navis_[index];
 	}
 
-	const ItemList& GetNavis() const {
+	const ItemList& GetNavis() const noexcept {
 		return navis_;
 	}
 
-	const ItemList& GetFiles() const {
+	const ItemList& GetFiles() const noexcept {
 		return files_;
 	}
 

@@ -27,15 +27,15 @@ class Clipboard {
 
 public:
 
-	Clipboard(HWND hWnd) : hWnd_(hWnd) {}
+	Clipboard(HWND hWnd) noexcept : hWnd_(hWnd) {}
 
-	~Clipboard() {}
+	~Clipboard() = default;
 
 	// Copy file paths to the clipboard
 	bool copy_path(const std::vector<std::wstring>& paths) const {
 		std::wstring str;
 		for (const auto& e : paths) {
-			if (1 < e.size() && e[e.size() - 1] == L':') {  // Drive
+			if (1 < e.size() && e.back() == L':') {  // Drive
 				str.append(e).append(L"\\\r\n");
 			} else {
 				str.append(e).append(L"\r\n");
@@ -68,26 +68,28 @@ public:
 
 		if (!::OpenClipboard(hWnd_)) return false;
 
-		auto hDrop = (HDROP) ::GetClipboardData(CF_HDROP);
+		auto hDrop = static_cast<HDROP>(::GetClipboardData(CF_HDROP));
 		if (hDrop) {
-			int count = ::DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
-			for (int i = 0; i < count; ++i) {
-				int len = ::DragQueryFile(hDrop, i, nullptr, 0);  // without end NULL
-				if ((int)buf.size() < len + 1) {
-					buf.resize(len + 1);  // add end NULL
+			const auto count = ::DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
+			for (UINT i = 0; i < count; ++i) {
+				const auto len = ::DragQueryFile(hDrop, i, nullptr, 0);  // without end NULL
+				if (static_cast<UINT>(buf.size()) < len + 1) {
+					buf.resize(static_cast<size_t>(len) + 1);  // add end NULL
 				}
-				::DragQueryFile(hDrop, i, buf.data(), MAX_PATH);
-				std::wstring target{ buf.data() };
-				auto name = Path::name(target);
-				if (Link::is_link(target)) {
-					target = Link::resolve(target);
-				} else {
-					name.append(L".lnk");
+				::DragQueryFile(hDrop, i, buf.data(), static_cast<UINT>(buf.size()));
+				if (buf.data() != nullptr && buf[0] != L'\0') {
+					std::wstring target{ buf.begin(), buf.end() };
+					auto name = Path::name(target);
+					if (Link::is_link(target)) {
+						target = Link::resolve(target);
+					} else {
+						name.append(L".lnk");
+					}
+					auto path{ dir };
+					path.append(L"\\").append(name);
+					auto shortcut = FileSystem::unique_name(path);
+					if (Link::create(shortcut, target)) ret = true;
 				}
-				auto path{ dir };
-				path.append(L"\\").append(name);
-				auto shortcut = FileSystem::unique_name(path);
-				if (Link::create(shortcut, target)) ret = true;
 			}
 		}
 		::CloseClipboard();

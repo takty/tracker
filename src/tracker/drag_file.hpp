@@ -3,7 +3,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include <windows.h>
 
@@ -28,11 +29,12 @@ class DragFile {
 
 	public:
 
-		DropSource() : refCount_(1) {}
+		DropSource() noexcept : refCount_(1) {}
 
-		~DropSource() {}
+		virtual ~DropSource() noexcept = default;
 
 		virtual HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) {
+			if (ppv == nullptr) return E_POINTER;
 			if (iid == IID_IDropSource || iid == IID_IUnknown) {
 				AddRef();
 				*ppv = this;
@@ -48,12 +50,12 @@ class DragFile {
 		}
 
 		virtual ULONG __stdcall Release() {
-			auto count = ::InterlockedDecrement(&refCount_);
+			const auto count = ::InterlockedDecrement(&refCount_);
 			if (count == 0) delete this;
 			return count;
 		}
 
-		virtual HRESULT __stdcall QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) {
+		virtual HRESULT __stdcall QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) noexcept {
 			if (fEscapePressed) {
 				return DRAGDROP_S_CANCEL;
 			}
@@ -66,7 +68,7 @@ class DragFile {
 			return S_OK;
 		}
 
-		virtual HRESULT __stdcall GiveFeedback(DWORD) {
+		virtual HRESULT __stdcall GiveFeedback(DWORD) noexcept {
 			return DRAGDROP_S_USEDEFAULTCURSORS;
 		}
 
@@ -77,13 +79,13 @@ public:
 	static void start(const std::vector<std::wstring>& paths) {
 		if (paths.empty()) return;
 
-		auto dobj = (LPDATAOBJECT)Shell::get_ole_ui_object(paths, IID_IDataObject);
+		auto dobj = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(paths, IID_IDataObject));
 		if (!dobj) return;
 
-		auto ds = new DropSource();
-		bool notDrive = !Path::is_root(paths.front());
+		auto ds = std::make_unique<DropSource>();
+		const bool notDrive = !Path::is_root(paths.front());
 		DWORD dwEffect;
-		::DoDragDrop(dobj, ds, DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
+		::DoDragDrop(dobj, ds.get(), DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
 		ds->Release();
 
 		dobj->Release();

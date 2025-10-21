@@ -3,7 +3,7 @@
  * Comparator of File Items
  *
  * @author Takuto Yanagida
- * @version 2020-03-22
+ * @version 2025-10-21
  *
  */
 
@@ -20,9 +20,12 @@ class CompByName {
 
 public:
 
-	CompByName(bool rev) : rev_(rev) {}
+	CompByName(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) {
+	bool operator()(const Item* it1, const Item* it2) noexcept {
+		if (it1 == nullptr || it2 == nullptr) {
+			return false;
+		}
 		bool ret = false;
 		if ((it1->IsDir()) ^ (it2->IsDir())) {
 			if ((it1->IsDir()) > (it2->IsDir())) ret = true;
@@ -42,11 +45,13 @@ class CompByType {
 
 public:
 
-	CompByType(bool rev) : rev_(rev) {}
+	CompByType(bool rev) noexcept : rev_(rev) {}
 
 	bool operator()(const Item* it1, const Item* it2) {
+		if (it1 == nullptr || it2 == nullptr) {
+			return false;
+		}
 		bool ret = false;
-
 		if ((it1->IsDir()) ^ (it2->IsDir())) {
 			if (it1->IsDir() > it2->IsDir()) ret = true;
 		} else {
@@ -69,9 +74,12 @@ class CompByDate {
 
 public:
 
-	CompByDate(bool rev) : rev_(rev) {}
+	CompByDate(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) {
+	bool operator()(const Item* it1, const Item* it2) noexcept {
+		if (it1 == nullptr || it2 == nullptr) {
+			return false;
+		}
 		bool ret = false;
 		if ((it1->IsDir()) ^ (it2->IsDir())) {
 			if ((it1->IsDir()) > (it2->IsDir())) ret = true;
@@ -91,9 +99,12 @@ class CompBySize {
 
 public:
 
-	CompBySize(bool rev) : rev_(rev) {}
+	CompBySize(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) {
+	bool operator()(const Item* it1, const Item* it2) noexcept {
+		if (it1 == nullptr || it2 == nullptr) {
+			return false;
+		}
 		bool ret = false;
 		if ((it1->IsDir()) ^ (it2->IsDir())) {
 			if ((it1->IsDir()) > (it2->IsDir())) ret = true;
