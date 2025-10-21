@@ -3,7 +3,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-22
  *
  */
 
@@ -42,9 +42,9 @@ public:
 		return paths_[index];
 	}
 
-	bool arrange(int drag, int drop) {
-		if (drag < 0 || static_cast<size_t>(drag) >= paths_.size()) return false;
-		if (drop < 0 || static_cast<size_t>(drop) >= paths_.size()) return false;
+	bool arrange(size_t drag, size_t drop) {
+		if (paths_.size() <= drag) return false;
+		if (paths_.size() <= drop) return false;
 		std::wstring path(paths_[drag]);
 		paths_.erase(paths_.begin() + drag);
 		paths_.insert(paths_.begin() + drop, path);
@@ -55,7 +55,7 @@ public:
 		paths_.push_back(path);
 	}
 
-	void remove(int index) noexcept {
+	void remove(size_t index) noexcept {
 		paths_.erase(paths_.begin() + index);
 	}
 

@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <optional>
 
 #include "item_list.h"
 #include "migemo_wrapper.h"
@@ -33,8 +34,7 @@ class Search {
 
 public:
 
-	Search() noexcept {
-	}
+	Search() noexcept = default;
 
 	bool Initialize(bool useMigemo) {
 		useMigemo_ = (useMigemo && regex_.loadLibrary() && migemo_.loadLibrary());
@@ -58,17 +58,17 @@ public:
 		return false;
 	}
 
-	int FindFirst(int cursorIndex, const ItemList& items) {
+	std::optional<size_t> FindFirst(std::optional<size_t> cursorIndex, const ItemList& items) {
 		reserveFind_ = false;
 		if (useMigemo_) migemo_.query(searchWord_, mkey_);
 		return FindNext(cursorIndex, items);
 	}
 
-	int FindNext(int cursorIndex, const ItemList& items) {
-		int jumpTo = -1;
+	std::optional<size_t> FindNext(std::optional<size_t> cursorIndex, const ItemList& items) {
+		std::optional<size_t> jumpTo;
 		bool restart = false;
 
-		size_t startIndex = (cursorIndex == -1) ? 0 : static_cast<size_t>(cursorIndex) + 1;
+		size_t startIndex = (!cursorIndex) ? 0 : cursorIndex.value() + 1;
 		if (startIndex == items.Count()) startIndex = 0;
 
 		if (useMigemo_) {

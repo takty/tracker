@@ -33,6 +33,7 @@ class Item {
 	int color_ = 0;
 	int style_ = 0;
 	int data_  = 0;
+	size_t id_ = 0;
 
 	// parentPath must include \ at the end
 	void Assign(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
@@ -93,20 +94,23 @@ public:
 	Item* SetFileItem(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
 		Assign(parentPath, wfd, exts);
 		data_ = 0;
+		id_   = 0;
 		return this;
 	}
 
 	Item* SetFileItem(const std::wstring& path, const TypeTable& exts, size_t id = 0) {
 		Assign(path, exts);
-		style_ |= MAKELONG(0, id);
 		data_ = 0;
+		id_   = id;
 		return this;
 	}
 
 	Item* SetEmptyItem() {
 		name_.assign(EMPTY_STR());
 		style_ = Item::EMPTY;
-		data_ = 0;
+		color_ = 0;
+		data_  = 0;
+		id_    = 0;
 		return this;
 	}
 
@@ -115,7 +119,8 @@ public:
 		name_.assign(name);
 		style_ = Item::DIR;
 		color_ = ::GetSysColor(COLOR_GRAYTEXT);
-		data_ = 0;
+		data_  = 0;
+		id_    = 0;
 		return this;
 	}
 
@@ -133,9 +138,9 @@ public:
 	}
 
 
-	void SetId(int i) noexcept {
-		style_ |= MAKELONG(0, i);
-	}
+	//void SetId(int i) noexcept {
+	//	style_ |= MAKELONG(0, i);
+	//}
 
 	void SetSelected(bool f) noexcept {
 		f ? (style_ |= SEL) : (style_ &= ~SEL);
@@ -147,6 +152,7 @@ public:
 		color_ = style_ = 0;
 		size_ = 0UL;
 		date_.dwLowDateTime = date_.dwHighDateTime = 0;
+		id_ = 0;
 	}
 
 	const std::wstring& Path() const noexcept {
@@ -169,8 +175,9 @@ public:
 		return color_;
 	}
 
-	int Id() const noexcept {
-		return HIWORD(style_);
+	size_t Id() const noexcept {
+		//return HIWORD(style_);
+		return id_;
 	}
 
 	//bool IsSeparator() const {

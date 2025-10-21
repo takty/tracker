@@ -81,17 +81,16 @@ public:
 		sort(items_.begin(), items_.end(), p);
 	}
 
-	size_t Select(int front, int back, bool all) noexcept {
-		if (front == -1 || back == -1) return selNum_;
+	size_t Select(size_t front, size_t back, bool all) noexcept {
 		if (back < front) std::swap(front, back);
 		if (all) {
-			for (int i = front; i <= back; ++i) {
+			for (size_t i = front; i <= back; ++i) {
 				if (items_[i]->data() != 0) continue;
 				items_[i]->SetSelected(true);
 			}
 			selNum_ = static_cast<size_t>(back) - front + 1;
 		} else {
-			for (int i = front; i <= back; ++i) {
+			for (size_t i = front; i <= back; ++i) {
 				auto& fd = items_[i];
 				if (fd->data() != 0) continue;
 				fd->SetSelected(!fd->IsSelected());

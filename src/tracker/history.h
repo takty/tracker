@@ -21,7 +21,7 @@
 class History {
 
 	std::vector<std::wstring> paths_;
-	int max_size_ = 0;
+	size_t max_size_ = 0;
 
 public:
 
@@ -56,7 +56,7 @@ public:
 		paths_.erase(remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
 		paths_.insert(paths_.begin(), path);  // Add
 
-		if ((int)paths_.size() > max_size_) {  // Maximum number of history limit
+		if (paths_.size() > max_size_) {  // Maximum number of history limit
 			paths_.resize(max_size_);
 		}
 	}

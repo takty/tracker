@@ -159,7 +159,7 @@ public:
 	}
 
 	// Move to lower folder
-	bool MoveToLower(ListType w, int index) {
+	bool MoveToLower(ListType w, size_t index) {
 		const Item* f = ((w == ListType::FILE) ? files_ : navis_)[index];
 		if (f == nullptr) return false;
 		if (f->IsEmpty()) return false;
@@ -191,34 +191,36 @@ public:
 	}
 
 	// Check if it is possible to move to lower folder
-	bool MovableToLower(ListType w, int index) {
+	bool MovableToLower(ListType w, size_t index) {
 		const Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
-		if (f == nullptr) return false;
 
+		if (f == nullptr) return false;
 		if (f->IsEmpty()) return false;
+
 		if (f->IsDir()) return true;
 		if (Link::is_link(f->Path())) return true;
 		if (InBookmark() || InHistory()) return true;
+
 		return false;
 	}
 
 	// Set operators for multiple selected files
-	Selection& SetOperator(int index, ListType type, Selection& ope) {
+	Selection& SetOperator(std::optional<size_t> index, ListType type, Selection& ope) {
 		ope.Clear();
-		if (index == -1) return ope;
+		if (!index) return ope;
 
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
-		if (vec[index]->IsEmpty()) return ope;
+		if (vec[index.value()]->IsEmpty()) return ope;
 
 		// When index is not selected (including hierarchy) -> Single file is selected alone
-		if (!vec[index]->IsSelected()) {
-			ope.Add(vec[index]->Path());
+		if (!vec[index.value()]->IsSelected()) {
+			ope.Add(vec[index.value()]->Path());
 			return ope;
 		}
 		// Copy selected file name
-		ope.Add(vec[index]->Path());  // Copy the file specified by index to the beginning
+		ope.Add(vec[index.value()]->Path());  // Copy the file specified by index to the beginning
 		for (size_t i = 0; i < vec.Count(); i++) {
-			if (vec[i]->IsSelected() && i != index) {
+			if (vec[i]->IsSelected() && i != index.value()) {
 				ope.Add(vec[i]->Path());
 			}
 		}
@@ -237,14 +239,14 @@ public:
 	}
 
 	// Sort favorite
-	bool ArrangeFavorites(int drag, int drop) {
-		if (drag == -1 || drop == -1 || drag == drop) return false;
+	bool ArrangeFavorites(std::optional<size_t> drag, std::optional<size_t> drop) {
+		if (!drag || !drop || drag == drop) return false;
 		if (!InBookmark()) return false;
-		return fav_.arrange(files_[drag]->Id(), files_[drop]->Id());
+		return fav_.arrange(files_[drag.value()]->Id(), files_[drop.value()]->Id());
 	}
 
 	// Add to / Remove from Favorites
-	void AddOrRemoveFavorite(const std::wstring& obj, ListType w, int index) {
+	void AddOrRemoveFavorite(const std::wstring& obj, ListType w, size_t index) {
 		auto &vec = (w == ListType::FILE) ? files_ : navis_;
 
 		if (vec[index]->IsEmpty()) return;
@@ -257,7 +259,7 @@ public:
 	}
 
 	// Select file by range specification
-	void SelectFile(int front, int back, ListType type, bool all) {
+	void SelectFile(size_t front, size_t back, ListType type, bool all) {
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		vec.Select(front, back, all);
 	}
@@ -297,7 +299,7 @@ public:
 	}
 
 	// Return file information
-	Item* GetItem(ListType w, int index) noexcept {
+	Item* GetItem(ListType w, size_t index) noexcept {
 		return (w == ListType::FILE) ? files_[index] : navis_[index];
 	}
 
