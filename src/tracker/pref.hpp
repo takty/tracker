@@ -3,7 +3,7 @@
  * Preference (Reading and writing INI file)
  *
  * @author Takuto Yanagida
- * @version 2025-10-20
+ * @version 2025-10-22
  *
  */
 
@@ -75,7 +75,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			const auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), MAX_PATH, iniPath_.c_str());
+			const auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), static_cast<DWORD>(buf.size()), iniPath_.c_str());
 			if (outLen != buf.size() - 1) break;
 			buf.resize(buf.size() * 2);
 		}

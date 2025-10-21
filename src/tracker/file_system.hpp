@@ -3,7 +3,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-22
  *
  */
 
@@ -143,7 +143,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			::GetModuleFileName(nullptr, buf.data(), MAX_PATH);
+			::GetModuleFileName(nullptr, buf.data(), static_cast<DWORD>(buf.size()));
 			if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) break;
 			buf.resize(buf.size() * 2);
 		}
@@ -155,7 +155,7 @@ public:
 		std::vector<wchar_t> buf(MAX_PATH);
 
 		while (true) {
-			const auto len = ::GetCurrentDirectory(MAX_PATH, buf.data());
+			const auto len = ::GetCurrentDirectory(static_cast<DWORD>(buf.size()), buf.data());
 			if (len < buf.size()) break;
 			buf.resize(len);
 		}

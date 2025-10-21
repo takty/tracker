@@ -3,7 +3,7 @@
  * Shortcut File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-22
  *
  */
 
@@ -68,7 +68,7 @@ public:
 			if (SUCCEEDED(hr)) {
 				std::vector<wchar_t> buf(MAX_PATH);
 				while (true) {
-					hr = psl->GetPath(buf.data(), MAX_PATH, nullptr, SLGP_RAWPATH);
+					hr = psl->GetPath(buf.data(), static_cast<DWORD>(buf.size()), nullptr, SLGP_RAWPATH);
 					if (HRESULT_CODE(hr) != ERROR_INSUFFICIENT_BUFFER) break;
 					buf.resize(buf.size() * 2);
 				}
