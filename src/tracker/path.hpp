@@ -3,7 +3,7 @@
  * File Path Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-22
  *
  */
 
@@ -93,6 +93,15 @@ public:
 		return UNC_PREFIX + path;
 	}
 
+	// Ensure the path begin with UNC prefix "\\?\" if the path is too long.
+	static std::wstring ensure_unc_prefix_if_needed(const std::wstring& path) {
+		const auto p = ensure_no_unc_prefix(path);
+		if (MAX_PATH - 1 < p.size()) {
+			return ensure_unc_prefix(p);
+		}
+		return p;
+	}
+
 	// Ensure the path does not begin with UNC prefix "\\?\"
 	static std::wstring ensure_no_unc_prefix(const std::wstring& path) {
 		if (0 == path.compare(0, 4, UNC_PREFIX)) {
@@ -114,7 +123,7 @@ public:
 	static std::wstring space_separated_quoted_paths_string(const std::vector<std::wstring>& paths) {
 		std::wstring ret;
 		for (const auto& path : paths) {
-			ret.append(1, L'\"').append(path);
+			ret.append(1, L'\"').append(ensure_unc_prefix_if_needed(path));
 			if (path.back() == DRIVE_IDENTIFIER) {
 				ret.append(1, PATH_SEPARATOR);
 			}

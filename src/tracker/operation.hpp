@@ -3,7 +3,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-20
+ * @version 2025-10-22
  *
  */
 
@@ -22,22 +22,25 @@
 class Operation {
 
 	class ShellItem {
+
 		IShellItem* si_ = nullptr;
 
 	public:
-		ShellItem(const std::wstring path) noexcept {
+
+		ShellItem(const std::wstring& path) noexcept {
 			IShellItem* dest = nullptr;
-			const auto res = ::SHCreateItemFromParsingName(path.c_str(), nullptr, IID_IShellItem, (void**)&dest);
-			if (res == S_OK) si_ = dest;
+			auto p           = Path::ensure_no_unc_prefix(path);
+			const auto res   = ::SHCreateItemFromParsingName(p.c_str(), nullptr, IID_IShellItem, (void**)&dest);
+			if (res == S_OK) {
+				si_ = dest;
+			}
 		}
+
 		ShellItem(const ShellItem&) = delete;
 		ShellItem& operator=(const ShellItem&) = delete;
 		ShellItem(ShellItem&&) = delete;
 		ShellItem& operator=(ShellItem&&) = delete;
 
-		IShellItem* ptr() const noexcept {
-			return si_;
-		}
 		~ShellItem() noexcept {
 			if (si_) {
 				try {
@@ -46,19 +49,29 @@ class Operation {
 				}
 			}
 		}
+
+		IShellItem* ptr() const noexcept {
+			return si_;
+		}
+
 	};
 
 	class ShellItemIdArray {
+
 		Shell::ItemIdChildList iicl_;
 		IShellItemArray* sia_ = nullptr;
 
 	public:
+
 		ShellItemIdArray(const std::vector<std::wstring>& paths) : iicl_(paths) {
 			auto parent_shf = iicl_.parent_shell_folder();
-			const auto& cs = iicl_.child_list();
+			const auto& cs  = iicl_.child_list();
+
 			if (parent_shf != nullptr && !cs.empty()) {
 				const auto res = ::SHCreateShellItemArray(nullptr, parent_shf, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), &sia_);
-				if (res != S_OK) sia_ = nullptr;
+				if (res != S_OK) {
+					sia_ = nullptr;
+				}
 			}
 		}
 
@@ -67,13 +80,14 @@ class Operation {
 		ShellItemIdArray(ShellItemIdArray&&) = delete;
 		ShellItemIdArray& operator=(ShellItemIdArray&&) = delete;
 
+		~ShellItemIdArray() {
+			sia_->Release();
+		}
+
 		IShellItemArray* shell_item_array() const noexcept {
 			return sia_;
 		}
 
-		~ShellItemIdArray() {
-			sia_->Release();
-		}
 	};
 
 	HWND            hWnd_    = nullptr;
@@ -81,8 +95,7 @@ class Operation {
 
 	bool perform() const {
 		const auto res = file_op_->PerformOperations();
-		if (SUCCEEDED(res)) return true;
-		return false;
+		return SUCCEEDED(res);
 	}
 
 	template<typename F> bool do_multiple_files_op(const std::vector<std::wstring>& paths, F fn) const {
@@ -120,8 +133,9 @@ class Operation {
 		sei.lpDirectory  = nullptr;
 		sei.nShow        = SW_SHOW;
 		sei.hInstApp     = nullptr;
-		if (::ShellExecuteEx(&sei) == TRUE) return true;
-
+		if (::ShellExecuteEx(&sei) == TRUE) {
+			return true;
+		}
 		// Work around for executing files in OneDrive
 		sei.lpVerb       = L"open";
 		sei.lpFile       = L"explorer";
@@ -133,11 +147,15 @@ public:
 
 	Operation(HWND hWnd = nullptr) noexcept {
 		hWnd_ = hWnd;
+
 		IFileOperation* obj = nullptr;
-		auto res = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, (void**)&obj);
+		auto res            = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, (void**)&obj);
+
 		if (SUCCEEDED(res)) {
 			res = obj->SetOperationFlags(FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOFX_NOMINIMIZEBOX);
-			if (SUCCEEDED(res)) file_op_ = obj;
+			if (SUCCEEDED(res)) {
+				file_op_ = obj;
+			}
 		}
 	}
 
@@ -173,7 +191,9 @@ public:
 		if (!path_si.ptr()) return false;
 
 		const auto res = file_op_->RenameItem(path_si.ptr(), new_fname.c_str(), nullptr);
-		if (SUCCEEDED(res)) return perform();
+		if (SUCCEEDED(res)) {
+			return perform();
+		}
 		return false;
 	}
 
@@ -201,7 +221,9 @@ public:
 			if (!sia.shell_item_array()) return false;
 
 			const auto res = file_op_->CopyItems(sia.shell_item_array(), dest_si.ptr());
-			if (SUCCEEDED(res)) return perform();
+			if (SUCCEEDED(res)) {
+				return perform();
+			}
 			return false;
 		});
 	}
@@ -217,7 +239,9 @@ public:
 			if (!sia.shell_item_array()) return false;
 
 			const auto res = file_op_->MoveItems(sia.shell_item_array(), dest_si.ptr());
-			if (SUCCEEDED(res)) return perform();
+			if (SUCCEEDED(res)) {
+				return perform();
+			}
 			return false;
 		});
 	}
@@ -231,7 +255,9 @@ public:
 			if (!sia.shell_item_array()) return false;
 
 			const auto res = file_op_->DeleteItems(sia.shell_item_array());
-			if (SUCCEEDED(res)) return perform();
+			if (SUCCEEDED(res)) {
+				return perform();
+			}
 			return false;
 		});
 	}

@@ -3,7 +3,7 @@
  * File Item
  *
  * @author Takuto Yanagida
- * @version 2025-10-20
+ * @version 2025-10-22
  *
  */
 
@@ -43,7 +43,7 @@ class Item {
 		size_ = (((unsigned long long) wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
 
 		auto isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
-		auto isDir = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		auto isDir    = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 		CheckFile(isDir, isHidden, exts);
 	}
 
@@ -51,13 +51,13 @@ class Item {
 		path_ = filePath;
 		name_ = Path::name(path_);
 
-		const auto attr     = ::GetFileAttributes(path_.c_str());
-		auto isDir    = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
-		auto isHidden = (attr & FILE_ATTRIBUTE_HIDDEN) != 0;
+		const auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path_).c_str());
+		auto isDir      = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		auto isHidden   = (attr & FILE_ATTRIBUTE_HIDDEN) != 0;
 
 		// When there is no file
 		if (attr == INVALID_FILE_ATTRIBUTES) {
-			isDir = false;
+			isDir    = false;
 			isHidden = true;
 		}
 		// Measures to prevent drive from appearing as hidden file
@@ -72,8 +72,9 @@ class Item {
 		style_ = 0;
 		if (!isDir && ext == L"lnk") {  // When it is a link
 			name_.resize(name_.size() - 4);  // remove .lnk
-			auto linkPath = Link::resolve(path_);
-			const auto attr     = ::GetFileAttributes(linkPath.c_str());
+			auto linkPath   = Link::resolve(path_);
+			const auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path_).c_str());
+
 			if (attr == INVALID_FILE_ATTRIBUTES) {  // When the link is broken
 				style_ = LINK | HIDE;
 				color_ = -1;

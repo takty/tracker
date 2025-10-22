@@ -53,7 +53,7 @@ public:
 		// %path%  -> "path\file"
 		auto pos = opt.find(L"%path%");
 		if (pos != std::wstring::npos) {
-			opt.replace(pos, 6, Path::quote(objs.front()));
+			opt.replace(pos, 6, Path::quote(Path::ensure_unc_prefix_if_needed(objs.front())));
 		}
 		// %paths% -> "path\file1" "path\file2"...
 		pos = opt.find(L"%paths%");
@@ -117,13 +117,13 @@ public:
 
 	// Check whether the path is a directory
 	static bool is_directory(const std::wstring& path) noexcept {
-		const auto attr = ::GetFileAttributes(path.c_str());
+		const auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
 		return (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 
 	// Check whether the file of the path is existing
 	static bool is_existing(const std::wstring& path) noexcept {
-		const auto attr = ::GetFileAttributes(path.c_str());
+		const auto attr = ::GetFileAttributes(Path::ensure_unc_prefix(path).c_str());
 		return attr != INVALID_FILE_ATTRIBUTES;
 	}
 

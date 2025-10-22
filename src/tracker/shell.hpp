@@ -3,7 +3,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-20
+ * @version 2025-10-22
  *
  */
 
@@ -32,16 +32,21 @@ public:
 
 		ItemIdChildList(const std::vector<std::wstring>& paths) {
 			parent_shf_ = Shell::get_parent_shell_folder(paths.front());
-			if (parent_shf_ == nullptr) return;
-
+			if (parent_shf_ == nullptr) {
+				return;
+			}
 			for (const auto& e : paths) {
 				auto fname = Path::name(e);
-				if (Path::is_root(e)) fname += L'\\';
+				if (Path::is_root(e)) {
+					fname += L'\\';
+				}
 				std::vector<wchar_t> fname_buf(fname.begin(), fname.end());
 				fname_buf.push_back(L'\0');
 				PITEMID_CHILD id;
-				const HRESULT res = parent_shf_->ParseDisplayName(nullptr, nullptr, fname_buf.data(), nullptr, &id, nullptr);
-				if (res == S_OK) ids_.push_back(id);
+				const auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, fname_buf.data(), nullptr, &id, nullptr);
+				if (res == S_OK) {
+					ids_.push_back(id);
+				}
 			}
 		}
 
@@ -51,7 +56,9 @@ public:
 		ItemIdChildList& operator=(ItemIdChildList&&) = delete;
 
 		~ItemIdChildList() {
-			for (auto e : ids_) ::CoTaskMemFree(e);
+			for (auto e : ids_) {
+				::CoTaskMemFree(e);
+			}
 			parent_shf_->Release();
 		}
 
@@ -67,11 +74,13 @@ public:
 
 	static LPSHELLFOLDER get_shell_folder(const std::wstring& path) noexcept {
 		PIDLIST_ABSOLUTE parent_id;
-		auto res = ::SHParseDisplayName(path.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
+
+		auto p         = Path::ensure_no_unc_prefix(path);
+		const auto res = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 
 		LPSHELLFOLDER parent_shf = nullptr;
 		if (res == S_OK) {
-			res = ::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
+			::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
 			::CoTaskMemFree(parent_id);
 		}
 		return parent_shf;
@@ -84,12 +93,12 @@ public:
 		if (Path::is_root(path)) {
 			res = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &parent_id);
 		} else {
-			auto p = Path::parent(path);
-			res = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
+			auto p = Path::ensure_no_unc_prefix(Path::parent(path));
+			res    = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 		}
 		LPSHELLFOLDER parent_shf = nullptr;
 		if (res == S_OK) {
-			res = ::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
+			::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
 			::CoTaskMemFree(parent_id);
 		}
 		return parent_shf;
@@ -98,12 +107,16 @@ public:
 	static LPVOID get_ole_ui_object(const std::vector<std::wstring>& paths, REFIID riid) {
 		ItemIdChildList sidcl(paths);
 		auto parent_shf = sidcl.parent_shell_folder();
-		const auto& cs = sidcl.child_list();
+		const auto& cs  = sidcl.child_list();
 
-		if (parent_shf == nullptr) return nullptr;
+		if (parent_shf == nullptr) {
+			return nullptr;
+		}
 		LPVOID ret_obj = nullptr;
 		const auto res = parent_shf->GetUIObjectOf(nullptr, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
-		if (res == S_OK) return ret_obj;
+		if (res == S_OK) {
+			return ret_obj;
+		}
 		return nullptr;
 	}
 
