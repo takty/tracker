@@ -44,10 +44,12 @@ public:
 	// Key input search
 	void KeySearch(WPARAM key) {
 		const auto time = GetTickCount64();
-		if (time - lastKeySearchTime_ > 1000) searchWord_.clear();
+		if (time - lastKeySearchTime_ > 1000) {
+			searchWord_.clear();
+		}
+		searchWord_.append(1, ::_totlower(static_cast<wint_t>(key)));
 		lastKeySearchTime_ = time;
-		searchWord_.append(1, ::_totlower((wint_t)key));
-		reserveFind_ = true;  // Flag the call to findFirst using a timer
+		reserveFind_       = true;  // Flag the call to findFirst using a timer
 	}
 
 	bool IsReserved() const noexcept {

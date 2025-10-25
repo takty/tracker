@@ -3,7 +3,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -45,12 +45,12 @@ public:
 		return paths_.size();
 	}
 
-	std::wstring& operator[](size_t index) noexcept {
-		return paths_[index];
+	std::wstring& operator[](size_t index) {
+		return paths_.at(index);
 	}
 
 	void add(const std::wstring& path) {
-		auto root = path[0] + L":\\";
+		auto root = std::wstring(1, path.front()) + L":\\";
 		if (FileSystem::is_removable(root)) return;  // Do not leave removable
 
 		paths_.erase(remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
@@ -63,7 +63,14 @@ public:
 
 	void clean_up() {
 		// Delete a nonexistent path
-		paths_.erase(remove_if(paths_.begin(), paths_.end(), [](std::wstring& p) noexcept {return !FileSystem::is_existing(p); }), paths_.end());
+		paths_.erase(
+			remove_if(
+				paths_.begin(),
+				paths_.end(),
+				[](std::wstring& p) noexcept {return !FileSystem::is_existing(p); }
+			),
+			paths_.end()
+		);
 	}
 
 	void clear() noexcept {

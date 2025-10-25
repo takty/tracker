@@ -40,10 +40,8 @@ public:
 				if (Path::is_root(e)) {
 					fname += L'\\';
 				}
-				std::vector<wchar_t> fname_buf(fname.begin(), fname.end());
-				fname_buf.push_back(L'\0');
 				PITEMID_CHILD id;
-				const auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, fname_buf.data(), nullptr, &id, nullptr);
+				const auto res = parent_shf_->ParseDisplayName(nullptr, nullptr, fname.data(), nullptr, &id, nullptr);
 				if (res == S_OK) {
 					ids_.push_back(id);
 				}
@@ -76,11 +74,11 @@ public:
 		PIDLIST_ABSOLUTE parent_id;
 
 		auto p         = Path::ensure_no_unc_prefix(path);
-		const auto res = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
+		const auto res = ::SHParseDisplayName(p.data(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 
 		LPSHELLFOLDER parent_shf = nullptr;
 		if (res == S_OK) {
-			::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
+			::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, reinterpret_cast<void**>(&parent_shf));
 			::CoTaskMemFree(parent_id);
 		}
 		return parent_shf;
@@ -89,16 +87,16 @@ public:
 	static LPSHELLFOLDER get_parent_shell_folder(const std::wstring& path) {
 		HRESULT res{};
 
-		PIDLIST_ABSOLUTE parent_id;
+		PIDLIST_ABSOLUTE parent_id{};
 		if (Path::is_root(path)) {
 			res = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &parent_id);
 		} else {
 			auto p = Path::ensure_no_unc_prefix(Path::parent(path));
-			res    = ::SHParseDisplayName(p.c_str(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
+			res    = ::SHParseDisplayName(p.data(), nullptr, &parent_id, 0, nullptr);  // This function can handle a super long path without UNC token
 		}
 		LPSHELLFOLDER parent_shf = nullptr;
 		if (res == S_OK) {
-			::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, (void**)&parent_shf);
+			::SHBindToObject(nullptr, parent_id, nullptr, IID_IShellFolder, reinterpret_cast<void**>(&parent_shf));
 			::CoTaskMemFree(parent_id);
 		}
 		return parent_shf;
@@ -106,14 +104,14 @@ public:
 
 	static LPVOID get_ole_ui_object(const std::vector<std::wstring>& paths, REFIID riid) {
 		ItemIdChildList sidcl(paths);
-		auto parent_shf = sidcl.parent_shell_folder();
-		const auto& cs  = sidcl.child_list();
+		const auto parent_shf = sidcl.parent_shell_folder();
+		const auto& cs        = sidcl.child_list();
 
 		if (parent_shf == nullptr) {
 			return nullptr;
 		}
 		LPVOID ret_obj = nullptr;
-		const auto res = parent_shf->GetUIObjectOf(nullptr, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), riid, nullptr, &ret_obj);
+		const auto res = parent_shf->GetUIObjectOf(nullptr, static_cast<UINT>(cs.size()), const_cast<LPCITEMIDLIST*>(cs.data()), riid, nullptr, &ret_obj);
 		if (res == S_OK) {
 			return ret_obj;
 		}

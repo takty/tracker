@@ -3,7 +3,7 @@
  * Drives
  *
  * @author Takuto Yanagida
- * @version 2025-10-20
+ * @version 2025-10-24
  *
  */
 
@@ -25,20 +25,20 @@ class Drives {
 	static const int WAITING_TIME     = 200;
 
 	std::vector<std::wstring> paths_;
-	bool slowDrives_[LAST_LETTER - FIRST_LETTER + 1];
+	std::vector<bool> slowDrives_;
 
 public:
 
 	const std::wstring PATH{ L":DRIVES" }, NAME{ L"Drives" };
 
-	Drives() noexcept : slowDrives_() {}
+	Drives() noexcept : slowDrives_(LAST_LETTER - FIRST_LETTER + 1, false) {}
 
 	size_t size() noexcept {
 		return paths_.size();
 	}
 
-	std::wstring& operator[](size_t index) noexcept {
-		return paths_[index];
+	std::wstring& operator[](size_t index) {
+		return paths_.at(index);
 	}
 
 	void clean_up() {
@@ -46,15 +46,16 @@ public:
 		std::wstring path(L"A:\\");
 
 		for (wchar_t c = FIRST_LETTER; c <= LAST_LETTER; ++c) {
-			path[path.size() - 3] = c;
+			const auto idx = c - FIRST_LETTER;
+			path.at(path.size() - 3) = c;
 			const auto type = ::GetDriveType(path.c_str());
 			if (type == DRIVE_NO_ROOT_DIR) continue;
 			if (type == DRIVE_REMOVABLE) {
-				if (!slowDrives_[c - FIRST_LETTER]) {
+				if (!slowDrives_.at(idx)) {
 					const auto startTime = ::GetTickCount64();
 					const bool can = (::GetDiskFreeSpace(path.c_str(), nullptr, nullptr, nullptr, nullptr) != 0);
 					if (::GetTickCount64() - startTime > WAITING_TIME) {  // If it takes time
-						slowDrives_[c - FIRST_LETTER] = true;
+						slowDrives_.at(idx) = true;
 					} else {
 						if (!can) continue;
 					}

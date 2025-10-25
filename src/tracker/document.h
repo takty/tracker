@@ -65,6 +65,7 @@ private:
 			cur = Path::parent(cur);
 		}
 		auto* item = navis_.CreateItem();// ->SetSeparatorItem(true);
+		if (item == nullptr) return;
 		item->data() = hierarchy_separator_option_data_;
 		navis_.Add(item);
 
@@ -84,11 +85,18 @@ private:
 		files_.Clear();
 		navis_.Clear();
 
-		const std::wstring path[3] = { fav_.PATH, his_.PATH, dri_.PATH };
-		const std::wstring name[3] = { fav_.NAME, his_.NAME, dri_.NAME };
+		//const std::wstring path[3] = { fav_.PATH, his_.PATH, dri_.PATH };
+		//const std::wstring name[3] = { fav_.NAME, his_.NAME, dri_.NAME };
 
-		for (int i = 0; i < 3; ++i) navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(path[i], name[i]));
+		//for (int i = 0; i < 3; ++i) {
+		//	navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(path[i], name[i]));
+		//}
+		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(fav_.PATH, fav_.NAME));
+		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(his_.PATH, his_.NAME));
+		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(dri_.PATH, dri_.NAME));
+
 		auto* item = navis_.CreateItem();// ->SetSeparatorItem(false);
+		if (item == nullptr) return;
 		item->data() = special_separator_option_data_;
 		navis_.Add(item);
 
@@ -166,7 +174,7 @@ public:
 
 		if (f->IsDir()) {
 			std::wstring path;
-			if (f->Path()[0] == L':') {
+			if (f->Path().front() == L':') {
 				path.assign(f->Path());
 			} else if (f->IsLink()) {  // Save current folder if folder shortcut
 				path = Link::resolve(f->Path());
@@ -209,16 +217,19 @@ public:
 		ope.Clear();
 		if (!index) return ope;
 
-		auto &vec = (type == ListType::FILE) ? files_ : navis_;
-		if (vec[index.value()]->IsEmpty()) return ope;
+		const auto& vec = (type == ListType::FILE) ? files_ : navis_;
+		const auto& it  = vec[index.value()];
+		if (!it) return ope;
+
+		if (it->IsEmpty()) return ope;
 
 		// When index is not selected (including hierarchy) -> Single file is selected alone
-		if (!vec[index.value()]->IsSelected()) {
-			ope.Add(vec[index.value()]->Path());
+		if (!it->IsSelected()) {
+			ope.Add(it->Path());
 			return ope;
 		}
 		// Copy selected file name
-		ope.Add(vec[index.value()]->Path());  // Copy the file specified by index to the beginning
+		ope.Add(it->Path());  // Copy the file specified by index to the beginning
 		for (size_t i = 0; i < vec.Count(); i++) {
 			if (vec[i]->IsSelected() && i != index.value()) {
 				ope.Add(vec[i]->Path());
@@ -259,7 +270,7 @@ public:
 	}
 
 	// Select file by range specification
-	void SelectFile(size_t front, size_t back, ListType type, bool all) {
+	void SelectFile(size_t front, size_t back, ListType type, bool all) noexcept {
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		vec.Select(front, back, all);
 	}
@@ -299,7 +310,7 @@ public:
 	}
 
 	// Return file information
-	Item* GetItem(ListType w, size_t index) noexcept {
+	Item* GetItem(ListType w, size_t index) {
 		return (w == ListType::FILE) ? files_[index] : navis_[index];
 	}
 

@@ -37,13 +37,13 @@ class Item {
 
 	// parentPath must include \ at the end
 	void Assign(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
-		path_ = parentPath + wfd.cFileName;
-		name_ = wfd.cFileName;
+		path_ = parentPath + std::wstring{ &wfd.cFileName[0] };
+		name_.assign(&wfd.cFileName[0]);
 		date_ = wfd.ftLastWriteTime;
-		size_ = (((unsigned long long) wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
+		size_ = (static_cast<unsigned long long>(wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
 
-		auto isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
-		auto isDir    = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		const auto isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
+		const auto isDir    = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 		CheckFile(isDir, isHidden, exts);
 	}
 

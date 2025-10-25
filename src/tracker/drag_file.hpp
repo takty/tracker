@@ -33,7 +33,7 @@ class DragFile {
 
 		virtual ~DropSource() noexcept = default;
 
-		virtual HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) {
+		HRESULT __stdcall QueryInterface(const IID &iid, void **ppv) override {
 			if (ppv == nullptr) return E_POINTER;
 			if (iid == IID_IDropSource || iid == IID_IUnknown) {
 				AddRef();
@@ -45,17 +45,17 @@ class DragFile {
 			}
 		}
 
-		virtual ULONG __stdcall AddRef() {
+		ULONG __stdcall AddRef() override {
 			return ::InterlockedIncrement(&refCount_);
 		}
 
-		virtual ULONG __stdcall Release() {
+		ULONG __stdcall Release() override {
 			const auto count = ::InterlockedDecrement(&refCount_);
 			if (count == 0) delete this;
 			return count;
 		}
 
-		virtual HRESULT __stdcall QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) noexcept {
+		HRESULT __stdcall QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) noexcept override {
 			if (fEscapePressed) {
 				return DRAGDROP_S_CANCEL;
 			}
@@ -68,7 +68,7 @@ class DragFile {
 			return S_OK;
 		}
 
-		virtual HRESULT __stdcall GiveFeedback(DWORD) noexcept {
+		HRESULT __stdcall GiveFeedback(DWORD) noexcept override {
 			return DRAGDROP_S_USEDEFAULTCURSORS;
 		}
 

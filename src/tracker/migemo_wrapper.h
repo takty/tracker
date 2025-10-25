@@ -3,7 +3,7 @@
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -51,16 +51,17 @@ public:
 
 		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
 		if (hMigemo_) {
-			migemoOpen_    = (MIGEMO_OPEN)GetProcAddress(hMigemo_, "migemo_open");
-			migemoClose_   = (MIGEMO_CLOSE)GetProcAddress(hMigemo_, "migemo_close");
-			migemoQuery_   = (MIGEMO_QUERY)GetProcAddress(hMigemo_, "migemo_query");
-			migemoRelease_ = (MIGEMO_RELEASE)GetProcAddress(hMigemo_, "migemo_release");
+			migemoOpen_    = reinterpret_cast<MIGEMO_OPEN>(GetProcAddress(hMigemo_, "migemo_open"));
+			migemoClose_   = reinterpret_cast<MIGEMO_CLOSE>(GetProcAddress(hMigemo_, "migemo_close"));
+			migemoQuery_   = reinterpret_cast<MIGEMO_QUERY>(GetProcAddress(hMigemo_, "migemo_query"));
+			migemoRelease_ = reinterpret_cast<MIGEMO_RELEASE>(GetProcAddress(hMigemo_, "migemo_release"));
 
 			std::wstring dp(dictPath);
 			if (dp.empty()) {
 				dp = Path::parent(FileSystem::module_file_path()).append(_T("\\Dict\\migemo-dict"));
 			}
-			m_ = migemoOpen_((char*)sc_.convert(dp.c_str()));
+			auto mbs = sc_.convert(dp);
+			m_ = migemoOpen_(mbs.get());
 			if (m_ == nullptr) return false;
 			standBy_ = true;
 		}
@@ -69,8 +70,8 @@ public:
 
 	void query(const std::wstring& searchWord, std::string& query) {
 		auto mbs = sc_.convert(searchWord);
-		auto p = migemoQuery_(m_, (unsigned char*)mbs);
-		query.assign("/").append((const char*)p).append("/ki");  // Handle as Japanese, case-insensitive
+		auto p   = migemoQuery_(m_, reinterpret_cast<unsigned char*>(mbs.get()));
+		query.assign("/").append(reinterpret_cast<const char*>(p)).append("/ki");  // Handle as Japanese, case-insensitive
 		migemoRelease_(m_, p);
 	}
 

@@ -3,7 +3,7 @@
  * Item list
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -44,23 +44,23 @@ public:
 		return items_.size();
 	}
 
-	Item* operator[](size_t index) noexcept {
-		return items_[index];
+	Item* operator[](size_t index) {
+		return items_.at(index);
 	}
 
-	const Item* operator[](size_t index) const noexcept {
-		return items_[index];
+	const Item* operator[](size_t index) const {
+		return items_.at(index);
 	}
 
 	Item* CreateItem() {
-		Item* f;
+		Item* f{};
 		if (buf_.empty()) {
 			f = new Item();
 		} else {
 			f = buf_.back();
 			buf_.pop_back();
 		}
-		f->Clear();
+		if (f) f->Clear();
 		return f;
 	}
 
@@ -85,16 +85,17 @@ public:
 		if (back < front) std::swap(front, back);
 		if (all) {
 			for (size_t i = front; i <= back; ++i) {
-				if (items_[i]->data() != 0) continue;
-				items_[i]->SetSelected(true);
+				auto &it = items_.at(i);
+				if (it->data() != 0) continue;
+				it->SetSelected(true);
 			}
-			selNum_ = static_cast<size_t>(back) - front + 1;
+			selNum_ = back - front + 1;
 		} else {
 			for (size_t i = front; i <= back; ++i) {
-				auto& fd = items_[i];
-				if (fd->data() != 0) continue;
-				fd->SetSelected(!fd->IsSelected());
-				selNum_ += (fd->IsSelected() ? 1 : -1);
+				auto& it = items_.at(i);
+				if (it->data() != 0) continue;
+				it->SetSelected(!it->IsSelected());
+				selNum_ += (it->IsSelected() ? 1 : -1);
 			}
 		}
 		return selNum_;

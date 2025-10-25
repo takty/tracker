@@ -3,7 +3,7 @@
  * Tool Tip
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-22
  *
  * Need to add to stdafx.h
  * #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -16,6 +16,8 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <string>
+
+#include "classes.h"
 
 
 class ToolTip {
@@ -30,7 +32,7 @@ public:
 	}
 
 	void Initialize(HWND hWnd) noexcept {
-		HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+		HINSTANCE hInst = reinterpret_cast<HINSTANCE>(GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
 		hWnd_  = hWnd;
 		hHint_ = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 			WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_NOANIMATE | TTS_NOFADE,
@@ -39,15 +41,15 @@ public:
 
 	//  Display Tool Tips
 	void Activate(const std::wstring& str, const RECT& rect) noexcept {
-		TOOLINFO ti = { 0 };
+		TOOLINFO ti{};
 		ti.cbSize   = sizeof(TOOLINFO);
 		ti.uFlags   = TTF_SUBCLASS | TTF_TRANSPARENT;
 		ti.hwnd     = hWnd_;
 		ti.uId      = 1;
 		ti.rect     = rect;
 		ti.hinst    = nullptr;
-		ti.lpszText = (LPTSTR)str.c_str();
-		SendMessage(hHint_, TTM_ADDTOOL, 0, (LPARAM)&ti);
+		ti.lpszText = const_cast<LPTSTR>(str.data());
+		SendMessage(hHint_, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 
 		isActive_ = true;
 	}
@@ -61,7 +63,7 @@ public:
 		ti.cbSize = sizeof(TOOLINFO);
 		ti.hwnd   = hWnd_;
 		ti.uId    = 1;
-		SendMessage(hHint_, TTM_DELTOOL, 0, (LPARAM)(LPTOOLINFO)&ti);
+		SendMessage(hHint_, TTM_DELTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 	}
 
 };

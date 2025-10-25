@@ -3,7 +3,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -107,13 +107,13 @@ public:
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
 		orig_proc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(MenuProc)));
-		const auto id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
+		const int id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
-		::SetWindowLongPtr(wnd_, GWLP_WNDPROC, (LONG_PTR)orig_proc_);
+		::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(orig_proc_));
 		::RemoveProp(wnd_, PROP_INSTANCE);
 
 		bool res = false;
-		if (id > 0) res = SUCCEEDED(invoke(cm, MAKEINTRESOURCEA(id - 1)));
+		if (id > 0) res = SUCCEEDED(invoke(cm, MAKEINTRESOURCEA(id - 1))) ? true : false;
 		::DestroyMenu(hMenu);
 		if (cm2) cm2->Release();
 		cm->Release();

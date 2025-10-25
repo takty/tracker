@@ -76,7 +76,7 @@ public:
 
 		std::wstring ext;
 		if (!is_directory(obj)) {
-			if (name[0] != Path::EXT_PREFIX) {  // When the file is not dot file
+			if (name.front() != Path::EXT_PREFIX) {  // When the file is not dot file
 				name = Path::name_without_ext(obj);
 				ext = Path::ext(obj);
 				if (!ext.empty()) ext.insert(std::begin(ext), Path::EXT_PREFIX);
@@ -141,23 +141,27 @@ public:
 	// Get the exe file path
 	static std::wstring module_file_path() noexcept {
 		std::vector<wchar_t> buf(MAX_PATH);
+		DWORD nSize{ MAX_PATH };
 
 		while (true) {
-			::GetModuleFileName(nullptr, buf.data(), static_cast<DWORD>(buf.size()));
-			if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) break;
-			buf.resize(buf.size() * 2);
+			const auto len = ::GetModuleFileName(nullptr, buf.data(), nSize);
+			if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+				return std::wstring(buf.data(), len);
+			}
+			nSize *= 2;
+			buf.resize(nSize);
 		}
-		return std::wstring(buf.data());
 	}
 
 	// Get the current directory path
 	static std::wstring current_directory_path() {
 		std::vector<wchar_t> buf(MAX_PATH);
+		DWORD nSize{ MAX_PATH };
 
 		while (true) {
-			const auto len = ::GetCurrentDirectory(static_cast<DWORD>(buf.size()), buf.data());
-			if (len < buf.size()) break;
-			buf.resize(len);
+			nSize = ::GetCurrentDirectory(nSize, buf.data());
+			if (nSize < buf.size()) break;
+			buf.resize(nSize);
 		}
 		return std::wstring(buf.data());
 	}
@@ -172,7 +176,7 @@ public:
 		if (!is_directory(path)) {
 			auto hf = ::CreateFile(path.c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 			if (hf == INVALID_HANDLE_VALUE) return false;
-			::GetFileSizeEx(hf, (PLARGE_INTEGER)&size);
+			::GetFileSizeEx(hf, reinterpret_cast<PLARGE_INTEGER>(&size));
 			::CloseHandle(hf);
 			return true;
 		}

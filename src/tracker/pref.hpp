@@ -16,6 +16,7 @@
 
 #include <windows.h>
 
+#include "classes.h"
 #include "file_utils.hpp"
 
 
@@ -68,7 +69,7 @@ public:
 	const std::wstring& path() const noexcept { return iniPath_; }
 
 	// Set the current section
-	void set_current_section(const std::wstring& sec) { curSec_.assign(sec); }
+	void set_current_section(const std::wstring& sec) noexcept { curSec_.assign(sec); }
 
 	// Get string item
 	std::wstring item(const wchar_t* sec, const wchar_t* key, const wchar_t* def) const {
@@ -109,6 +110,7 @@ public:
 
 	// Get integer item
 	int item_int(const wchar_t* sec, const wchar_t* key, int def) noexcept {
+		if (sec == nullptr || key == nullptr) return def;
 		return ::GetPrivateProfileInt(sec, key, def, iniPath_.c_str());
 	}
 
@@ -128,12 +130,15 @@ public:
 	}
 
 	// Write an integer item
-	void set_item_int(const std::wstring& sec, const std::wstring& key, int val) {
-		::WritePrivateProfileString(sec.c_str(), key.c_str(), std::to_wstring(val).c_str(), iniPath_.c_str());
+	void set_item_int(const std::wstring& sec, const std::wstring& key, int val) noexcept {
+		try {
+			::WritePrivateProfileString(sec.c_str(), key.c_str(), std::to_wstring(val).c_str(), iniPath_.c_str());
+		} catch (...) {
+		}
 	}
 
 	// Write an integer item
-	void set_item_int(const std::wstring& key, int val) {
+	void set_item_int(const std::wstring& key, int val) noexcept {
 		set_item_int(curSec_, key, val);
 	}
 

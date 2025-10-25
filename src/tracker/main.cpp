@@ -69,19 +69,19 @@ BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) {
 }
 
 LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
-	auto view = (View*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	auto view = reinterpret_cast<View*>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
 	switch (msg) {
 	case WM_CREATE:            new View(hWnd); break;
 	case WM_DESTROY:           delete view; break;
 	case WM_DPICHANGED:        view->wmDpiChanged(LOWORD(wp), HIWORD(wp)); break;
-	case WM_WINDOWPOSCHANGING: view->wmWindowPosChanging((LPWINDOWPOS)lp); break;
+	case WM_WINDOWPOSCHANGING: view->wmWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lp)); break;
 	case WM_SIZE:              view->wmSize(LOWORD(lp), HIWORD(lp)); break;
 	case WM_PAINT:             view->wmPaint(); break;
-	case WM_ACTIVATEAPP:       if (!(BOOL)wp && ::GetCapture() != hWnd) ::ShowWindow(hWnd, SW_HIDE);  break;
+	case WM_ACTIVATEAPP:       if (!wp && ::GetCapture() != hWnd) ::ShowWindow(hWnd, SW_HIDE);  break;
 	case WM_TIMER:             view->wmTimer(); break;
 	case WM_HOTKEY:            view->wmHotKey(wp); break;
-	case WM_SHOWWINDOW:        view->wmShowWindow((BOOL)wp); break;
+	case WM_SHOWWINDOW:        view->wmShowWindow(wp); break;
 	case WM_LBUTTONDOWN:       view->wmButtonDown(VK_LBUTTON, LOWORD(lp), HIWORD(lp)); break;
 	case WM_RBUTTONDOWN:       view->wmButtonDown(VK_RBUTTON, LOWORD(lp), HIWORD(lp)); break;
 	case WM_MBUTTONDOWN:       view->wmButtonDown(VK_MBUTTON, LOWORD(lp), HIWORD(lp)); break;
@@ -89,7 +89,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_LBUTTONUP:         view->wmButtonUp(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_RBUTTONUP:         view->wmButtonUp(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_MOUSEWHEEL:        view->wmMouseWheel((short)HIWORD(wp)); break;
+	case WM_MOUSEWHEEL:        view->wmMouseWheel(static_cast<short>(HIWORD(wp))); break;
 	case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
 	case WM_QUERYENDSESSION:   view->wmEndSession(); return 1;
 	case WM_ENDSESSION:        view->wmEndSession(); break;

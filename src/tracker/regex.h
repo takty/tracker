@@ -3,7 +3,7 @@
  * Bregexp Wrapper
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-25
  *
  */
 
@@ -14,6 +14,7 @@
 #include <tchar.h>
 #include <string>
 
+#include "classes.h"
 #include "bregexp.h"
 #include "string_converter.h"
 
@@ -49,8 +50,8 @@ public:
 
 		hBregexp_ = ::LoadLibrary(_T("Bregexp.dll"));
 		if (hBregexp_) {
-			bregexpMatch_ = (BREGEXP_MATCH)::GetProcAddress(hBregexp_, "BMatch");
-			bregexpFree_  = (BREGEXP_FREE)::GetProcAddress(hBregexp_, "BRegfree");
+			bregexpMatch_ = reinterpret_cast<BREGEXP_MATCH>(::GetProcAddress(hBregexp_, "BMatch"));
+			bregexpFree_  = reinterpret_cast<BREGEXP_FREE>(::GetProcAddress(hBregexp_, "BRegfree"));
 			standBy_     = true;
 		}
 		return standBy_;
@@ -75,48 +76,46 @@ class Pattern {
 	Regex*      bm_;
 	std::string pattern_;
 	BREGEXP*    rxp_;
-	int*        refCount_;
+	std::shared_ptr<int> refCount_;
 
 	StringConverter sc_;
 	char            msg_[80];
 
 public:
 
-	Pattern() : bm_(nullptr), rxp_(nullptr), refCount_(new int), msg_("") {}
-
-	Pattern(Regex& bm, const std::string& pattern) : bm_(&bm), pattern_(pattern), rxp_(nullptr), refCount_(new int), msg_("") {
+	Pattern(Regex& bm, const std::string& pattern) : bm_(&bm), pattern_(pattern), rxp_(nullptr), refCount_(std::make_shared<int>()), msg_("") {
 		char str[] = " ";
-		bm_->bregexpMatch_((char*)pattern.c_str(), str, str + 1, &rxp_, msg_);
+		bm_->bregexpMatch_(const_cast<char*>(pattern.data()), &str[0], &str[1], &rxp_, &msg_[0]);
 		*refCount_ = 1;
 	}
 
 	Pattern(const Pattern& p) : bm_(p.bm_), pattern_(p.pattern_), rxp_(p.rxp_), refCount_(p.refCount_), msg_("") {
-		if (refCount_ != nullptr) ++(*refCount_);
+		if (refCount_) ++(*refCount_);
 	}
 
+	Pattern() = delete;
 	Pattern(Pattern&&) = delete;
 	Pattern& operator=(Pattern&&) = delete;
 
 	~Pattern() {
-		if (refCount_ != nullptr && --(*refCount_) == 0) {
+		if (refCount_ && --(*refCount_) == 0) {
 			bm_->bregexpFree_(rxp_);
-			delete refCount_;
 		}
 	}
 
 	Pattern& operator=(const Pattern& p) {
-		bm_      = p.bm_;
-		pattern_ = p.pattern_;
-		rxp_     = p.rxp_;
-		if (refCount_ != nullptr) delete refCount_;
+		bm_       = p.bm_;
+		pattern_  = p.pattern_;
+		rxp_      = p.rxp_;
 		refCount_ = p.refCount_;
-		if (refCount_ != nullptr) ++(*refCount_);
+		if (refCount_) ++(*refCount_);
 	}
 
 	bool match(const std::wstring& str) {
-		if (refCount_ == nullptr) return false;
-		const char* mbs = sc_.convert(str);
-		return bm_->bregexpMatch_((char*)pattern_.c_str(), (char*)mbs, (char*)mbs + ::strlen(mbs), &rxp_, msg_) != 0;
+		if (!refCount_) return false;
+		auto mbs = sc_.convert(str);
+		auto cs  = mbs.get();
+		return bm_->bregexpMatch_(pattern_.data(), cs, cs + ::strlen(cs), &rxp_, &msg_[0]) != 0;
 	}
 
 };

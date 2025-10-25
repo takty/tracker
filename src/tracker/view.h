@@ -3,7 +3,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -14,6 +14,8 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <cmath>
+#include <locale>
 
 #include "tracker.h"
 #include "file_utils.hpp"
@@ -40,7 +42,13 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 class View : public Observer {
 
-	enum { SEPA = 1, DIR = 2, HIDE = 4, LINK = 8, HIER = 16, SEL = 32, EMPTY = 64 };
+	static constexpr auto SEPA  = 1;
+	static constexpr auto DIR   = 2;
+	static constexpr auto HIDE  = 4;
+	static constexpr auto LINK  = 8;
+	static constexpr auto HIER  = 16;
+	static constexpr auto SEL   = 32;
+	static constexpr auto EMPTY = 64;
 
 	int mouseDownY_        = -1;
 	int mouseDownArea_     = -1;
@@ -67,7 +75,7 @@ class View : public Observer {
 	}
 	bool curSelIsLong_ = false, suppressPopup_ = false;
 	UINT cursorAlign_ = 0;
-	HWND hWnd_;
+	const HWND hWnd_;
 	double dpiFactX_, dpiFactY_;
 
 	HierTransition ht_;
@@ -84,7 +92,7 @@ public:
 		switch (msg) {
 		case WM_WINDOWPOSCHANGING:
 			{
-				auto pos = (WINDOWPOS*)lp;
+				auto pos = reinterpret_cast<WINDOWPOS*>(lp);
 				if ((pos->flags & SWP_NOSIZE) && pos->y < menuTop_()) {
 					RECT r;
 					::GetWindowRect(hMenu, &r);
@@ -95,21 +103,25 @@ public:
 			}
 		default: break;
 		}
-		return ::CallWindowProc((WNDPROC)::GetWindowLongPtr(hMenu, GWLP_USERDATA), hMenu, msg, wp, lp);
+		auto proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hMenu, GWLP_USERDATA));
+		return ::CallWindowProc(proc, hMenu, msg, wp, lp);
 	}
 
-	View(const HWND hWnd) : doc_(extensions_, pref_, SEPA, (SEPA | HIER)), ope_(extensions_, pref_), re_(WM_RENAMEEDITCLOSED) {
+	View(const HWND hWnd) : hWnd_(hWnd), doc_(extensions_, pref_, SEPA, (SEPA | HIER)), ope_(extensions_, pref_), re_(WM_RENAMEEDITCLOSED) {
 		doc_.SetView(this);
 
-		hWnd_ = hWnd;
-		::SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)this);  // Set the window a property
-		ope_.SetWindowHandle(hWnd);
-		re_.Initialize(hWnd);
-		tt_.Initialize(hWnd);
+		::SetWindowLongPtr(hWnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));  // Set the window a property
+		ope_.SetWindowHandle(hWnd_);
+		re_.Initialize(hWnd_);
+		tt_.Initialize(hWnd_);
 
 		const auto dpi = WindowUtils::GetDPI(hWnd_);
 		dpiFactX_ = dpi.x / 96.0;
 		dpiFactY_ = dpi.y / 96.0;
+
+		//OutputDebugStringW(L"----");
+		//OutputDebugStringW(pref_.path().c_str());
+		//OutputDebugStringW(L"----");
 
 		// Whether to make multi-user (call first)
 		if (pref_.item_int(SECTION_WINDOW, KEY_MULTI_USER, VAL_MULTI_USER)) pref_.set_multi_user_mode();
@@ -122,21 +134,21 @@ public:
 	void loadPropData(const bool firstTime) {
 		pref_.set_current_section(SECTION_WINDOW);
 
-		cxSide_      = (int)(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
-		cyItem_      = (int)(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
-		cxScrollBar_ = (int)(6 * dpiFactX_);
+		cxSide_      = std::lrint(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
+		cyItem_      = std::lrint(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
+		cxScrollBar_ = std::lrint(6 * dpiFactX_);
 
 		popupPos_        = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
 		fullScreenCheck_ = pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
 
-		const int width  = (int)(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
-		const int height = (int)(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
+		const int width  = std::lrint(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
+		const int height = std::lrint(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
 
 		const wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
 		const wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
 
 		const wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
-		const int     fontSize = (int)(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
+		const int     fontSize = std::lrint(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
 
 		const bool useMigemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
 
@@ -149,8 +161,10 @@ public:
 
 		::DeleteObject(hItemFont_);
 		hItemFont_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
-		if (fontName.empty() || !hItemFont_) hItemFont_ = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
-		hMarkFont_ = ::CreateFont((int)(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
+		if (fontName.empty() || !hItemFont_) {
+			hItemFont_ = static_cast<HFONT>(::GetStockObject(DEFAULT_GUI_FONT));
+		}
+		hMarkFont_ = ::CreateFont(std::lrint(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
 		re_.SetFont(hItemFont_);
 
 		search_.Initialize(useMigemo);
@@ -159,20 +173,20 @@ public:
 		doc_.Initialize(firstTime);
 	}
 
-	void SetHotkey(const wstring& key, int id) const noexcept {
+	void SetHotkey(const wstring& key, int id) const {
 		UINT flag = 0;
 		if (key.size() < 5) return;
-		if (key[0] == _T('1')) flag |= MOD_ALT;
-		if (key[1] == _T('1')) flag |= MOD_CONTROL;
-		if (key[2] == _T('1')) flag |= MOD_SHIFT;
-		if (key[3] == _T('1')) flag |= MOD_WIN;
-		if (flag) RegisterHotKey(hWnd_, id, flag, key[4]);
+		if (key.at(0) == _T('1')) flag |= MOD_ALT;
+		if (key.at(1) == _T('1')) flag |= MOD_CONTROL;
+		if (key.at(2) == _T('1')) flag |= MOD_SHIFT;
+		if (key.at(3) == _T('1')) flag |= MOD_WIN;
+		if (flag) RegisterHotKey(hWnd_, id, flag, key.at(4));
 	}
 
 	View(const View&) = delete;
-	View& operator=(const View&) = delete;
+	virtual View& operator=(const View&) = delete;
 	View(View&&) = delete;
-	View& operator=(View&&) = delete;
+	virtual View& operator=(View&&) = delete;
 
 	virtual ~View() {
 		re_.Finalize();
@@ -180,8 +194,8 @@ public:
 		RECT rw;
 		GetWindowRect(hWnd_, &rw);
 		pref_.set_current_section(SECTION_WINDOW);
-		pref_.set_item_int(KEY_WIDTH,  (int)(((__int64)rw.right  - rw.left) / dpiFactX_));
-		pref_.set_item_int(KEY_HEIGHT, (int)(((__int64)rw.bottom - rw.top)  / dpiFactY_));
+		pref_.set_item_int(KEY_WIDTH,  static_cast<int>((static_cast<__int64>(rw.right)  - rw.left) / dpiFactX_));
+		pref_.set_item_int(KEY_HEIGHT, static_cast<int>((static_cast<__int64>(rw.bottom) - rw.top)  / dpiFactY_));
 
 		doc_.Finalize();
 		::UnregisterHotKey(hWnd_, IDHK);  // Cancel hot key
@@ -249,7 +263,7 @@ public:
 		}
 	}
 
-	void wmEndSession() {
+	void wmEndSession() noexcept {
 		doc_.Finalize();
 	}
 
@@ -274,10 +288,12 @@ public:
 
 		if (!::IsWindow(hMenu)) return;
 		if (enter) {
-			::SetWindowLongPtr(hMenu, GWLP_USERDATA, (LONG_PTR)::GetWindowLongPtr(hMenu, GWLP_WNDPROC));
-			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, (LONG_PTR)View::menuProc);
+			const auto proc = static_cast<LONG_PTR>(::GetWindowLongPtr(hMenu, GWLP_WNDPROC));
+			::SetWindowLongPtr(hMenu, GWLP_USERDATA, proc);
+			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(View::menuProc));
 		} else {
-			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, (LONG_PTR)::GetWindowLongPtr(hMenu, GWLP_USERDATA));
+			const auto proc = static_cast<LONG_PTR>(::GetWindowLongPtr(hMenu, GWLP_USERDATA));
+			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, proc);
 		}
 	}
 
@@ -294,8 +310,8 @@ public:
 	enum class IconType { NONE = 0, SQUARE = 1, CIRCLE = 2, SCIRCLE = 3 };
 
 	void wmPaint() {
-		RECT rc;
-		PAINTSTRUCT ps;
+		RECT rc{};
+		PAINTSTRUCT ps{};
 
 		::GetClientRect(hWnd_, &rc);
 		auto dc = ::BeginPaint(hWnd_, &ps);
@@ -305,13 +321,17 @@ public:
 			const size_t begin = ps.rcPaint.top / cyItem_;
 			const size_t end   = ps.rcPaint.bottom / cyItem_;
 			RECT r{};
-			r.top = (LONG)(begin * cyItem_), r.bottom = r.top + cyItem_, r.left = 0, r.right = rc.right - cxScrollBar_;
+			r.top    = static_cast<LONG>(begin * cyItem_);
+			r.bottom = r.top + cyItem_;
+			r.left   = 0;
+			r.right  = rc.right - cxScrollBar_;
 
 			const ItemList &navis = doc_.GetNavis(), &files = doc_.GetFiles();
 
 			for (size_t i = begin; i <= end; ++i) {
 				if (i < navis.Count()) {
 					const Item *fd = navis[i];
+					if (!fd) continue;
 					if ((fd->data() & SEPA) != 0) {
 						drawSeparator(dc, r, (fd->data() == (SEPA | HIER)));
 					} else {
@@ -321,7 +341,7 @@ public:
 					const size_t t = i - navis.Count() + scrollListTopIndex_;
 					DrawItem(dc, r, files[t], listCursorSwitch_ == Document::ListType::FILE && t == listCursorIndex_);
 				} else {
-					::FillRect(dc, &r, (HBRUSH)(COLOR_MENU + 1));
+					::FillRect(dc, &r, ::GetSysColorBrush(COLOR_MENU));
 				}
 				r.top += cyItem_, r.bottom += cyItem_;
 			}
@@ -331,41 +351,39 @@ public:
 
 	// Draw a scroll bar
 	void drawScrollBar(HDC dc) noexcept {
-		RECT rc;
+		RECT rc{};
 		const ItemList& files = doc_.GetFiles();
 
 		::GetClientRect(hWnd_, &rc);
 		rc.left = rc.right - cxScrollBar_;
 		if (files.Count() <= scrollListLineNum_) {
-			::FillRect(dc, &rc, (HBRUSH)(COLOR_MENU + 1));
+			::FillRect(dc, &rc, ::GetSysColorBrush(COLOR_MENU));
 			return;
 		}
-		const double d = (double)rc.bottom / files.Count();
+		const double d = static_cast<double>(rc.bottom) / files.Count();
 		RECT t = rc;
-		t.bottom = (LONG)(d * scrollListTopIndex_);
-		::FillRect(dc, &t, (HBRUSH)(COLOR_BTNSHADOW + 1));
+		t.bottom = static_cast<LONG>(d * scrollListTopIndex_);
+		::FillRect(dc, &t, ::GetSysColorBrush(COLOR_BTNSHADOW));
 		if (scrollListLineNum_ + scrollListTopIndex_ < files.Count()) {
-			t.top = t.bottom;
-			t.bottom += (LONG)(d * scrollListLineNum_);
-			::FillRect(dc, &t, (HBRUSH)(COLOR_MENU + 1));
-			t.top = t.bottom;
+			t.top     = t.bottom;
+			t.bottom += static_cast<LONG>(d * scrollListLineNum_);
+			::FillRect(dc, &t, ::GetSysColorBrush(COLOR_MENU));
+			t.top    = t.bottom;
 			t.bottom = rc.bottom;
-			::FillRect(dc, &t, (HBRUSH)(COLOR_BTNSHADOW + 1));
+			::FillRect(dc, &t, ::GetSysColorBrush(COLOR_BTNSHADOW));
 		} else {
-			t.top = t.bottom;
+			t.top    = t.bottom;
 			t.bottom = rc.bottom;
-			::FillRect(dc, &t, (HBRUSH)(COLOR_MENU + 1));
+			::FillRect(dc, &t, ::GetSysColorBrush(COLOR_MENU));
 		}
 	}
 
 	// Draw a separator
 	void drawSeparator(HDC dc, RECT r, bool isHier) {
-		TCHAR str[4]{};
-		const TCHAR sortBy[] = _T("nedsNEDS");
-		SIZE font;
+		SIZE font{};
 		const ItemList& files = doc_.GetFiles();
 
-		::FillRect(dc, &r, (HBRUSH)(COLOR_MENU + 1));
+		::FillRect(dc, &r, ::GetSysColorBrush(COLOR_MENU));
 		::SelectObject(dc, hItemFont_);  // Font selection (do here because we measure the size below)
 		if (isHier) {
 			wstring num;
@@ -382,11 +400,13 @@ public:
 			nr.left = nr.right - font.cx - 3;
 			WindowUtils::DrawGrayText(dc, nr, num.c_str());
 			r.right = nr.left - 1;
-			str[0] = sortBy[doc_.GetOpt().GetSortType() + doc_.GetOpt().GetSortOrder() * 4], str[1] = _T('\0');
+
+			TCHAR str[2]{};
+			str[0] = doc_.GetOpt().GetSortTypeChar();
 
 			r.left += 3;
-			WindowUtils::DrawGrayText(dc, r, str);
-			::GetTextExtentPoint32(dc, str, static_cast<int>(::_tcslen(str)), &font);
+			WindowUtils::DrawGrayText(dc, r, &str[0]);
+			::GetTextExtentPoint32(dc, &str[0], static_cast<int>(::_tcslen(&str[0])), &font);
 			r.left = font.cx + 2;
 		}
 		if (doc_.InHistory()) {
@@ -402,6 +422,7 @@ public:
 	// Draw an item
 	void DrawItem(HDC dc, RECT r, const Item *fd, bool cur) noexcept {
 		::FillRect(dc, &r, ::GetSysColorBrush(cur ? COLOR_HIGHLIGHT : COLOR_MENU));  // Draw the background
+		if (!fd) return;
 		if (fd->IsEmpty()) {
 			::SetTextColor(dc, GetSysColor(COLOR_GRAYTEXT));
 			::SetBkMode(dc, TRANSPARENT);
@@ -429,12 +450,12 @@ public:
 		::SelectObject(dc, hItemFont_);
 		r.left = cxSide_;
 		if (fd->IsDir()) r.right -= cxSide_;
-		SIZE font;
+		SIZE font{};
 		if (cur) {
 			::GetTextExtentPoint32(dc, fd->Name().c_str(), static_cast<int>(fd->Name().size()), &font);
 			curSelIsLong_ = font.cx > r.right - r.left;  // File name at cursor position is out
 		}
-		::DrawText(dc, fd->Name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (cursorAlign_ * curSelIsLong_ * cur));
+		::DrawText(dc, fd->Name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | ((curSelIsLong_ && cur) ? cursorAlign_ : 0));
 	}
 
 	// Draw a mark
@@ -519,7 +540,7 @@ public:
 		if (!mouseDownIndex_) return;
 
 		// Check button long press
-		POINT pt, gp;
+		POINT pt{}, gp{};
 		const auto timeOut = ::GetTickCount64() + 500;
 		::GetCursorPos(&gp);
 		while (timeOut > ::GetTickCount64()) {
@@ -537,8 +558,8 @@ public:
 		if (re_.IsActive()) return;  // Reject while renaming
 
 		if (mouseDownY_ != -1 && mouseDownArea_ == 1) {  // Scroller
-			const int t = (int)(mouseDownTopIndex_.value() - ((__int64)mouseDownY_ - y) / ((double)listRect_.bottom / doc_.GetFiles().Count()));
-			setScrollListTopIndex(t);
+			const double t = mouseDownTopIndex_.value() - (static_cast<long long>(mouseDownY_) - y) * static_cast<double>(doc_.GetFiles().Count()) / listRect_.bottom;
+			setScrollListTopIndex(std::lrint(max(0, t)));
 			return;
 		}
 		Document::ListType type;
@@ -587,14 +608,17 @@ public:
 	// Sense the direction the pointer is moving
 	int pointerMovingDir(int x, int y) noexcept {
 		static int lastX, lastY;
-		int dir;
+		int dir{};
 
 		const int w = abs(x - lastX);
 		const int h = abs(y - lastY);
+
 		if (w > h)      dir = (x - lastX < 0) ? 0 : 1;
 		else if (w < h) dir = (y - lastY < 0) ? 2 : 3;
-		else           dir = -1;
-		lastX = x, lastY = y;
+		else            dir = -1;
+
+		lastX = x;
+		lastY = y;
 		return dir;
 	}
 
@@ -714,7 +738,7 @@ public:
 				if (key == VK_APPS) {
 					action(COM_SHELL_MENU, listCursorSwitch_, listCursorIndex_);
 				}  else if (_T('A') <= key && key <= _T('Z')) {
-					accelerator((char)key, listCursorSwitch_, listCursorIndex_);
+					accelerator(static_cast<TCHAR>(key), listCursorSwitch_, listCursorIndex_);
 				}
 			} else {
 				switch (key) {
@@ -780,7 +804,7 @@ public:
 	}
 
 	// Specify cursor position
-	void setCursorIndex(std::optional<size_t> index, Document::ListType type) noexcept {
+	void setCursorIndex(std::optional<size_t> index, Document::ListType type) {
 		if (index.has_value() && type == Document::ListType::FILE) {
 			if (index.value() < scrollListTopIndex_) {
 				setScrollListTopIndex(index.value(), false);
@@ -824,9 +848,8 @@ public:
 		const ItemList& files = doc_.GetFiles();
 
 		const size_t old = scrollListTopIndex_;
-		//if (i < 0) scrollListTopIndex_ = 0;
 		if (files.Count() <= scrollListLineNum_) scrollListTopIndex_ = 0;
-		else if (files.Count() - i < scrollListLineNum_) scrollListTopIndex_ = files.Count() - scrollListLineNum_;
+		else if (files.Count() < scrollListLineNum_ + i) scrollListTopIndex_ = files.Count() - scrollListLineNum_;
 		else scrollListTopIndex_ = i;
 
 		RECT r;
@@ -842,21 +865,27 @@ public:
 
 	// Display pop-up menu and execute command
 	void popupMenu(Document::ListType w, std::optional<size_t> index) {
+		if (!index) return;
+
 		doc_.SetOperator(index, w, ope_);
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
+
 		auto ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
 		const int type = extensions_.get_id(ext) + 1;
+
 		UINT f;
 		const POINT pt = popupPt(w, index.value(), f);
-		wstring cmd;
 		PopupMenu pm(hWnd_, &pref_);
-
+		wstring cmd;
 		std::vector<wstring> items;
-		if (pm.popup(type, pt, f, cmd, items)) action(ope_, cmd, w, index);
+
+		if (pm.popup(type, pt, f, cmd, items)) {
+			action(ope_, cmd, w, index);
+		}
 	}
 
 	// Execution of command by accelerator
-	void accelerator(char accelerator, Document::ListType w, std::optional<size_t> index) {
+	void accelerator(TCHAR accelerator, Document::ListType w, std::optional<size_t> index) {
 		doc_.SetOperator(index, w, ope_);
 		if (ope_.Count() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto ext = FileSystem::is_directory(ope_[0]) ? PATH_EXT_DIR : Path::ext(ope_[0]);
@@ -881,8 +910,10 @@ public:
 			::SetCurrentDirectory(Path::parent(objs[0]).c_str());
 			doc_.SetHistory(objs[0]);
 		}
-		if (cmd[0] == _T('<')) {
-			systemCommand(cmd, objs, w, index.value());
+		if (cmd.front() == _T('<')) {
+			if (index) {
+				systemCommand(cmd, objs, w, index.value());
+			}
 		} else {
 			if (!hasObj) return;
 			::ShowWindow(hWnd_, SW_HIDE);  // Hide in advance
@@ -904,7 +935,7 @@ public:
 		if (cmd == COM_START_DRAG)    { ::SetCursor(::LoadCursor(nullptr, IDC_NO)); ::ShowWindow(hWnd_, SW_HIDE); ope_.StartDrag(); return; }
 		if (cmd == COM_SHELL_MENU)    {
 			UINT f;
-			POINT pt = popupPt(w, index, f);
+			const POINT pt = popupPt(w, index, f);
 			ope_.PopupShellMenu(pt, f);
 			return;
 		}
@@ -943,12 +974,14 @@ public:
 		const POINT pt = popupPt(w, index, f);
 
 		HMENU hMenu = ::CreatePopupMenu();
+		if (hMenu == nullptr) return;
+
 		for (size_t i = 0; i < items.size(); ++i) {
-			::AppendMenu(hMenu, MF_STRING, i, items[i].c_str());
+			::AppendMenu(hMenu, MF_STRING, i, items.at(i).c_str());
 		}
 		const int ret = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTBUTTON | f, pt.x, pt.y, 0, hWnd_, nullptr);
 		::DestroyMenu(hMenu);
-		if (ret == (int)items.size() - 1) {
+		if (static_cast<size_t>(ret) == items.size() - 1) {
 			ope_.PopupFileProperty();
 		}
 	}
@@ -959,7 +992,7 @@ public:
 		RECT r;
 		::GetWindowRect(hWnd_, &r);
 
-		size_t l = indexToLine(index, w);
+		const size_t l = indexToLine(index, w);
 		POINT pt = { 0, static_cast<long>(l * cyItem_) };
 		::ClientToScreen(hWnd_, &pt);
 		menuTop_() = pt.y;
@@ -991,7 +1024,7 @@ public:
 public:
 
 	// Window size position adjustment
-	virtual void Updated() override {
+	void Updated() override {
 		setScrollListTopIndex(ht_.index());
 		setCursorIndex(std::nullopt, Document::ListType::FILE);
 		scrollListLineNum_ = (listRect_.bottom - doc_.GetNavis().Count() * cyItem_) / cyItem_;

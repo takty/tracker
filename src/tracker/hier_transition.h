@@ -3,7 +3,7 @@
  * Transition of Folder Hierarchy
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -32,11 +32,11 @@ public:
 	}
 
 	size_t index() const noexcept {
-		return views_[currentViewIndex_].index_;
+		return views_.at(currentViewIndex_).index_;
 	}
 
 	void setIndex(size_t index) noexcept {
-		views_[currentViewIndex_].index_ = index;
+		views_.at(currentViewIndex_).index_ = index;
 	}
 
 	bool canGoBack() const noexcept {
@@ -45,19 +45,23 @@ public:
 
 	std::wstring& goBack() noexcept {
 		--currentViewIndex_;
-		return views_[currentViewIndex_].path_;
+		return views_.at(currentViewIndex_).path_;
 	}
 
 	void goForward(size_t index, const std::wstring& path) {
-		if (canGoBack() && views_[currentViewIndex_ - 1].path_ == path) return;
-		views_[currentViewIndex_].set(path, index);
+		if (canGoBack() && views_.at(currentViewIndex_ - 1).path_ == path) {
+			return;
+		}
+		views_.at(currentViewIndex_).set(path, index);
 		++currentViewIndex_;
 		views_.resize(currentViewIndex_ + 1);
 	}
 
 	void clearIndexes() noexcept {
 		for (auto i = 0U; i < views_.size(); ++i) {
-			if (i != currentViewIndex_) views_[i].index_ = 0U;
+			if (i != currentViewIndex_) {
+				views_.at(i).index_ = 0U;
+			}
 		}
 	}
 

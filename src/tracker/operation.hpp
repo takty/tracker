@@ -3,7 +3,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-10-24
  *
  */
 
@@ -14,6 +14,7 @@
 
 #include <shlobj.h>
 
+#include "classes.h"
 #include "path.hpp"
 #include "file_system.hpp"
 #include "shell.hpp"
@@ -30,7 +31,7 @@ class Operation {
 		ShellItem(const std::wstring& path) noexcept {
 			IShellItem* dest = nullptr;
 			auto p           = Path::ensure_no_unc_prefix(path);
-			const auto res   = ::SHCreateItemFromParsingName(p.c_str(), nullptr, IID_IShellItem, (void**)&dest);
+			const auto res   = ::SHCreateItemFromParsingName(p.c_str(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&dest));
 			if (res == S_OK) {
 				si_ = dest;
 			}
@@ -68,7 +69,7 @@ class Operation {
 			const auto& cs  = iicl_.child_list();
 
 			if (parent_shf != nullptr && !cs.empty()) {
-				const auto res = ::SHCreateShellItemArray(nullptr, parent_shf, static_cast<UINT>(cs.size()), (LPCITEMIDLIST*)cs.data(), &sia_);
+				const auto res = ::SHCreateShellItemArray(nullptr, parent_shf, static_cast<UINT>(cs.size()), const_cast<LPCITEMIDLIST*>(&cs.data()[0]), &sia_);
 				if (res != S_OK) {
 					sia_ = nullptr;
 				}
@@ -145,13 +146,13 @@ class Operation {
 
 public:
 
-	Operation(HWND hWnd = nullptr) noexcept {
+	Operation(HWND hWnd = nullptr) {
 		hWnd_ = hWnd;
 
 		IFileOperation* obj = nullptr;
-		auto res            = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, (void**)&obj);
+		auto res            = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, reinterpret_cast<void**>(&obj));
 
-		if (SUCCEEDED(res)) {
+		if (SUCCEEDED(res) && obj) {
 			res = obj->SetOperationFlags(FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOFX_NOMINIMIZEBOX);
 			if (SUCCEEDED(res)) {
 				file_op_ = obj;

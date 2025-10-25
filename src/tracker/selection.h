@@ -3,7 +3,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -25,7 +25,7 @@ class Selection {
 	static std::wstring Format(long long l) {
 		std::wstring s;
 		for (int d = 0; l; d++, l /= 10) {
-			s = wchar_t(L'0' + (l % 10)) + (((!(d % 3) && d) ? L"," : L"") + s);
+			s = std::to_wstring(L'0' + (l % 10)) + (((!(d % 3) && d) ? L"," : L"") + s);
 		}
 		return s;
 	}
@@ -71,8 +71,9 @@ class Selection {
 			r = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &currentFolder);
 		} else {
 			if (::SHGetDesktopFolder(&desktopFolder) != NOERROR) return;
-			wchar_t* wideName = (wchar_t*)path.c_str();
-			r = desktopFolder->ParseDisplayName(hWnd_, nullptr, wideName, nullptr, &currentFolder, nullptr);
+			if (!desktopFolder) return;
+			std::wstring displayName = path;
+			r = desktopFolder->ParseDisplayName(hWnd_, nullptr, displayName.data(), nullptr, &currentFolder, nullptr);
 			desktopFolder->Release();
 		}
 		if (r != S_OK) return;
@@ -91,7 +92,7 @@ class Selection {
 
 	// Determine file size
 	bool FilesSize(uint64_t& size, const uint64_t limitTime) {
-		uint64_t s;
+		uint64_t s{};
 		size = 0;
 
 		for (const auto& e : objects_) {
@@ -104,15 +105,29 @@ class Selection {
 
 	// Generate a string representing the size of the file or drive
 	std::wstring FileSizeToStr(const uint64_t& size, bool success, const wchar_t* prefix) {
-		static const wchar_t *u[] = { L" Bytes", L" kB", L" MB", L" GB" };
-		static const int s[] = { 0, 10, 20, 30 };
-
 		std::wstring dest;
-		int f = 0;
-		if (size >= (1 << 30)) f = 3;
-		else if (size >= (1 << 20)) f = 2;
-		else if (size >= (1 << 10)) f = 1;
-		const double val = double(size) / (1ULL << s[f]);
+		std::wstring u;
+		bool ab{ false };
+		double val{};
+
+		if (size >= (1 << 30)) {
+			val = static_cast<double>(size) / (1ULL << 30);
+			u   = L" GB";
+		}
+		else if (size >= (1 << 20)) {
+			val = static_cast<double>(size) / (1ULL << 20);
+			u   = L" MB";
+			ab  = true;
+		}
+		else if (size >= (1 << 10)) {
+			val = static_cast<double>(size) / (1ULL << 10);
+			u   = L" kB";
+			ab  = true;
+		}
+		else {
+			val = static_cast<double>(size) / (1ULL << 0);
+			u   = L" Bytes";
+		}
 
 		int pre = 0;
 		if (val < 100) ++pre;
@@ -120,10 +135,12 @@ class Selection {
 		if (val < 1) ++pre;
 
 		wchar_t format[100]{}, temp[100]{};
-		swprintf_s(&format[0], 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, u[f]);
+		swprintf_s(&format[0], 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, u.c_str());
 		swprintf_s(&temp[0], 100, &format[0], val);
 		dest.assign(&temp[0]);
-		if (f != 0 && f != 3) dest.append(L" (").append(Format(size)).append(L" Bytes)");
+		if (ab) {
+			dest.append(L" (").append(Format(size)).append(L" Bytes)");
+		}
 		return dest;
 	}
 
@@ -175,8 +192,8 @@ public:
 	}
 
 	// Reference of specified index element
-	const std::wstring& operator[](size_t i) const noexcept {
-		return objects_[i];
+	const std::wstring& operator[](size_t i) const {
+		return objects_.at(i);
 	}
 
 	// Size
@@ -191,10 +208,10 @@ public:
 
 	// Resolve the shortcut and then open
 	bool OpenAfterResolve() {
-		if (!Link::is_link(objects_[0])) return false;  // If it is not a shortcut
+		if (!Link::is_link(objects_.front())) return false;  // If it is not a shortcut
 
 		// OpenBy processing
-		auto path = Link::resolve(objects_[0]);
+		auto path = Link::resolve(objects_.front());
 		return OpenFile({ path });
 	}
 
@@ -211,24 +228,24 @@ public:
 
 	// Display shell menu
 	void PopupShellMenu(const POINT& pt, UINT f) {
-		SetShellNotify(Path::parent(objects_[0]));
+		SetShellNotify(Path::parent(objects_.front()));
 		ContextMenu cm(hWnd_);
 		cm.popup(objects_, TPM_RIGHTBUTTON | f, pt);
 	}
 
 	// Create New
-	bool CreateNewFile(const wchar_t* org) {
-		if (!FileSystem::is_directory(objects_[0])) return false;  // Fail if not folder
+	bool CreateNewFile(const std::wstring& orig) {
+		if (!FileSystem::is_directory(objects_.front())) return false;  // Fail if not folder
 
-		std::wstring orig{ org };
-		std::wstring npath{ objects_[0] };
+		//std::wstring orig{ org };
+		std::wstring npath{ objects_.front() };
 		auto fname = Path::name(orig);
 		npath.append(1, L'\\').append(fname);
 		auto newPath = FileSystem::unique_name(npath);
 
 		auto new_fname = Path::name(newPath);
 		Operation so(hWnd_);
-		const bool ret = so.copy_one_file(orig, objects_[0], new_fname);
+		const bool ret = so.copy_one_file(orig, objects_.front(), new_fname);
 
 		if (ret) RequestUpdate();
 		return ret;
@@ -236,8 +253,10 @@ public:
 
 	// Create a new folder
 	bool CreateNewFolderIn() {
-		if (!FileSystem::is_directory(objects_[0])) return false;  // Fail if not folder
-		auto npath = objects_[0] + L"\\NewFolder";
+		if (!FileSystem::is_directory(objects_.front())) {
+			return false;  // Fail if not folder
+		}
+		auto npath = objects_.front() + L"\\NewFolder";
 		auto newPath = FileSystem::unique_name(npath);
 
 		const BOOL ret = ::CreateDirectory(newPath.c_str(), nullptr);
@@ -322,14 +341,14 @@ public:
 
 	void PasteIn() {
 		const ContextMenu cm(hWnd_);
-		SetShellNotify(objects_[0]);
+		SetShellNotify(objects_.front());
 		cm.paste_in(objects_);
 	}
 
 	// Paste as a shortcut
 	bool PasteAsShortcutIn() {
 		const Clipboard cb(hWnd_);
-		const bool ret = cb.paste_as_link_in(objects_[0]);
+		const bool ret = cb.paste_as_link_in(objects_.front());
 		if (ret) RequestUpdate();
 		return ret;
 	}
@@ -348,9 +367,9 @@ public:
 
 	// Get file information string
 	void InformationStrings(std::vector<std::wstring>& items) {
-		if (Path::is_root(objects_[0])) {  // When it is a drive
+		if (Path::is_root(objects_.front())) {  // When it is a drive
 			uint64_t dSize, dFree;
-			FileSystem::drive_size(objects_[0], dSize, dFree);
+			FileSystem::drive_size(objects_.front(), dSize, dFree);
 			auto sizeStr = FileSizeToStr(dSize, true, L"");
 			auto usedStr = FileSizeToStr(dSize - dFree, true, L"");
 			items.push_back(usedStr.append(1, L'/').append(sizeStr));
@@ -362,7 +381,7 @@ public:
 			items.push_back(FileSizeToStr(size, suc, L"Size:\t"));
 
 			// Get date
-			HANDLE hf = ::CreateFile(objects_[0].c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+			HANDLE hf = ::CreateFile(objects_.front().c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 			if (hf != INVALID_HANDLE_VALUE) {
 				FILETIME ctime, mtime;
 				::GetFileTime(hf, &ctime, nullptr, &mtime);
@@ -383,7 +402,7 @@ public:
 
 	// Execute a string command
 	int Command(const std::wstring& cmd) {
-		if (cmd.find(COM_CREATE_NEW) == 0) { CreateNewFile(cmd.c_str() + 11); return 1; }
+		if (cmd.find(COM_CREATE_NEW) == 0) { CreateNewFile(cmd.substr(COM_CREATE_NEW.size())); return 1; }
 		if (cmd == COM_NEW_FOLDER)         { CreateNewFolderIn(); return 1; }
 		if (cmd == COM_DELETE)             { DeleteFile(); return 1; }
 		if (cmd == COM_CLONE)              { CloneHere(); return 1; }

@@ -3,7 +3,7 @@
  * Table for Managing File Types
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -27,33 +27,28 @@ class TypeTable {
 	std::map<std::wstring, int> ext_to_id_;
 	std::map<int, int>          id_to_color_;
 
-	int convert_hex_to_color(const std::wstring& hex) {
-		if (hex.empty()) return -1;
-		const std::wstring pre0{ L"0x" };
-		const std::wstring pre1{ L"#" };
-		std::wstring ro;
-		if (hex.compare(0, pre0.size(), pre0) == 0) {
-			ro.assign(hex);
-		} else if (hex.compare(0, pre1.size(), pre1) == 0) {
-			ro.assign(L"000000");
-			std::wstring t{ hex };
-			if (hex.size() <= 4) {
-				t.append(L"000");
-				ro[0] = ro[1] = t[3];
-				ro[2] = ro[3] = t[2];
-				ro[4] = ro[5] = t[1];
-			} else {
-				t.append(L"000000");
-				ro[0] = t[5]; ro[1] = t[6];
-				ro[2] = t[3]; ro[3] = t[4];
-				ro[4] = t[1]; ro[5] = t[2];
-			}
+	int convert_hex_to_color(const std::wstring& s) {
+		if (s.empty()) return -1;
+		if (s.front() == L'#') {
+			std::wstring t(s.begin() + 1, s.end());
+			if (t.size() == 3) t = { t.at(0),t.at(0), t.at(1),t.at(1), t.at(2),t.at(2) };
+			if (t.size() != 6) return -1;
+			try {
+				const int rgb = std::stoi(t, nullptr, 16);
+				return ((rgb & 0xFF) << 16) | (rgb & 0xFF00) | ((rgb >> 16) & 0xFF);
+			} catch (...) { return -1; }
 		}
-		try {
-			return std::stoi(ro, nullptr, 16);
-		} catch (...) {
-			return -1;
+		if (s.rfind(L"0x", 0) == 0 || s.rfind(L"0X", 0) == 0) {
+			try { return std::stoi(std::wstring{s.begin() + 2, s.end()}, nullptr, 16); }
+			catch (...) { return -1; }
 		}
+		if (s.size() == 6) {
+			try {
+				const int rgb = std::stoi(std::wstring{s}, nullptr, 16);
+				return ((rgb & 0xFF) << 16) | (rgb & 0xFF00) | ((rgb >> 16) & 0xFF);
+			} catch (...) { return -1; }
+		}
+		return -1;
 	}
 
 public:

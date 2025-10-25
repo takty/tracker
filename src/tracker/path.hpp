@@ -70,7 +70,7 @@ public:
 		if (pos == std::wstring::npos) {  // Abnormal
 			return L"";  // Return empty
 		}
-		if (1 < size && path[pos - 1] == DRIVE_IDENTIFIER) {  // When root 'C:\'
+		if (1 < size && path.at(pos - 1) == DRIVE_IDENTIFIER) {  // When root 'C:\'
 			if (pos == size - 1) {  // Pos is the tail end
 				return L"";  // Return empty
 			} else {  // Return containing '\'
@@ -86,7 +86,7 @@ public:
 	}
 
 	// Ensure the path begin with UNC prefix "\\?\"
-	static std::wstring ensure_unc_prefix(const std::wstring& path) {
+	static std::wstring ensure_unc_prefix(const std::wstring& path) noexcept {
 		if (0 == path.compare(0, 4, UNC_PREFIX)) {
 			return path;
 		}
@@ -94,7 +94,7 @@ public:
 	}
 
 	// Ensure the path begin with UNC prefix "\\?\" if the path is too long.
-	static std::wstring ensure_unc_prefix_if_needed(const std::wstring& path) {
+	static std::wstring ensure_unc_prefix_if_needed(const std::wstring& path) noexcept {
 		const auto p = ensure_no_unc_prefix(path);
 		if (MAX_PATH - 1 < p.size()) {
 			return ensure_unc_prefix(p);
@@ -103,7 +103,7 @@ public:
 	}
 
 	// Ensure the path does not begin with UNC prefix "\\?\"
-	static std::wstring ensure_no_unc_prefix(const std::wstring& path) {
+	static std::wstring ensure_no_unc_prefix(const std::wstring& path) noexcept {
 		if (0 == path.compare(0, 4, UNC_PREFIX)) {
 			return path.substr(4);
 		}
@@ -112,7 +112,7 @@ public:
 
 	// Translate relative path to absolute path
 	static std::wstring absolute_path(const std::wstring& path, const std::wstring& module_file_path) {
-		if (path[0] == EXT_PREFIX && path[1] == PATH_SEPARATOR) {
+		if (path.at(0) == EXT_PREFIX && path.at(1) == PATH_SEPARATOR) {
 			auto ret = parent(module_file_path);
 			return ret.append(path, 1);
 		}
@@ -148,11 +148,11 @@ public:
 	}
 
 	// Check whether the path is root
-	static bool is_root(const std::wstring& path) noexcept {
+	static bool is_root(const std::wstring& path) {
 		const auto size = path.size();
 		return
-			(1 < size && path[size - 2] == DRIVE_IDENTIFIER && path[size - 1] == PATH_SEPARATOR) ||
-			(0 < size && path[size - 1] == DRIVE_IDENTIFIER);
+			(1 < size && path.at(size - 2) == DRIVE_IDENTIFIER && path.at(size - 1) == PATH_SEPARATOR) ||
+			(0 < size && path.at(size - 1) == DRIVE_IDENTIFIER);
 	}
 
 };

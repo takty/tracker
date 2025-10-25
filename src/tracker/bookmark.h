@@ -38,14 +38,14 @@ public:
 		return paths_.size();
 	}
 
-	std::wstring& operator[](size_t index) noexcept {
-		return paths_[index];
+	std::wstring& operator[](size_t index) {
+		return paths_.at(index);
 	}
 
 	bool arrange(size_t drag, size_t drop) {
 		if (paths_.size() <= drag) return false;
 		if (paths_.size() <= drop) return false;
-		std::wstring path(paths_[drag]);
+		std::wstring path(paths_.at(drag));
 		paths_.erase(paths_.begin() + drag);
 		paths_.insert(paths_.begin() + drop, path);
 		return true;

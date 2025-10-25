@@ -3,12 +3,14 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
 
 #pragma once
+
+#include <memory>
 
 #include <windows.h>
 #include <commctrl.h>
@@ -27,14 +29,14 @@ class RenameEdit {
 	std::wstring newFileName_;
 
 	static LRESULT CALLBACK editProc(HWND hEdit_, UINT msg, WPARAM wp, LPARAM lp) {
-		auto p = (RenameEdit*)GetWindowLongPtr(hEdit_, GWLP_USERDATA);
+		auto p = reinterpret_cast<RenameEdit*>(::GetWindowLongPtr(hEdit_, GWLP_USERDATA));
 
 		switch (msg) {
 		case WM_KEYDOWN:
-			if ((int)wp == VK_RETURN) {
+			if (wp == VK_RETURN) {
 				p->Close();
 				break;
-			} else if ((int)wp == VK_ESCAPE) {
+			} else if (wp == VK_ESCAPE) {
 				::ShowWindow(hEdit_, SW_HIDE);
 				break;
 			}
@@ -52,20 +54,20 @@ public:
 
 	void Initialize(HWND hWnd) noexcept {
 		hWnd_ = hWnd;
-		auto hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+		auto hInst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
 		hEdit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
 			0, 0, 0, 0, hWnd, nullptr, hInst, nullptr);
-		orgProc_ = (WNDPROC)::GetWindowLongPtr(hEdit_, GWLP_WNDPROC);
-		::SetWindowLongPtr(hEdit_, GWLP_USERDATA, (LONG_PTR)this);
-		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, (LONG_PTR)RenameEdit::editProc);
+		orgProc_ = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hEdit_, GWLP_WNDPROC));
+		::SetWindowLongPtr(hEdit_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(RenameEdit::editProc));
 	}
 
 	void Finalize() const noexcept {
-		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, (LONG_PTR)orgProc_);
+		::SetWindowLongPtr(hEdit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(orgProc_));
 	}
 
 	void SetFont(HFONT hItemFont) const noexcept {
-		::SendMessage(hEdit_, WM_SETFONT, (WPARAM)hItemFont, 0);
+		::SendMessage(hEdit_, WM_SETFONT, reinterpret_cast<WPARAM>(hItemFont), 0);
 	}
 
 	bool IsActive() const noexcept {
@@ -100,11 +102,10 @@ public:
 		::ShowWindow(hEdit_, SW_HIDE);
 		if (!::SendMessage(hEdit_, EM_GETMODIFY, 0, 0) || renamedPath_.empty()) return;
 		const auto len = ::GetWindowTextLength(hEdit_);  // Not including terminal NULL
-		auto fname = new wchar_t[len + 1];  // Add terminal NULL
-		::GetWindowText(hEdit_, fname, len + 1);  // Add terminal NULL
-		newFileName_.assign(fname);
+		auto fname = std::vector<wchar_t>(len + 1);  // Add terminal NULL
+		::GetWindowText(hEdit_, fname.data(), len + 1);  // Add terminal NULL
+		newFileName_.assign(fname.data());
 		if (Link::is_link(renamedPath_)) newFileName_.append(_T(".lnk"));
-		delete[] fname;
 		::SendMessage(hWnd_, msg_, 0, 0);
 	}
 

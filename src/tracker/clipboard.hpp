@@ -3,7 +3,7 @@
  * Clipboard Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -72,13 +72,13 @@ public:
 		if (hDrop) {
 			const auto count = ::DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
 			for (UINT i = 0; i < count; ++i) {
-				const auto len = ::DragQueryFile(hDrop, i, nullptr, 0);  // without end NULL
-				if (static_cast<UINT>(buf.size()) < len + 1) {
-					buf.resize(static_cast<size_t>(len) + 1);  // add end NULL
+				const auto len = static_cast<size_t>(::DragQueryFile(hDrop, i, nullptr, 0));  // without end NULL
+				if (buf.size() < len + 1) {
+					buf.resize(len + 1);  // add end NULL
 				}
 				::DragQueryFile(hDrop, i, buf.data(), static_cast<UINT>(buf.size()));
-				if (buf.data() != nullptr && buf[0] != L'\0') {
-					std::wstring target{ buf.begin(), buf.end() };
+				if (buf.data() != nullptr && buf.front() != L'\0') {
+					std::wstring target{ buf.data() };
 					auto name = Path::name(target);
 					if (Link::is_link(target)) {
 						target = Link::resolve(target);

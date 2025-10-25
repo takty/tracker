@@ -15,6 +15,7 @@
 
 #include <Shlobj.h>
 
+#include "classes.h"
 #include "path.hpp"
 #include "file_system.hpp"
 
@@ -30,17 +31,17 @@ public:
 
 	// Create shortcut file
 	static bool create(const std::wstring& shortcut_path, const std::wstring& target) {
-		IShellLink *psl = nullptr;
-		auto hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
-		if (FAILED(hr)) return false;
+		IShellLink* psl{};
+		auto hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, reinterpret_cast<LPVOID*>(&psl));
+		if (FAILED(hr) || !psl) return false;
 
 		psl->SetPath(target.c_str());
 		if (!FileSystem::is_directory(target)) {
 			psl->SetWorkingDirectory(Path::parent(target).c_str());
 		}
-		IPersistFile* ppf = nullptr;
-		hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
-		if (SUCCEEDED(hr)) {
+		IPersistFile* ppf{};
+		hr = psl->QueryInterface(IID_IPersistFile, reinterpret_cast<LPVOID*>(&ppf));
+		if (SUCCEEDED(hr) && ppf) {
 			auto sp = shortcut_path.c_str();
 			ppf->Save(sp, TRUE);
 			ppf->Release();
@@ -55,24 +56,27 @@ public:
 	// Resolve shortcut and get the target path
 	static std::wstring resolve(const std::wstring& path) {
 		std::wstring target;
-		IShellLink *psl = nullptr;
+		IShellLink* psl{};
 
-		auto hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
-		if (FAILED(hr)) return target;
+		auto hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IShellLink, reinterpret_cast<LPVOID*>(&psl));
+		if (FAILED(hr) || !psl) return target;
 
-		IPersistFile *ppf = nullptr;
-		hr = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
-		if (SUCCEEDED(hr)) {
+		IPersistFile* ppf{};
+		hr = psl->QueryInterface(IID_IPersistFile, reinterpret_cast<LPVOID*>(&ppf));
+		if (SUCCEEDED(hr) && ppf) {
 			auto sp = path.c_str();
 			hr = ppf->Load(sp, STGM_READ);  // load target path
 			if (SUCCEEDED(hr)) {
 				std::vector<wchar_t> buf(MAX_PATH);
-				while (true) {
-					hr = psl->GetPath(buf.data(), static_cast<DWORD>(buf.size()), nullptr, SLGP_RAWPATH);
-					if (HRESULT_CODE(hr) != ERROR_INSUFFICIENT_BUFFER) break;
-					buf.resize(buf.size() * 2);
+				hr = psl->GetPath(buf.data(), MAX_PATH, nullptr, SLGP_RAWPATH);
+				if (SUCCEEDED(hr)) {
+					target.append(buf.data());
 				}
-				target.append(buf.data());
+				//while (true) {
+				//	cch *= 2;
+				//	buf.resize(cch);
+				//}
+				//target.append(buf.data());
 			}
 			ppf->Release();
 		}

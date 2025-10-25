@@ -3,7 +3,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-24
  *
  */
 
@@ -37,7 +37,7 @@ class PopupMenu {
 			if (name.empty()) continue;
 			wsprintf(&key[0], _T("Path%d"), i + 1);
 			auto path = pref_.item(sec, &key[0], def);
-			if (name.size() == 2 && name[0] == '&') continue;  // Hidden item
+			if (name.size() == 2 && name.front() == '&') continue;  // Hidden item
 			if (i == 0 && items.size() > 0) {  // When connecting to another menu
 				::AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
 			}
@@ -47,12 +47,12 @@ class PopupMenu {
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addTypeMenu(sec.substr(1), items, hSubMenu);
-				::AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, name.c_str());
+				::AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), name.c_str());
 			} else if (path == _T("<New>")) {  // New file menu
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addNewFileMenu(hSubMenu, items);
-				::AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, name.c_str());
+				::AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), name.c_str());
 			} else {  // Normal menu item
 				UINT flag = MF_STRING;
 				if ((!paste && path == _T("<Paste>")) || (!pasteShortcut && path == _T("<PasteShortcut>"))) {
@@ -68,12 +68,11 @@ class PopupMenu {
 	void addNewFileMenu(HMENU hMenu, std::vector<std::wstring> &items) {
 		std::wstring path;
 
-		auto dir = Path::parent(pref_.path()) + L"\\newfile\\";
+		const auto dir = Path::parent(pref_.path()) + L"\\newfile\\";
 		FileSystem::find_first_file(dir, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
-			path.assign(L"<CreateNew>").append(parent).append(wfd.cFileName);
-			OutputDebugString((path + L'\n').c_str());
+			path.assign(L"<CreateNew>").append(parent).append(&wfd.cFileName[0]);
 			items.push_back(path);
-			::AppendMenu(hMenu, MF_STRING, items.size(), wfd.cFileName);
+			::AppendMenu(hMenu, MF_STRING, items.size(), &wfd.cFileName[0]);
 			return true;  // continue
 		});
 	}
@@ -89,7 +88,7 @@ class PopupMenu {
 			if (hDropEffect) {
 				void* ptr = ::GlobalLock(hDropEffect);
 				if (ptr != nullptr) {
-					const DWORD dwEffect = *(DWORD*)ptr;
+					const DWORD dwEffect = *static_cast<DWORD*>(ptr);
 					::GlobalUnlock(hDropEffect);
 					if (dwEffect & DROPEFFECT_LINK) canPasteShortcut = true;
 				}
@@ -142,26 +141,29 @@ public:
 		if (!additional.empty()) {
 			::AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
 			for (size_t i = 0; i < additional.size(); ++i) {
-				::AppendMenu(hMenu, MF_STRING, i, additional[i].c_str());
+				::AppendMenu(hMenu, MF_STRING, i, additional.at(i).c_str());
 			}
 		}
 
 		if (items.size()) {
 			const int id = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, hWnd_, nullptr);
 			ret = (0 < id);  // -1, 0 if not selected
-			if (0 < id && static_cast<size_t>(id) <= items.size()) {
-				cmd.assign(items[id - 1]);  // Ordinary command
-			}
+			if (0 < id) {
+				const auto idx = static_cast<size_t>(id);
+				if (idx <= items.size()) {
+					cmd.assign(items.at(idx - 1));  // Ordinary command
+				}
+			} 
 		}
-		for (size_t i = 0; i < hMenus_.size(); ++i) {
-			::DestroyMenu(hMenus_[i]);
+		for (const auto& m : hMenus_) {
+			::DestroyMenu(m);
 		}
 		return ret;
 	}
 
 	// Get command from accelerator
 	bool getAccelCommand(int type, TCHAR acce, std::wstring& cmd) {
-		TCHAR key[16];
+		TCHAR key[16]{};
 		bool ret = false;
 
 		if (type) {  // When a menu number is specified
