@@ -50,7 +50,7 @@ class View : public Observer {
 	static constexpr auto SEL   = 32;
 	static constexpr auto EMPTY = 64;
 
-	static HFONT GetUiMessageFont() {
+	static HFONT GetUiMessageFont() noexcept {
 		NONCLIENTMETRICSW ncm{};
 		ncm.cbSize = sizeof(ncm);
 		if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0)) {
@@ -167,7 +167,7 @@ public:
 		::DeleteObject(hItemFont_);
 		hItemFont_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
 		if (fontName.empty() || !hItemFont_) {
-			hItemFont_ = View::GetUiMessageFont();//static_cast<HFONT>(::GetStockObject(DEFAULT_GUI_FONT));
+			hItemFont_ = View::GetUiMessageFont();
 		}
 		hMarkFont_ = ::CreateFont(std::lrint(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
 		re_.SetFont(hItemFont_);
