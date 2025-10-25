@@ -3,7 +3,7 @@
  * Preference (Reading and writing INI file)
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-10-25
  *
  */
 
@@ -74,11 +74,13 @@ public:
 	// Get string item
 	std::wstring item(const wchar_t* sec, const wchar_t* key, const wchar_t* def) const {
 		std::vector<wchar_t> buf(MAX_PATH);
+		DWORD nSize{ MAX_PATH };
 
 		while (true) {
-			const auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), static_cast<DWORD>(buf.size()), iniPath_.c_str());
+			const auto outLen = ::GetPrivateProfileString(sec, key, def, buf.data(), nSize, iniPath_.c_str());
 			if (outLen != buf.size() - 1) break;
-			buf.resize(buf.size() * 2);
+			nSize *= 2;
+			buf.resize(nSize);
 		}
 		return { buf.data() };
 	}
