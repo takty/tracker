@@ -25,7 +25,7 @@ public:
 
 	static const wchar_t PATH_SEPARATOR   = L'\\';  // File path separator
 	static const wchar_t DRIVE_IDENTIFIER = L':';   // Drive identifier
-	static const wchar_t EXT_PREFIX       = L'.';   // Extention prefix
+	static const wchar_t EXT_PREFIX       = L'.';   // Extension prefix
 
 	constexpr static wchar_t const * const UNC_PREFIX = L"\\\\?\\";
 
