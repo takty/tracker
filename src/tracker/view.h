@@ -263,7 +263,7 @@ public:
 		}
 	}
 
-	void wmEndSession() noexcept {
+	void wmEndSession() {
 		doc_.Finalize();
 	}
 
@@ -318,10 +318,10 @@ public:
 
 		if (ps.rcPaint.right > rc.right - cxScrollBar_) drawScrollBar(dc);
 		if (ps.rcPaint.left < rc.right - cxScrollBar_) {
-			const size_t begin = ps.rcPaint.top / cyItem_;
-			const size_t end   = ps.rcPaint.bottom / cyItem_;
+			const long begin = ps.rcPaint.top / cyItem_;
+			const long end   = ps.rcPaint.bottom / cyItem_;
 			RECT r{};
-			r.top    = static_cast<LONG>(begin * cyItem_);
+			r.top    = begin * cyItem_;
 			r.bottom = r.top + cyItem_;
 			r.left   = 0;
 			r.right  = rc.right - cxScrollBar_;
@@ -848,10 +848,13 @@ public:
 		const ItemList& files = doc_.GetFiles();
 
 		const size_t old = scrollListTopIndex_;
-		if (files.Count() <= scrollListLineNum_) scrollListTopIndex_ = 0;
-		else if (files.Count() < scrollListLineNum_ + i) scrollListTopIndex_ = files.Count() - scrollListLineNum_;
-		else scrollListTopIndex_ = i;
-
+		if (files.Count() <= scrollListLineNum_) {
+			scrollListTopIndex_ = 0;
+		} else if (files.Count() < scrollListLineNum_ + i) {
+			scrollListTopIndex_ = files.Count() - scrollListLineNum_;
+		} else {
+			scrollListTopIndex_ = i;
+		}
 		RECT r;
 		GetClientRect(hWnd_, &r);
 		r.right -= cxScrollBar_;
@@ -946,7 +949,7 @@ public:
 	void selectFile(std::optional<size_t> front_opt, std::optional<size_t> back_opt, bool all = false) {
 		if (!front_opt || !back_opt || doc_.InDrives()) return;
 		size_t front = front_opt.value();
-		size_t back = back_opt.value();
+		size_t back  = back_opt.value();
 		if (back < front) std::swap(front, back);
 		doc_.SelectFile(front, back, Document::ListType::FILE, all);
 
