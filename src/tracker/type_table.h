@@ -1,12 +1,9 @@
 /**
- *
  * Table for Managing File Types
  *
  * @author Takuto Yanagida
  * @version 2025-10-25
- *
  */
-
 
 #pragma once
 
@@ -14,7 +11,6 @@
 #include <string>
 
 #include "Pref.hpp"
-
 
 class TypeTable {
 

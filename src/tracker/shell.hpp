@@ -1,12 +1,9 @@
 /**
- *
  * Shell Object Operations
  *
  * @author Takuto Yanagida
  * @version 2025-10-22
- *
  */
-
 
 #pragma once
 
@@ -17,7 +14,6 @@
 #include <shlobj.h>
 
 #include "Path.hpp"
-
 
 class Shell {
 

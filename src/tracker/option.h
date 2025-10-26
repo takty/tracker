@@ -1,12 +1,9 @@
 /**
- *
  * Document Options
  *
  * @author Takuto Yanagida
  * @version 2025-10-21
- *
  */
-
 
 #pragma once
 
@@ -15,7 +12,6 @@
 #include "comparator.h"
 #include "pref.hpp"
 #include "item_list.h"
-
 
 class Option {
 

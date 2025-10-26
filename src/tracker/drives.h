@@ -1,12 +1,9 @@
 /**
- *
  * Drives
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
@@ -16,7 +13,6 @@
 #include <windows.h>
 
 #include "file_utils.hpp"
-
 
 class Drives {
 

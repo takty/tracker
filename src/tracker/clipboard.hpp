@@ -1,12 +1,9 @@
 /**
- *
  * Clipboard Operations
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
@@ -19,7 +16,6 @@
 #include "Path.hpp"
 #include "Link.hpp"
 #include "Shell.hpp"
-
 
 class Clipboard {
 

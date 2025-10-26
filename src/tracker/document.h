@@ -1,12 +1,9 @@
 /**
- *
  * Document
  *
  * @author Takuto Yanagida
  * @version 2025-10-26
- *
  */
-
 
 #pragma once
 
@@ -27,9 +24,7 @@
 #include "drives.h"
 #include "option.h"
 
-
 class Item;
-
 
 class Document {
 

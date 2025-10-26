@@ -1,12 +1,9 @@
 /**
- *
  * Reader and Writer of Text Files
  *
  * @author Takuto Yanagida
  * @version 2025-10-26
- *
  */
-
 
 #pragma once
 
@@ -15,7 +12,6 @@
 #include <fstream>
 
 #include "file_utils.hpp"
-
 
 class TextReaderWriter {
 

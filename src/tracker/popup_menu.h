@@ -1,12 +1,9 @@
 /**
- *
  * Popup Menu
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
@@ -15,7 +12,6 @@
 #include <string>
 
 #include "Pref.hpp"
-
 
 class PopupMenu {
 
@@ -153,7 +149,7 @@ public:
 				if (idx <= items.size()) {
 					cmd.assign(items.at(idx - 1));  // Ordinary command
 				}
-			} 
+			}
 		}
 		for (const auto& m : hMenus_) {
 			::DestroyMenu(m);

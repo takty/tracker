@@ -1,17 +1,13 @@
 /**
- *
  * Transition of Folder Hierarchy
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
 #include <vector>
-
 
 class HierTransition {
 

@@ -1,12 +1,9 @@
 /**
- *
  * File Operations
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
@@ -18,7 +15,6 @@
 #include "file_utils.hpp"
 #include "type_table.h"
 #include "pref.hpp"
-
 
 class Selection {
 

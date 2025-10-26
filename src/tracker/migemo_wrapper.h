@@ -1,12 +1,9 @@
 /**
- *
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
  * @version 2025-10-26
- *
  */
-
 
 #pragma once
 
@@ -14,7 +11,6 @@
 
 #include "migemo.h"
 #include "string_converter.h"
-
 
 class Migemo {
 

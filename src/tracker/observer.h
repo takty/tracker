@@ -1,12 +1,9 @@
 /**
- *
  * Observer
  *
  * @author Takuto Yanagida
  * @version 2020-03-22
- *
  */
-
 
 #pragma once
 

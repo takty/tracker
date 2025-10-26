@@ -1,12 +1,9 @@
 /**
- *
  * Search Functions
  *
  * @author Takuto Yanagida
  * @version 2025-10-21
- *
  */
-
 
 #pragma once
 
@@ -20,7 +17,6 @@
 #include "migemo_wrapper.h"
 #include "regex.h"
 #include "pref.hpp"
-
 
 class Search {
 

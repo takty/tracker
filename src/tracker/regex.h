@@ -1,12 +1,9 @@
 /**
- *
  * Bregexp Wrapper
  *
  * @author Takuto Yanagida
  * @version 2025-10-25
- *
  */
-
 
 #pragma once
 
@@ -17,7 +14,6 @@
 #include "classes.h"
 #include "bregexp.h"
 #include "string_converter.h"
-
 
 class Regex {
 
@@ -69,7 +65,6 @@ public:
 	}
 
 };
-
 
 class Pattern {
 

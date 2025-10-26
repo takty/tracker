@@ -1,12 +1,9 @@
 /**
- *
  * Rename Edit
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
@@ -17,7 +14,6 @@
 #include <tchar.h>
 #include <string>
 #include "file_utils.hpp"
-
 
 class RenameEdit {
 

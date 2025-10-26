@@ -1,12 +1,9 @@
 /**
- *
  * Main Function
  *
  * @author Takuto Yanagida
  * @version 2025-10-21
- *
  */
-
 
 #include "stdafx.h"
 #include "View.h"
@@ -14,7 +11,6 @@
 const wchar_t MUTEX[]       = _T("TRACKER510_20251020");
 const wchar_t CLASS_NAME[]  = _T("Tracker");
 const wchar_t WINDOW_NAME[] = _T("Tracker");
-
 
 int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
 	::CreateMutex(nullptr, FALSE, &MUTEX[0]);

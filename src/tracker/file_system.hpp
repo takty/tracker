@@ -1,12 +1,9 @@
 /**
- *
  * File System Operations
  *
  * @author Takuto Yanagida
  * @version 2025-10-22
- *
  */
-
 
 #pragma once
 
@@ -17,7 +14,6 @@
 #include <Shlobj.h>
 
 #include "Path.hpp"
-
 
 class FileSystem {
 

@@ -1,12 +1,9 @@
 /**
- *
  * View
  *
  * @author Takuto Yanagida
  * @version 2025-10-25
- *
  */
-
 
 #pragma once
 
@@ -35,10 +32,8 @@ using namespace std;
 
 constexpr auto IDHK = 1;
 
-
 BOOL InitApplication(HINSTANCE hInst, const wchar_t* className);
 LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
-
 
 class View : public Observer {
 

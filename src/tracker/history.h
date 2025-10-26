@@ -1,12 +1,9 @@
 /**
- *
  * History
  *
  * @author Takuto Yanagida
  * @version 2025-10-26
- *
  */
-
 
 #pragma once
 
@@ -17,7 +14,6 @@
 #include "file_utils.hpp"
 #include "pref.hpp"
 #include "text_reader_writer.hpp"
-
 
 class History {
 

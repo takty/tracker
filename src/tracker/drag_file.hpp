@@ -1,12 +1,9 @@
 /**
- *
  * OLE File Dragging
  *
  * @author Takuto Yanagida
  * @version 2025-10-22
- *
  */
-
 
 #pragma once
 
@@ -18,7 +15,6 @@
 
 #include "Path.hpp"
 #include "Shell.hpp"
-
 
 class DragFile {
 

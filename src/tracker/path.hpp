@@ -1,19 +1,15 @@
 /**
- *
  * File Path Operations
  *
  * @author Takuto Yanagida
  * @version 2025-10-26
- *
  */
-
 
 #pragma once
 
 #include <string>
 #include <vector>
 #include <algorithm>
-
 
 const std::wstring PATH_EXT_DIR(L"<folder>");
 

@@ -16,7 +16,6 @@
 // C RunTime Header Files
 #include <tchar.h>
 
-
 #include <windowsx.h>
 #include <shellapi.h>
 #include <shlobj.h>

@@ -1,12 +1,9 @@
 /**
- *
  * String Converter
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
@@ -17,7 +14,6 @@
 #include <string>
 
 #include "classes.h"
-
 
 class StringConverter {
 

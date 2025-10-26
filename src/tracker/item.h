@@ -1,12 +1,9 @@
 /**
- *
  * File Item
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
- *
+ * @version 2025-10-26
  */
-
 
 #pragma once
 
@@ -16,7 +13,6 @@
 #include "file_utils.hpp"
 #include "document.h"
 #include "type_table.h"
-
 
 class Item {
 
@@ -125,11 +121,6 @@ public:
 		return this;
 	}
 
-	//Item* SetSeparatorItem(bool isHier) {
-	//	style_ = (Item::SEPA | (isHier ? Item::HIER : 0));
-	//	return this;
-	//}
-
 	int& data() noexcept {
 		return data_;
 	}
@@ -137,11 +128,6 @@ public:
 	const int& data() const noexcept {
 		return data_;
 	}
-
-
-	//void SetId(int i) noexcept {
-	//	style_ |= MAKELONG(0, i);
-	//}
 
 	void SetSelected(bool f) noexcept {
 		f ? (style_ |= SEL) : (style_ &= ~SEL);
@@ -177,13 +163,8 @@ public:
 	}
 
 	size_t Id() const noexcept {
-		//return HIWORD(style_);
 		return id_;
 	}
-
-	//bool IsSeparator() const {
-	//	return (style_ & SEPA) != 0;
-	//}
 
 	bool IsEmpty() const noexcept {
 		return (style_ & EMPTY) != 0;

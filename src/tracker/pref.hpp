@@ -1,12 +1,9 @@
 /**
- *
  * Preference (Reading and writing INI file)
  *
  * @author Takuto Yanagida
  * @version 2025-10-25
- *
  */
-
 
 #pragma once
 
@@ -18,7 +15,6 @@
 
 #include "classes.h"
 #include "file_utils.hpp"
-
 
 class Pref {
 

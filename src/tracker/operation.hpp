@@ -1,12 +1,9 @@
 /**
- *
  * Shell File Operations
  *
  * @author Takuto Yanagida
  * @version 2025-10-24
- *
  */
-
 
 #pragma once
 
@@ -18,7 +15,6 @@
 #include "path.hpp"
 #include "file_system.hpp"
 #include "shell.hpp"
-
 
 class Operation {
 

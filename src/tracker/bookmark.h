@@ -1,12 +1,9 @@
 /**
- *
  * Bookmarks
  *
  * @author Takuto Yanagida
  * @version 2025-10-26
- *
  */
-
 
 #pragma once
 
@@ -15,7 +12,6 @@
 
 #include "Pref.hpp"
 #include "text_reader_writer.hpp"
-
 
 class Bookmark {
 

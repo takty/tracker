@@ -1,17 +1,13 @@
 /**
- *
  * Comparator of File Items
  *
  * @author Takuto Yanagida
  * @version 2025-10-21
- *
  */
-
 
 #pragma once
 
 #include "Item.h"
-
 
 // Function Object for Comparing By Names
 class CompByName {
@@ -36,7 +32,6 @@ public:
 	}
 
 };
-
 
 // Function Object for Comparing By Types
 class CompByType {
@@ -66,7 +61,6 @@ public:
 
 };
 
-
 // Function Object for Comparing By Dates
 class CompByDate {
 
@@ -90,7 +84,6 @@ public:
 	}
 
 };
-
 
 // Function Object for Comparing By Sizes
 class CompBySize {

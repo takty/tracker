@@ -1,12 +1,9 @@
 /**
- *
  * Classes
  *
  * @author Takuto Yanagida
  * @version 2025-10-25
- *
  */
-
 
 #pragma once
 

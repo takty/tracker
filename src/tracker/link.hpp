@@ -1,12 +1,9 @@
 /**
- *
  * Shortcut File Operations
  *
  * @author Takuto Yanagida
  * @version 2025-10-22
- *
  */
-
 
 #pragma once
 
@@ -18,7 +15,6 @@
 #include "classes.h"
 #include "path.hpp"
 #include "file_system.hpp"
-
 
 class Link {
 

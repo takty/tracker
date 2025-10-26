@@ -1,12 +1,9 @@
 /**
- *
  * Common Header
  *
  * @author Takuto Yanagida
  * @version 2025-10-25
- *
  */
-
 
 #pragma once
 
@@ -16,9 +13,8 @@
 #define WM_REQUESTUPDATE    (WM_APP + 1)
 #define WM_RENAMEEDITCLOSED (WM_APP + 2)
 
-
 //
-// Sections and Keys of INI File ----------------------------------------
+// Sections and Keys of INI File -----------------------------------------------
 //
 
 const std::wstring SECTION_WINDOW(L"Window");
@@ -56,9 +52,8 @@ const std::wstring SECTION_HISTORY(L"History");
 
 	constexpr int MAX_HISTORY = 32;
 
-
 //
-// Command ----------------------------------------
+// Command ---------------------------------------------------------------------
 //
 
 const std::wstring COM_CREATE_NEW(L"<CreateNew>");
@@ -84,9 +79,8 @@ const std::wstring COM_FAVORITE(L"<Favorite>");
 const std::wstring COM_START_DRAG(L"<StartDrag>");
 const std::wstring COM_SHELL_MENU(L"<ShellMenu>");
 
-
 //
-// Special Extension ----------------------------------------
+// Special Extension -----------------------------------------------------------
 //
 
 const std::wstring EXT_FOLDER(L"<folder>");
