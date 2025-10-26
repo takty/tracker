@@ -3,7 +3,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-10-26
  *
  */
 
@@ -16,10 +16,14 @@
 
 #include "file_utils.hpp"
 #include "pref.hpp"
+#include "text_reader_writer.hpp"
 
 
 class History {
 
+	const std::wstring FILE_NAME{ L"history.txt" };
+
+	const std::wstring path_;
 	std::vector<std::wstring> paths_;
 	size_t max_size_ = 0;
 
@@ -27,18 +31,21 @@ public:
 
 	const std::wstring PATH{ L":HISTORY" }, NAME{ L"History" };
 
-	History() noexcept {}
+	History(const std::wstring& iniPath) noexcept : path_(Path::parent(iniPath).append(L"\\").append(FILE_NAME)) {}
 
 	void initialize(Pref& pref) noexcept {
 		max_size_ = pref.item_int(KEY_MAX_HISTORY, VAL_MAX_HISTORY);
 	}
 
 	void restore(Pref& pref) {
-		paths_ = pref.items<std::vector<std::wstring>>(SECTION_HISTORY, KEY_FILE, MAX_HISTORY);
+		paths_ = TextReaderWriter::read(path_);
+		if (paths_.empty()) {
+			paths_ = pref.items<std::vector<std::wstring>>(SECTION_HISTORY, KEY_FILE, MAX_HISTORY);
+		}
 	}
 
-	void store(Pref& pref) const {
-		pref.set_items(paths_, SECTION_HISTORY, KEY_FILE);
+	void store() const {
+		TextReaderWriter::write(path_, paths_);
 	}
 
 	size_t size() noexcept {

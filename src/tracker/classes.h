@@ -3,7 +3,7 @@
  * Classes
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-10-25
  *
  */
 
@@ -11,6 +11,7 @@
 #pragma once
 
 class Pref;
+class PrefList;
 class Pattern;
 class Regex;
 class Link;

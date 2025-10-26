@@ -3,7 +3,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-10-26
  *
  */
 
@@ -14,24 +14,31 @@
 #include <string>
 
 #include "Pref.hpp"
+#include "text_reader_writer.hpp"
 
 
 class Bookmark {
 
+	const std::wstring FILE_NAME{ L"bookmark.txt" };
+
+	const std::wstring path_;
 	std::vector<std::wstring> paths_;
 
 public:
 
 	const std::wstring PATH{ L":BOOKMARK" }, NAME{ L"Bookmark" };
 
-	Bookmark() noexcept = default;
+	Bookmark(const std::wstring& iniPath) noexcept : path_(Path::parent(iniPath).append(L"\\").append(FILE_NAME)) {}
 
 	void restore(Pref& pref) {
-		paths_ = pref.items<std::vector<std::wstring>>(SECTION_BOOKMARK, KEY_FILE, MAX_BOOKMARK);
+		paths_ = TextReaderWriter::read(path_);
+		if (paths_.empty()) {
+			paths_ = pref.items<std::vector<std::wstring>>(SECTION_BOOKMARK, KEY_FILE, MAX_BOOKMARK);
+		}
 	}
 
-	void store(Pref& pref) const {
-		pref.set_items(paths_, SECTION_BOOKMARK, KEY_FILE);
+	void store() const {
+		TextReaderWriter::write(path_, paths_);
 	}
 
 	size_t size() noexcept {

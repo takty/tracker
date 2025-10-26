@@ -3,7 +3,7 @@
  * File Path Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-10-26
  *
  */
 
@@ -63,7 +63,7 @@ public:
 	}
 
 	// Extract parent path
-	static std::wstring parent(const std::wstring& path) {
+	static std::wstring parent(const std::wstring& path) noexcept {
 		const auto size = path.size();
 		const auto pos = path.find_last_of(PATH_SEPARATOR);
 

@@ -3,7 +3,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-26
  *
  */
 
@@ -85,12 +85,6 @@ private:
 		files_.Clear();
 		navis_.Clear();
 
-		//const std::wstring path[3] = { fav_.PATH, his_.PATH, dri_.PATH };
-		//const std::wstring name[3] = { fav_.NAME, his_.NAME, dri_.NAME };
-
-		//for (int i = 0; i < 3; ++i) {
-		//	navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(path[i], name[i]));
-		//}
 		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(fav_.PATH, fav_.NAME));
 		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(his_.PATH, his_.NAME));
 		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(dri_.PATH, dri_.NAME));
@@ -126,7 +120,7 @@ private:
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extensions_(exts), pref_(pref), opt_(), view_() {
+	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extensions_(exts), pref_(pref), opt_(), view_(), fav_(pref.path()), his_(pref.path()) {
 		special_separator_option_data_ = special_separator_option_data;
 		hierarchy_separator_option_data_ = hierarchy_separator_option_data;
 		currentPath_ = dri_.PATH;
@@ -146,8 +140,8 @@ public:
 	}
 
 	void Finalize() {
-		fav_.store(pref_);
-		his_.store(pref_);
+		fav_.store();
+		his_.store();
 		opt_.Store(pref_);
 	}
 
