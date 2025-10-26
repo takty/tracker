@@ -62,7 +62,9 @@ public:
 
 	std::optional<size_t> FindFirst(std::optional<size_t> cursorIndex, const ItemList& items) {
 		reserveFind_ = false;
-		if (useMigemo_) migemo_.query(searchWord_, mkey_);
+		if (useMigemo_) {
+			migemo_.query(searchWord_, mkey_);
+		}
 		return FindNext(cursorIndex, items);
 	}
 

@@ -3,7 +3,7 @@
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-10-26
  *
  */
 
@@ -18,10 +18,10 @@
 
 class Migemo {
 
-	typedef migemo* (*MIGEMO_OPEN)(char* dict);
-	typedef void(*MIGEMO_CLOSE)(migemo* object);
-	typedef unsigned char* (*MIGEMO_QUERY)(migemo* object, unsigned char* query);
-	typedef void(*MIGEMO_RELEASE)(migemo* object, unsigned char* string);
+	typedef migemo* (__stdcall *MIGEMO_OPEN)(const char* dict);
+	typedef void(__stdcall *MIGEMO_CLOSE)(migemo* object);
+	typedef unsigned char* (__stdcall *MIGEMO_QUERY)(migemo* object, const unsigned char* query);
+	typedef void(__stdcall *MIGEMO_RELEASE)(migemo* object, unsigned char* string);
 
 	MIGEMO_OPEN    migemoOpen_    = nullptr;
 	MIGEMO_CLOSE   migemoClose_   = nullptr;
@@ -47,8 +47,6 @@ public:
 	}
 
 	bool loadLibrary(const std::wstring& dictPath = std::wstring()) {
-		standBy_ = false;
-
 		hMigemo_ = ::LoadLibrary(_T("Migemo.dll"));
 		if (hMigemo_) {
 			migemoOpen_    = reinterpret_cast<MIGEMO_OPEN>(GetProcAddress(hMigemo_, "migemo_open"));
@@ -62,10 +60,9 @@ public:
 			}
 			auto mbs = sc_.convert(dp);
 			m_ = migemoOpen_(mbs.get());
-			if (m_ == nullptr) return false;
-			standBy_ = true;
+			if (m_) return true;
 		}
-		return standBy_;
+		return false;
 	}
 
 	void query(const std::wstring& searchWord, std::string& query) {
