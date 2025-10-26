@@ -818,7 +818,7 @@ public:
 				setScrollListTopIndex(index.value() - scrollListLineNum_ + 1, false);
 			}
 		}
-		if (listCursorIndex_ && (listCursorSwitch_ != type || (index.has_value() && listCursorIndex_ != index.value()))) {
+		if (listCursorIndex_ && (listCursorSwitch_ != type || (!index.has_value() || listCursorIndex_ != index.value()))) {
 			RECT r = listRect_;
 			r.top    = static_cast<long>(indexToLine(listCursorIndex_.value(), listCursorSwitch_) * cyItem_);
 			r.bottom = r.top + cyItem_;
