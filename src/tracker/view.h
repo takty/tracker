@@ -406,7 +406,7 @@ public:
 
 			r.left += 3;
 			WindowUtils::DrawGrayText(dc, r, &str[0]);
-			::GetTextExtentPoint32(dc, &str[0], static_cast<int>(::_tcslen(&str[0])), &font);
+			::GetTextExtentPoint32(dc, &str[0], 1, &font);
 			r.left = font.cx + 2;
 		}
 		if (doc_.InHistory()) {

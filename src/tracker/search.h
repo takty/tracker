@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <vector>
 #include <string>
+#include <cwctype>
 #include <algorithm>
 #include <optional>
 #include <regex>
@@ -42,7 +43,7 @@ public:
 		if (time - lastKeySearchTime_ > 1000) {
 			searchWord_.clear();
 		}
-		searchWord_.append(1, ::_totlower(static_cast<wint_t>(key)));
+		searchWord_.append(1, std::towlower(static_cast<wint_t>(key)));
 		lastKeySearchTime_ = time;
 		reserveFind_       = true;  // Flag the call to findFirst using a timer
 	}
@@ -94,7 +95,7 @@ public:
 				if (restart && i == startIndex) break;
 
 				std::wstring name(items[i]->Name());
-				transform(name.begin(), name.end(), name.begin(), ::_totlower);  // Lower case
+				transform(name.begin(), name.end(), name.begin(), std::towlower);  // Lower case
 				if (name.find(searchWord_) != std::wstring::npos) {
 					jumpTo = i;
 					break;
