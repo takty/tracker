@@ -2,7 +2,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-26
  */
 
 #include "stdafx.h"
@@ -77,7 +77,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_ACTIVATEAPP:       if (!wp && ::GetCapture() != hWnd) ::ShowWindow(hWnd, SW_HIDE);  break;
 	case WM_TIMER:             view->wmTimer(); break;
 	case WM_HOTKEY:            view->wmHotKey(wp); break;
-	case WM_SHOWWINDOW:        view->wmShowWindow(wp); break;
+	case WM_SHOWWINDOW:        view->wmShowWindow(wp == TRUE); break;
 	case WM_LBUTTONDOWN:       view->wmButtonDown(VK_LBUTTON, LOWORD(lp), HIWORD(lp)); break;
 	case WM_RBUTTONDOWN:       view->wmButtonDown(VK_RBUTTON, LOWORD(lp), HIWORD(lp)); break;
 	case WM_MBUTTONDOWN:       view->wmButtonDown(VK_MBUTTON, LOWORD(lp), HIWORD(lp)); break;

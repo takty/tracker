@@ -2,7 +2,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2025-10-25
+ * @version 2025-10-26
  */
 
 #pragma once
@@ -513,7 +513,7 @@ public:
 		::ShowWindow(hWnd_, SW_SHOW);
 	}
 
-	void wmShowWindow(BOOL show) {
+	void wmShowWindow(bool show) {
 		if (show) {
 			doc_.Update();
 			WindowUtils::MoveWindowToCorner(hWnd_, popupPos_);
