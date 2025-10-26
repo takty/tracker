@@ -54,17 +54,21 @@ public:
 			if (dp.empty()) {
 				dp = Path::parent(FileSystem::module_file_path()).append(_T("\\Dict\\migemo-dict"));
 			}
-			auto mbs = sc_.convert(dp);
+			auto mbs = sc_.wc2mb(dp);
 			m_ = migemoOpen_(mbs.get());
 			if (m_) return true;
 		}
 		return false;
 	}
 
-	void query(const std::wstring& searchWord, std::string& query) {
-		auto mbs = sc_.convert(searchWord);
+	void query(const std::wstring& searchWord, std::wstring& query) {
+		auto mbs = sc_.wc2mb(searchWord);
 		auto p   = migemoQuery_(m_, reinterpret_cast<unsigned char*>(mbs.get()));
-		query.assign("/").append(reinterpret_cast<const char*>(p)).append("/ki");  // Handle as Japanese, case-insensitive
+		std::string temp{ reinterpret_cast<const char*>(p) };
+
+		StringConverter sc{};
+		query.assign(sc.mb2wc(temp).get());
+
 		migemoRelease_(m_, p);
 	}
 

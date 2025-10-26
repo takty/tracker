@@ -38,9 +38,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bregexp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="comparator.h">
       <Filter>Header Files\Document</Filter>
     </ClInclude>
@@ -124,9 +121,6 @@
     </ClInclude>
     <ClInclude Include="operation.hpp">
       <Filter>Header Files\Document\FileUtils</Filter>
-    </ClInclude>
-    <ClInclude Include="regex.h">
-      <Filter>Header Files\View\Utils</Filter>
     </ClInclude>
     <ClInclude Include="string_converter.h">
       <Filter>Header Files\View\Utils</Filter>

@@ -2,7 +2,7 @@
  * Search Functions
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-10-26
  */
 
 #pragma once
@@ -12,28 +12,27 @@
 #include <string>
 #include <algorithm>
 #include <optional>
+#include <regex>
 
 #include "item_list.h"
 #include "migemo_wrapper.h"
-#include "regex.h"
 #include "pref.hpp"
 
 class Search {
 
 	Migemo       migemo_;
-	Regex        regex_;
 	ULONGLONG    lastKeySearchTime_ = 0;
 	bool         useMigemo_         = false;
 	bool         reserveFind_       = false;
 	std::wstring searchWord_;
-	std::string  mkey_;  // Always ANSI
+	std::wstring migemoPattern_;
 
 public:
 
 	Search() noexcept = default;
 
 	bool Initialize(bool useMigemo) {
-		useMigemo_ = (useMigemo && regex_.loadLibrary() && migemo_.loadLibrary());
+		useMigemo_ = (useMigemo && migemo_.loadLibrary());
 		return useMigemo_;
 	}
 
@@ -59,12 +58,12 @@ public:
 	std::optional<size_t> FindFirst(std::optional<size_t> cursorIndex, const ItemList& items) {
 		reserveFind_ = false;
 		if (useMigemo_) {
-			migemo_.query(searchWord_, mkey_);
+			migemo_.query(searchWord_, migemoPattern_);
 		}
 		return FindNext(cursorIndex, items);
 	}
 
-	std::optional<size_t> FindNext(std::optional<size_t> cursorIndex, const ItemList& items) {
+	std::optional<size_t> FindNext(std::optional<size_t> cursorIndex, const ItemList& items) const {
 		std::optional<size_t> jumpTo;
 		bool restart = false;
 
@@ -72,7 +71,8 @@ public:
 		if (startIndex == items.Count()) startIndex = 0;
 
 		if (useMigemo_) {
-			Pattern pat(regex_, mkey_);
+			std::wregex pat(migemoPattern_, std::regex_constants::ECMAScript | std::regex_constants::icase);
+
 			for (size_t i = startIndex; ; ++i) {
 				if (i >= items.Count()) {
 					i = 0;
@@ -80,7 +80,7 @@ public:
 				}
 				if (restart && i == startIndex) break;
 
-				if (pat.match(items[i]->Name())) {
+				if (std::regex_search(items[i]->Name(), pat)) {
 					jumpTo = i;
 					break;
 				}
