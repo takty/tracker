@@ -328,7 +328,7 @@ public:
 
 			const ItemList &navis = doc_.GetNavis(), &files = doc_.GetFiles();
 
-			for (size_t i = begin; i <= end; ++i) {
+			for (size_t i = begin; i <= static_cast<size_t>(end); ++i) {
 				if (i < navis.Count()) {
 					const Item *fd = navis[i];
 					if (!fd) continue;
