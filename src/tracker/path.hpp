@@ -2,7 +2,7 @@
  * File Path Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -26,7 +26,7 @@ public:
 	constexpr static wchar_t const * const UNC_PREFIX = L"\\\\?\\";
 
 	// Extract file name (UNC ok)
-	static std::wstring name(const std::wstring& path) {
+	static std::wstring name(const std::wstring& path) noexcept {
 		const auto size = path.size();
 		const auto last = (path.back() == PATH_SEPARATOR) ? size - 2 : size - 1;
 		const auto pos  = path.find_last_of(PATH_SEPARATOR, last);
@@ -38,7 +38,7 @@ public:
 	}
 
 	// Extract file name without extention
-	static std::wstring name_without_ext(const std::wstring& path) {
+	static std::wstring name_without_ext(const std::wstring& path) noexcept {
 		auto ret = name(path);
 		const auto pos = ret.find_last_of(EXT_PREFIX);
 		if (pos != std::wstring::npos) ret.resize(pos);
@@ -46,7 +46,7 @@ public:
 	}
 
 	// Extract file extention
-	static std::wstring ext(const std::wstring& path) {
+	static std::wstring ext(const std::wstring& path) noexcept {
 		auto n = name(path);
 		const auto pos = n.find_last_of(EXT_PREFIX);
 
@@ -77,7 +77,7 @@ public:
 	}
 
 	// Quote path
-	static std::wstring quote(const std::wstring& path) {
+	static std::wstring quote(const std::wstring& path) noexcept {
 		return (L'\"' + path).append(1, L'\"');
 	}
 
@@ -107,7 +107,7 @@ public:
 	}
 
 	// Translate relative path to absolute path
-	static std::wstring absolute_path(const std::wstring& path, const std::wstring& module_file_path) {
+	static std::wstring absolute_path(const std::wstring& path, const std::wstring& module_file_path) noexcept {
 		if (path.at(0) == EXT_PREFIX && path.at(1) == PATH_SEPARATOR) {
 			auto ret = parent(module_file_path);
 			return ret.append(path, 1);
@@ -116,7 +116,7 @@ public:
 	}
 
 	// Make quoted and space-separated path string
-	static std::wstring space_separated_quoted_paths_string(const std::vector<std::wstring>& paths) {
+	static std::wstring space_separated_quoted_paths_string(const std::vector<std::wstring>& paths) noexcept {
 		std::wstring ret;
 		for (const auto& path : paths) {
 			ret.append(1, L'\"').append(ensure_unc_prefix_if_needed(path));
@@ -130,7 +130,7 @@ public:
 	}
 
 	// Make NULL-separated and double-NULL-terminated path string
-	static std::wstring null_separated_paths_string(const std::vector<std::wstring>& paths) {
+	static std::wstring null_separated_paths_string(const std::vector<std::wstring>& paths) noexcept {
 		std::wstring ret;
 		for (const auto& path : paths) {
 			ret.append(path);
@@ -144,7 +144,7 @@ public:
 	}
 
 	// Check whether the path is root
-	static bool is_root(const std::wstring& path) {
+	static bool is_root(const std::wstring& path) noexcept {
 		const auto size = path.size();
 		return
 			(1 < size && path.at(size - 2) == DRIVE_IDENTIFIER && path.at(size - 1) == PATH_SEPARATOR) ||

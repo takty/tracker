@@ -2,7 +2,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-04
  */
 
 #include "stdafx.h"
@@ -49,7 +49,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 	return static_cast<int>(msg.wParam);
 }
 
-BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) {
+BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
 	WNDCLASS wc{};
 	wc.style         = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc   = (WNDPROC)wndProc;

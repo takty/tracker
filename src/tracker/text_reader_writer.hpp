@@ -2,7 +2,7 @@
  * Reader and Writer of Text Files
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -60,7 +60,7 @@ public:
 				break;
 			}
 			lines.emplace_back(text.substr(pos, nl - pos));
-			if (text[nl] == L'\r' && nl + 1 < n && text[nl + 1] == L'\n') {
+			if (text.at(nl) == L'\r' && nl + 1 < n && text.at(nl + 1) == L'\n') {
 				pos = nl + 2;
 			} else {
 				pos = nl + 1;

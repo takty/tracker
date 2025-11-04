@@ -2,7 +2,7 @@
  * Shortcut File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -21,7 +21,7 @@ class Link {
 public:
 
 	// Check whether the path is a shortcut file
-	static bool is_link(const std::wstring& path) {
+	static bool is_link(const std::wstring& path) noexcept {
 		return !FileSystem::is_directory(path) && Path::ext(path) == L"lnk";
 	}
 

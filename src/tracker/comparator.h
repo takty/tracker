@@ -2,7 +2,7 @@
  * Comparator of File Items
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -42,7 +42,7 @@ public:
 
 	CompByType(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) {
+	bool operator()(const Item* it1, const Item* it2) noexcept {
 		if (it1 == nullptr || it2 == nullptr) {
 			return false;
 		}

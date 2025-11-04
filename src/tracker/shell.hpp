@@ -2,7 +2,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -80,7 +80,7 @@ public:
 		return parent_shf;
 	}
 
-	static LPSHELLFOLDER get_parent_shell_folder(const std::wstring& path) {
+	static LPSHELLFOLDER get_parent_shell_folder(const std::wstring& path) noexcept {
 		HRESULT res{};
 
 		PIDLIST_ABSOLUTE parent_id{};
