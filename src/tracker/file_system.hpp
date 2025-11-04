@@ -2,7 +2,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -164,15 +164,22 @@ public:
 
 	// Get drive size
 	static void drive_size(const std::wstring& path, uint64_t& size, uint64_t& free) noexcept {
-		::GetDiskFreeSpaceEx(path.c_str(), reinterpret_cast<PULARGE_INTEGER>(&free), reinterpret_cast<PULARGE_INTEGER>(&size), nullptr);
+		ULARGE_INTEGER f{}, s{};
+		::GetDiskFreeSpaceEx(path.c_str(), &f, &s, nullptr);
+		free = f.QuadPart;
+		size = s.QuadPart;
 	}
 
 	// Calculate file/directory size
 	static bool calc_file_size(const std::wstring& path, uint64_t& size, const uint64_t& limitTime) {
 		if (!is_directory(path)) {
 			auto hf = ::CreateFile(path.c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-			if (hf == INVALID_HANDLE_VALUE) return false;
-			::GetFileSizeEx(hf, reinterpret_cast<PLARGE_INTEGER>(&size));
+			if (hf == INVALID_HANDLE_VALUE) {
+				return false;
+			}
+			LARGE_INTEGER s{};
+			::GetFileSizeEx(hf, &s);
+			size = s.QuadPart;
 			::CloseHandle(hf);
 			return true;
 		}
