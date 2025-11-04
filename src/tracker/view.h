@@ -2,7 +2,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -32,7 +32,7 @@ using namespace std;
 
 constexpr auto IDHK = 1;
 
-BOOL InitApplication(HINSTANCE hInst, const wchar_t* className);
+BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept;
 LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 class View : public Observer {
@@ -44,15 +44,6 @@ class View : public Observer {
 	static constexpr auto HIER  = 16;
 	static constexpr auto SEL   = 32;
 	static constexpr auto EMPTY = 64;
-
-	static HFONT GetUiMessageFont() noexcept {
-		NONCLIENTMETRICSW ncm{};
-		ncm.cbSize = sizeof(ncm);
-		if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0)) {
-			return nullptr;
-		}
-		return CreateFontIndirectW(&ncm.lfMessageFont);
-	}
 
 	int mouseDownY_        = -1;
 	int mouseDownArea_     = -1;
@@ -119,9 +110,9 @@ public:
 		re_.Initialize(hWnd_);
 		tt_.Initialize(hWnd_);
 
-		const auto dpi = WindowUtils::GetDPI(hWnd_);
-		dpiFactX_ = dpi.x / 96.0;
-		dpiFactY_ = dpi.y / 96.0;
+		const int dpi = ::GetDpiForWindow(hWnd_);
+		dpiFactX_ = dpi / 96.0;
+		dpiFactY_ = dpi / 96.0;
 
 		// Whether to make multi-user (call first)
 		if (pref_.item_int(SECTION_WINDOW, KEY_MULTI_USER, VAL_MULTI_USER)) pref_.set_multi_user_mode();
@@ -162,7 +153,7 @@ public:
 		::DeleteObject(hItemFont_);
 		hItemFont_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
 		if (fontName.empty() || !hItemFont_) {
-			hItemFont_ = View::GetUiMessageFont();
+			hItemFont_ = WindowUtils::GetUiMessageFont(hWnd_);
 		}
 		hMarkFont_ = ::CreateFont(std::lrint(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
 		re_.SetFont(hItemFont_);

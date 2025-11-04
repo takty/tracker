@@ -2,7 +2,7 @@
  * Window Utilities
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-11-04
  */
 
 #pragma once
@@ -69,14 +69,14 @@ public:
 		return (::GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
 	}
 
-	static POINT GetDPI(HWND hWnd) noexcept {
-		auto monitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-		UINT fx, fy;
-		::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &fx, &fy);
-		POINT dpi{};
-		dpi.x = fx;
-		dpi.y = fy;
-		return dpi;
+	static HFONT GetUiMessageFont(HWND hwnd) noexcept {
+		NONCLIENTMETRICSW ncm{};
+		ncm.cbSize = sizeof(ncm);
+		const int dpi = ::GetDpiForWindow(hwnd);
+		if (!::SystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0, dpi)) {
+			return nullptr;
+		}
+		return ::CreateFontIndirect(&ncm.lfMessageFont);
 	}
 
 	static void DrawGrayText(HDC dc, RECT r, const TCHAR* str) noexcept {
