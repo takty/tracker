@@ -2,7 +2,7 @@
  * Clipboard Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-09
  */
 
 #pragma once
@@ -12,6 +12,8 @@
 
 #include <windows.h>
 #include <shlobj.h>
+
+#include "gsl/gsl"
 
 #include "Path.hpp"
 #include "Link.hpp"
@@ -68,11 +70,11 @@ public:
 		if (hDrop) {
 			const auto count = ::DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
 			for (UINT i = 0; i < count; ++i) {
-				const auto len = static_cast<size_t>(::DragQueryFile(hDrop, i, nullptr, 0));  // without end NULL
+				const auto len = gsl::narrow<size_t>(::DragQueryFile(hDrop, i, nullptr, 0));  // without end NULL
 				if (buf.size() < len + 1) {
 					buf.resize(len + 1);  // add end NULL
 				}
-				::DragQueryFile(hDrop, i, buf.data(), static_cast<UINT>(buf.size()));
+				::DragQueryFile(hDrop, i, buf.data(), gsl::narrow<UINT>(buf.size()));
 				if (buf.data() != nullptr && buf.front() != L'\0') {
 					std::wstring target{ buf.data() };
 					auto name = Path::name(target);

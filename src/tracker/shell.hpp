@@ -2,13 +2,15 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-04
+ * @version 2025-11-09
  */
 
 #pragma once
 
 #include <vector>
 #include <string>
+
+#include "gsl/gsl"
 
 #include <windows.h>
 #include <shlobj.h>
@@ -107,7 +109,7 @@ public:
 			return nullptr;
 		}
 		LPVOID ret_obj = nullptr;
-		const auto res = parent_shf->GetUIObjectOf(nullptr, static_cast<UINT>(cs.size()), const_cast<LPCITEMIDLIST*>(cs.data()), riid, nullptr, &ret_obj);
+		const auto res = parent_shf->GetUIObjectOf(nullptr, gsl::narrow<UINT>(cs.size()), const_cast<LPCITEMIDLIST*>(cs.data()), riid, nullptr, &ret_obj);
 		if (res == S_OK) {
 			return ret_obj;
 		}

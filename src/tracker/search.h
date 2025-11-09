@@ -2,7 +2,7 @@
  * Search Functions
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-09
  */
 
 #pragma once
@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <optional>
 #include <regex>
+
+#include "gsl/gsl"
 
 #include "item_list.h"
 #include "migemo_wrapper.h"
@@ -43,7 +45,7 @@ public:
 		if (time - lastKeySearchTime_ > 1000) {
 			searchWord_.clear();
 		}
-		searchWord_.append(1, std::towlower(static_cast<wint_t>(key)));
+		searchWord_.append(1, std::towlower(gsl::narrow<wint_t>(key)));
 		lastKeySearchTime_ = time;
 		reserveFind_       = true;  // Flag the call to findFirst using a timer
 	}

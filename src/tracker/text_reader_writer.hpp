@@ -2,7 +2,7 @@
  * Reader and Writer of Text Files
  *
  * @author Takuto Yanagida
- * @version 2025-11-04
+ * @version 2025-11-09
  */
 
 #pragma once
@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 #include <fstream>
+
+#include "gsl/gsl"
 
 #include "file_utils.hpp"
 
@@ -41,9 +43,9 @@ public:
 		if (remain <= 0 || (remain % 2) != 0) return lines;
 
 		std::wstring text;
-		text.resize(static_cast<size_t>(remain / 2));
+		text.resize(gsl::narrow<size_t>(remain / 2));
 		if (!ifs.read(reinterpret_cast<char*>(text.data()), remain)) {
-			const auto got = static_cast<size_t>(ifs.gcount());
+			const auto got = gsl::narrow<size_t>(ifs.gcount());
 			if (got % 2 == 0) {
 				text.resize(got / 2);
 			} else {
@@ -77,10 +79,10 @@ public:
 		ofs.write(reinterpret_cast<const char*>(bom), sizeof(bom));
 
 		for (const auto& line : lines) {
-			ofs.write(reinterpret_cast<const char*>(line.data()), static_cast<std::streamsize>(line.size() * sizeof(wchar_t)));
+			ofs.write(reinterpret_cast<const char*>(line.data()), gsl::narrow<std::streamsize>(line.size() * sizeof(wchar_t)));
 
 			const wchar_t crlf[] = L"\r\n";
-			ofs.write(reinterpret_cast<const char*>(crlf), static_cast<std::streamsize>(2 * sizeof(wchar_t)));
+			ofs.write(reinterpret_cast<const char*>(crlf), gsl::narrow<std::streamsize>(2 * sizeof(wchar_t)));
 		}
 		ofs.close();
 	}

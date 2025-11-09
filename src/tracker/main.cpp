@@ -2,8 +2,10 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2025-11-04
+ * @version 2025-11-09
  */
+
+#include "gsl/gsl"
 
 #include "stdafx.h"
 #include "View.h"
@@ -46,7 +48,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 	}
 	::OleUninitialize();  // For supporting drag
 	::CoUninitialize();
-	return static_cast<int>(msg.wParam);
+	return gsl::narrow<int>(msg.wParam);
 }
 
 BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
@@ -85,7 +87,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_LBUTTONUP:         view->wmButtonUp(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_RBUTTONUP:         view->wmButtonUp(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_MOUSEWHEEL:        view->wmMouseWheel(static_cast<short>(HIWORD(wp))); break;
+	case WM_MOUSEWHEEL:        view->wmMouseWheel(gsl::narrow<short>(HIWORD(wp))); break;
 	case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
 	case WM_QUERYENDSESSION:   view->wmEndSession(); return 1;
 	case WM_ENDSESSION:        view->wmEndSession(); break;

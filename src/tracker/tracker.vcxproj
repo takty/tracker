@@ -210,6 +210,7 @@
     </ManifestResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="gsl\gsl" />
     <None Include="tracker.ico" />
   </ItemGroup>
   <ItemGroup>

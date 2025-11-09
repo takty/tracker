@@ -2,12 +2,15 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-09
  */
 
 #pragma once
 
 #include <memory>
+#include <vector>
+
+#include "gsl/gsl"
 
 #include <windows.h>
 #include <commctrl.h>
@@ -98,7 +101,7 @@ public:
 		::ShowWindow(hEdit_, SW_HIDE);
 		if (!::SendMessage(hEdit_, EM_GETMODIFY, 0, 0) || renamedPath_.empty()) return;
 		const auto len = ::GetWindowTextLength(hEdit_);  // Not including terminal NULL
-		auto fname = std::vector<wchar_t>(len + 1);  // Add terminal NULL
+		auto fname = std::vector<wchar_t>(gsl::narrow<wchar_t>(len) + 1);  // Add terminal NULL
 		::GetWindowText(hEdit_, fname.data(), len + 1);  // Add terminal NULL
 		newFileName_.assign(fname.data());
 		if (Link::is_link(renamedPath_)) newFileName_.append(_T(".lnk"));

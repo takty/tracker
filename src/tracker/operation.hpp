@@ -2,7 +2,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-09
  */
 
 #pragma once
@@ -10,6 +10,8 @@
 #include <string>
 
 #include <shlobj.h>
+
+#include "gsl/gsl"
 
 #include "classes.h"
 #include "path.hpp"
@@ -65,7 +67,7 @@ class Operation {
 			const auto& cs  = iicl_.child_list();
 
 			if (parent_shf != nullptr && !cs.empty()) {
-				const auto res = ::SHCreateShellItemArray(nullptr, parent_shf, static_cast<UINT>(cs.size()), const_cast<LPCITEMIDLIST*>(&cs.data()[0]), &sia_);
+				const auto res = ::SHCreateShellItemArray(nullptr, parent_shf, gsl::narrow<UINT>(cs.size()), const_cast<LPCITEMIDLIST*>(&cs.data()[0]), &sia_);
 				if (res != S_OK) {
 					sia_ = nullptr;
 				}

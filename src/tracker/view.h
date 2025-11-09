@@ -14,6 +14,8 @@
 #include <cmath>
 #include <locale>
 
+#include "gsl/gsl"
+
 #include "tracker.h"
 #include "file_utils.hpp"
 #include "pref.hpp"
@@ -279,11 +281,11 @@ public:
 
 		if (!::IsWindow(hMenu)) return;
 		if (enter) {
-			const auto proc = static_cast<LONG_PTR>(::GetWindowLongPtr(hMenu, GWLP_WNDPROC));
+			const auto proc = gsl::narrow<LONG_PTR>(::GetWindowLongPtr(hMenu, GWLP_WNDPROC));
 			::SetWindowLongPtr(hMenu, GWLP_USERDATA, proc);
 			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(View::menuProc));
 		} else {
-			const auto proc = static_cast<LONG_PTR>(::GetWindowLongPtr(hMenu, GWLP_USERDATA));
+			const auto proc = gsl::narrow<LONG_PTR>(::GetWindowLongPtr(hMenu, GWLP_USERDATA));
 			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, proc);
 		}
 	}
@@ -386,7 +388,7 @@ public:
 				}
 			}
 			num.append(std::to_wstring(files.Count()));
-			::GetTextExtentPoint32(dc, num.c_str(), static_cast<int>(num.size()), &font);
+			::GetTextExtentPoint32(dc, num.c_str(), gsl::narrow<int>(num.size()), &font);
 			RECT nr = r;
 			nr.left = nr.right - font.cx - 3;
 			WindowUtils::DrawGrayText(dc, nr, num.c_str());
@@ -443,7 +445,7 @@ public:
 		if (fd->IsDir()) r.right -= cxSide_;
 		SIZE font{};
 		if (cur) {
-			::GetTextExtentPoint32(dc, fd->Name().c_str(), static_cast<int>(fd->Name().size()), &font);
+			::GetTextExtentPoint32(dc, fd->Name().c_str(), gsl::narrow<int>(fd->Name().size()), &font);
 			curSelIsLong_ = font.cx > r.right - r.left;  // File name at cursor position is out
 		}
 		::DrawText(dc, fd->Name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | ((curSelIsLong_ && cur) ? cursorAlign_ : 0));
@@ -729,7 +731,7 @@ public:
 				if (key == VK_APPS) {
 					action(COM_SHELL_MENU, listCursorSwitch_, listCursorIndex_);
 				}  else if (_T('A') <= key && key <= _T('Z')) {
-					accelerator(static_cast<TCHAR>(key), listCursorSwitch_, listCursorIndex_);
+					accelerator(gsl::narrow<TCHAR>(key), listCursorSwitch_, listCursorIndex_);
 				}
 			} else {
 				switch (key) {
@@ -806,7 +808,7 @@ public:
 		}
 		if (listCursorIndex_ && (listCursorSwitch_ != type || (!index.has_value() || listCursorIndex_ != index.value()))) {
 			RECT r = listRect_;
-			r.top    = static_cast<long>(indexToLine(listCursorIndex_.value(), listCursorSwitch_) * cyItem_);
+			r.top    = gsl::narrow<long>(indexToLine(listCursorIndex_.value(), listCursorSwitch_) * cyItem_);
 			r.bottom = r.top + cyItem_;
 			::InvalidateRect(hWnd_, &r, FALSE);
 		}
@@ -820,7 +822,7 @@ public:
 			listCursorIndex_ = index.value();
 			listCursorSwitch_ = type;
 			RECT r = listRect_;
-			r.top    = static_cast<long>(indexToLine(index.value(), type) * cyItem_);
+			r.top    = gsl::narrow<long>(indexToLine(index.value(), type) * cyItem_);
 			r.bottom = r.top + cyItem_;
 			::InvalidateRect(hWnd_, &r, FALSE);
 		}
@@ -849,8 +851,8 @@ public:
 		RECT r;
 		GetClientRect(hWnd_, &r);
 		r.right -= cxScrollBar_;
-		r.top    = static_cast<long>(cyItem_ * doc_.GetNavis().Count());
-		::ScrollWindow(hWnd_, 0, static_cast<long>((old - scrollListTopIndex_) * cyItem_), &r, &r);
+		r.top    = gsl::narrow<long>(cyItem_ * doc_.GetNavis().Count());
+		::ScrollWindow(hWnd_, 0, gsl::narrow<long>((old - scrollListTopIndex_) * cyItem_), &r, &r);
 		GetClientRect(hWnd_, &r);
 		r.left = r.right - cxScrollBar_;
 		::InvalidateRect(hWnd_, &r, FALSE);
@@ -920,7 +922,7 @@ public:
 	void systemCommand(const wstring& cmd, const Selection& objs, Document::ListType w, size_t index) {
 		if (cmd == COM_SELECT_ALL)    { selectFile(0, doc_.GetFiles().Count() - 1, true); return; }
 		if (cmd == COM_RENAME)        {
-			re_.Open(objs[0], static_cast<long>(indexToLine(index, w) * cyItem_), listRect_.right, cyItem_);
+			re_.Open(objs[0], gsl::narrow<long>(indexToLine(index, w) * cyItem_), listRect_.right, cyItem_);
 			return;
 		}
 		if (cmd == COM_POPUP_INFO)    { popupInfo(objs, w, index); return; }
@@ -948,12 +950,12 @@ public:
 		if (back >= scrollListTopIndex_ + scrollListLineNum_) back = scrollListTopIndex_ + scrollListLineNum_ - 1;
 
 		RECT lr = listRect_;
-		lr.top    = static_cast<long>(cyItem_ * (front - scrollListTopIndex_ + doc_.GetNavis().Count()));
-		lr.bottom = static_cast<long>(cyItem_ * (back  - scrollListTopIndex_ + doc_.GetNavis().Count() + 1));
+		lr.top    = gsl::narrow<long>(cyItem_ * (front - scrollListTopIndex_ + doc_.GetNavis().Count()));
+		lr.bottom = gsl::narrow<long>(cyItem_ * (back  - scrollListTopIndex_ + doc_.GetNavis().Count() + 1));
 		::InvalidateRect(hWnd_, &lr, FALSE);
 
 		// Update selected file count display
-		lr.top    = static_cast<long>(cyItem_ * (doc_.GetNavis().Count() - 1));
+		lr.top    = gsl::narrow<long>(cyItem_ * (doc_.GetNavis().Count() - 1));
 		lr.bottom = lr.top + cyItem_;
 		::InvalidateRect(hWnd_, &lr, FALSE);
 		::UpdateWindow(hWnd_);
@@ -987,7 +989,7 @@ public:
 		::GetWindowRect(hWnd_, &r);
 
 		const size_t l = indexToLine(index, w);
-		POINT pt = { 0, static_cast<long>(l * cyItem_) };
+		POINT pt = { 0, gsl::narrow<long>(l * cyItem_) };
 		::ClientToScreen(hWnd_, &pt);
 		menuTop_() = pt.y;
 		if (popupPos_ == 0 || popupPos_ == 3) {
