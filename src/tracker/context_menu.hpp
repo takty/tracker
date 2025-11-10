@@ -2,7 +2,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <shlobj.h>
 
+#include "gsl/gsl"
 #include "Shell.hpp"
 
 class ContextMenu {
@@ -87,8 +88,13 @@ public:
 		if (!cm) return false;
 
 		// Get IContextMenu2
-		LPCONTEXTMENU2 cm2 = nullptr;
-		cm->QueryInterface(IID_IContextMenu2, reinterpret_cast<void**>(&cm2));
+		LPVOID temp = nullptr;
+		cm->QueryInterface(IID_IContextMenu2, &temp);
+		if (!temp) {
+			cm->Release();
+			return false;
+		}
+		LPCONTEXTMENU2 cm2 = static_cast<LPCONTEXTMENU2>(temp);
 
 		// Create a menu
 		auto hMenu = ::CreatePopupMenu();
@@ -102,9 +108,11 @@ public:
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
+		[[gsl::suppress(type.1)]] 
 		orig_proc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(MenuProc)));
 		const int id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
+		[[gsl::suppress(type.1)]] 
 		::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(orig_proc_));
 		::RemoveProp(wnd_, PROP_INSTANCE);
 

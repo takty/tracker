@@ -2,7 +2,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -34,8 +34,8 @@ public:
 
 private:
 
-	Observer* view_;
-	const TypeTable& extensions_;
+	Observer* observer_;
+	const TypeTable& exts_;
 	Pref& pref_;
 
 	Bookmark fav_;
@@ -52,83 +52,111 @@ private:
 	// Make a file list of ordinary folders
 	void SetNormalFolder(const std::wstring& path) {
 		// Create hierarchical list
-		const auto last = navis_.Count();
+		const auto last = navis_.size();
 		std::wstring cur(path);
 
 		while (!cur.empty()) {
-			navis_.Insert(last, navis_.CreateItem()->SetFileItem(cur, extensions_));
-			cur = Path::parent(cur);
+			const auto it = Item::create();
+			it->set_file(cur, exts_);
+			navis_.insert(last, it);
+			cur = path::parent(cur);
 		}
-		auto* item = navis_.CreateItem();// ->SetSeparatorItem(true);
-		if (item == nullptr) return;
-		item->data() = hierarchy_separator_option_data_;
-		navis_.Add(item);
+		const auto it = Item::create();
+		it->data() = hierarchy_separator_option_data_;
+		navis_.add(it);
 
 		// Add files
-		FileSystem::find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
+		file_system::find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			const bool isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
-			if (!isHidden || opt_.IsShowHidden()) {
-				files_.Add(files_.CreateItem()->SetFileItem(parent, wfd, extensions_));
+			if (!isHidden || opt_.is_show_hidden()) {
+				const auto it = Item::create();
+				it->set_file(parent, wfd, exts_);
+				files_.add(it);
 			}
 			return true;  // continue
 		});
-		opt_.SortFiles(files_);
+		opt_.sort_files(files_);
 	}
 
 	// Make a file list
 	void MakeFileList() {
-		files_.Clear();
-		navis_.Clear();
+		files_.clear();
+		navis_.clear();
 
-		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(fav_.PATH, fav_.NAME));
-		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(his_.PATH, his_.NAME));
-		navis_.Add(navis_.CreateItem()->SetSpecialFolderItem(dri_.PATH, dri_.NAME));
+		const auto itFav = Item::create();
+		const auto itHis = Item::create();
+		const auto itDri = Item::create();
+		itFav->set_special(fav_.PATH, fav_.NAME);
+		itHis->set_special(his_.PATH, his_.NAME);
+		itDri->set_special(dri_.PATH, dri_.NAME);
+		navis_.add(itFav);
+		navis_.add(itHis);
+		navis_.add(itDri);
 
-		auto* item = navis_.CreateItem();// ->SetSeparatorItem(false);
-		if (item == nullptr) return;
-		item->data() = special_separator_option_data_;
-		navis_.Add(item);
+		const auto itSp = Item::create();
+		itSp->data() = special_separator_option_data_;
+		navis_.add(itSp);
 
 		const ErrorMode em;
 		if (currentPath_ == fav_.PATH) {
-			for (size_t i = 0; i < fav_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(fav_[i], extensions_, i));
+			for (size_t i = 0; i < fav_.size(); ++i) {
+				const auto it = Item::create();
+				it->set_file(fav_[i], exts_, i);
+				files_.add(it);
+			}
 		} else if (currentPath_ == his_.PATH) {
 			his_.clean_up();
-			for (size_t i = 0; i < his_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(his_[i], extensions_, i));
-			opt_.SortHistory(files_);
+			for (size_t i = 0; i < his_.size(); ++i) {
+				const auto it = Item::create();
+				it->set_file(his_[i], exts_, i);
+				files_.add(it);
+			}
+			opt_.sort_history(files_);
 		} else if (currentPath_ == dri_.PATH) {
 			dri_.clean_up();
-			for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extensions_));
+			for (size_t i = 0; i < dri_.size(); ++i) {
+				const auto it = Item::create();
+				it->set_file(dri_[i], exts_);
+				files_.add(it);
+			}
 		} else {
 			while (!currentPath_.empty()) {  // Go back to the folder where the file exists
-				if (FileSystem::is_existing(currentPath_)) break;
-				currentPath_ = Path::parent(currentPath_);
+				if (file_system::is_existing(currentPath_)) break;
+				currentPath_ = path::parent(currentPath_);
 			}
 			if (!currentPath_.empty()) SetNormalFolder(currentPath_);  // Folder found
 			else {
 				dri_.clean_up();
-				for (size_t i = 0; i < dri_.size(); ++i) files_.Add(files_.CreateItem()->SetFileItem(dri_[i], extensions_));
+				for (size_t i = 0; i < dri_.size(); ++i) {
+					const auto it = Item::create();
+					it->set_file(dri_[i], exts_);
+					files_.add(it);
+				}
 			}
 		}
-		if (files_.Count() == 0) files_.Add(files_.CreateItem()->SetEmptyItem());
+		if (files_.size() == 0) {
+			const auto it = Item::create();
+			it->set_empty();
+			files_.add(it);
+		}
 	}
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : extensions_(exts), pref_(pref), opt_(), view_(), fav_(pref.path()), his_(pref.path()) {
-		special_separator_option_data_ = special_separator_option_data;
+	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : exts_(exts), pref_(pref), opt_(), observer_(), fav_(pref.path()), his_(pref.path()) {
+		special_separator_option_data_   = special_separator_option_data;
 		hierarchy_separator_option_data_ = hierarchy_separator_option_data;
-		currentPath_ = dri_.PATH;
+		currentPath_                     = dri_.PATH;
 	}
 
-	void SetView(Observer* view) noexcept {
-		view_ = view;
+	void SetObserver(Observer* o) noexcept {
+		observer_ = o;
 	}
 
 	void Initialize(bool firstTime = true) {
 		his_.initialize(pref_);
 		if (firstTime) {
-			opt_.Restore(pref_);
+			opt_.restore(pref_);
 			fav_.restore(pref_);
 			his_.restore(pref_);
 		}
@@ -137,14 +165,14 @@ public:
 	void Finalize() {
 		fav_.store();
 		his_.store();
-		opt_.Store(pref_);
+		opt_.store(pref_);
 	}
 
 	void Update() {
-		navis_.ClearSelection();
-		files_.ClearSelection();
+		navis_.unselect();
+		files_.unselect();
 		MakeFileList();
-		view_->Updated();
+		observer_->updated();
 	}
 
 	void SetCurrentDirectory(const std::wstring& path) {
@@ -157,30 +185,30 @@ public:
 
 	// Move to lower folder
 	bool MoveToLower(ListType w, size_t index) {
-		const Item* f = ((w == ListType::FILE) ? files_ : navis_)[index];
-		if (f == nullptr) return false;
-		if (f->IsEmpty()) return false;
+		const std::shared_ptr<Item> it = GetItem(w, index);
+		if (it == nullptr) return false;
+		if (it->is_empty()) return false;
 
-		if (f->IsDir()) {
+		if (it->is_dir()) {
 			std::wstring path;
-			if (f->Path().front() == L':') {
-				path.assign(f->Path());
-			} else if (f->IsLink()) {  // Save current folder if folder shortcut
-				path = Link::resolve(f->Path());
+			if (it->path().front() == L':') {
+				path.assign(it->path());
+			} else if (it->is_link()) {  // Save current folder if folder shortcut
+				path = link::resolve(it->path());
 			} else {
-				path.assign(f->Path());
+				path.assign(it->path());
 			}
 			SetCurrentDirectory(path);
 			return true;
 		}
-		if (Link::is_link(f->Path())) {  // If it is a shortcut
-			auto path = Link::resolve(f->Path());
-			path = Path::parent(path);  // Get parent path
+		if (link::is_link(it->path())) {  // If it is a shortcut
+			auto path = link::resolve(it->path());
+			path = path::parent(path);  // Get parent path
 			SetCurrentDirectory(path);
 			return true;
 		}
 		if (InBookmark() || InHistory()) {
-			auto path = Path::parent(f->Path());
+			auto path = path::parent(it->path());
 			SetCurrentDirectory(path);
 			return true;
 		}
@@ -189,13 +217,13 @@ public:
 
 	// Check if it is possible to move to lower folder
 	bool MovableToLower(ListType w, size_t index) {
-		const Item *f = ((w == ListType::FILE) ? files_ : navis_)[index];
+		const std::shared_ptr<Item> it = GetItem(w, index);
 
-		if (f == nullptr) return false;
-		if (f->IsEmpty()) return false;
+		if (it == nullptr) return false;
+		if (it->is_empty()) return false;
 
-		if (f->IsDir()) return true;
-		if (Link::is_link(f->Path())) return true;
+		if (it->is_dir()) return true;
+		if (link::is_link(it->path())) return true;
 		if (InBookmark() || InHistory()) return true;
 
 		return false;
@@ -203,25 +231,25 @@ public:
 
 	// Set operators for multiple selected files
 	Selection& SetOperator(std::optional<size_t> index, ListType type, Selection& ope) {
-		ope.Clear();
+		ope.clear();
 		if (!index) return ope;
 
 		const auto& vec = (type == ListType::FILE) ? files_ : navis_;
-		const auto& it  = vec[index.value()];
+		const auto& it  = vec.at(index.value());
 		if (!it) return ope;
 
-		if (it->IsEmpty()) return ope;
+		if (it->is_empty()) return ope;
 
 		// When index is not selected (including hierarchy) -> Single file is selected alone
-		if (!it->IsSelected()) {
-			ope.Add(it->Path());
+		if (!it->is_sel()) {
+			ope.add(it->path());
 			return ope;
 		}
 		// Copy selected file name
-		ope.Add(it->Path());  // Copy the file specified by index to the beginning
-		for (size_t i = 0; i < vec.Count(); i++) {
-			if (vec[i]->IsSelected() && i != index.value()) {
-				ope.Add(vec[i]->Path());
+		ope.add(it->path());  // Copy the file specified by index to the beginning
+		for (size_t i = 0; i < vec.size(); i++) {
+			if (vec.at(i)->is_sel() && i != index.value()) {
+				ope.add(vec.at(i)->path());
 			}
 		}
 		return ope;
@@ -242,16 +270,16 @@ public:
 	bool ArrangeFavorites(std::optional<size_t> drag, std::optional<size_t> drop) {
 		if (!drag || !drop || drag == drop) return false;
 		if (!InBookmark()) return false;
-		return fav_.arrange(files_[drag.value()]->Id(), files_[drop.value()]->Id());
+		return fav_.arrange(files_.at(drag.value())->id(), files_.at(drop.value())->id());
 	}
 
 	// Add to / Remove from Favorites
 	void AddOrRemoveFavorite(const std::wstring& obj, ListType w, size_t index) {
 		auto &vec = (w == ListType::FILE) ? files_ : navis_;
 
-		if (vec[index]->IsEmpty()) return;
+		if (vec.at(index)->is_empty()) return;
 		if (InBookmark()) {
-			fav_.remove(files_[index]->Id());
+			fav_.remove(files_.at(index)->id());
 		} else {
 			fav_.add(obj);
 		}
@@ -261,7 +289,7 @@ public:
 	// Select file by range specification
 	void SelectFile(size_t front, size_t back, ListType type, bool all) noexcept {
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
-		vec.Select(front, back, all);
+		vec.select(front, back, all);
 	}
 
 	Option& GetOpt() noexcept {
@@ -270,7 +298,7 @@ public:
 
 	// Return the number of selected files
 	size_t SelectedCount() noexcept {
-		return files_.SelectionCount();
+		return files_.selected_size();
 	}
 
 	// The current directory is a bookmark
@@ -299,8 +327,8 @@ public:
 	}
 
 	// Return file information
-	Item* GetItem(ListType w, size_t index) {
-		return (w == ListType::FILE) ? files_[index] : navis_[index];
+	std::shared_ptr<Item> GetItem(ListType w, size_t index) {
+		return (w == ListType::FILE) ? files_.at(index) : navis_.at(index);
 	}
 
 	const ItemList& GetNavis() const noexcept {
@@ -309,6 +337,18 @@ public:
 
 	const ItemList& GetFiles() const noexcept {
 		return files_;
+	}
+
+	const size_t GetNaviCount() const noexcept {
+		return navis_.size();
+	}
+
+	const size_t GetFileCount() const noexcept {
+		return files_.size();
+	}
+
+	const bool IsFileEmpty() const {
+		return files_.size() && files_.at(0)->is_empty();
 	}
 
 };

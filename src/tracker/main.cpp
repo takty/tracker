@@ -2,17 +2,20 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2025-11-09
+ * @version 2025-11-10
  */
 
-#include "gsl/gsl"
+#include <memory>
 
+#include "gsl/gsl"
 #include "stdafx.h"
 #include "View.h"
 
-const wchar_t MUTEX[]       = _T("TRACKER510_20251020");
+const wchar_t MUTEX[]       = _T("TRACKER510_20251123");
 const wchar_t CLASS_NAME[]  = _T("Tracker");
 const wchar_t WINDOW_NAME[] = _T("Tracker");
+
+std::unique_ptr<View> view{};
 
 int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
 	::CreateMutex(nullptr, FALSE, &MUTEX[0]);
@@ -36,6 +39,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 		return 0;
 	}
 	// Create main window
+	[[gsl::suppress(con.4)]]
 	const HWND hWnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, &CLASS_NAME[0], &WINDOW_NAME[0], WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, hInst, nullptr);
 	if (!hWnd) {
 		::MessageBeep(MB_ICONHAND);
@@ -67,13 +71,17 @@ BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
 }
 
 LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
-	auto view = reinterpret_cast<View*>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
-
 	switch (msg) {
-	case WM_CREATE:            new View(hWnd); break;
-	case WM_DESTROY:           delete view; break;
+	case WM_CREATE:
+		view = std::make_unique<View>(hWnd);
+		view->initialize();
+		break;
+	case WM_DESTROY:           view->finalize(); break;
 	case WM_DPICHANGED:        view->wmDpiChanged(LOWORD(wp), HIWORD(wp)); break;
-	case WM_WINDOWPOSCHANGING: view->wmWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lp)); break;
+	case WM_WINDOWPOSCHANGING: 
+		[[gsl::suppress(type.1)]]
+		if (view) view->wmWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lp));
+		break;
 	case WM_SIZE:              view->wmSize(LOWORD(lp), HIWORD(lp)); break;
 	case WM_PAINT:             view->wmPaint(); break;
 	case WM_ACTIVATEAPP:       if (!wp && ::GetCapture() != hWnd) ::ShowWindow(hWnd, SW_HIDE);  break;
@@ -87,10 +95,10 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_LBUTTONUP:         view->wmButtonUp(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_RBUTTONUP:         view->wmButtonUp(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_MOUSEWHEEL:        view->wmMouseWheel(gsl::narrow<short>(HIWORD(wp))); break;
+	case WM_MOUSEWHEEL:        view->wmMouseWheel(GET_WHEEL_DELTA_WPARAM(wp)); break;
 	case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
-	case WM_QUERYENDSESSION:   view->wmEndSession(); return 1;
-	case WM_ENDSESSION:        view->wmEndSession(); break;
+	//case WM_QUERYENDSESSION:   view->wmEndSession(); return 1;
+	//case WM_ENDSESSION:        view->wmEndSession(); break;
 	case WM_REQUESTUPDATE:     view->wmRequestUpdate(); break;
 	case WM_RENAMEEDITCLOSED:  view->wmRenameEditClosed(); break;
 	case WM_KEYDOWN:           view->wmKeyDown(wp); break;

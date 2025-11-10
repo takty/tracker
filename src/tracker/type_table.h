@@ -2,7 +2,7 @@
  * Table for Managing File Types
  *
  * @author Takuto Yanagida
- * @version 2025-10-25
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -14,11 +14,11 @@
 
 class TypeTable {
 
-	const std::wstring EXT_SECTION{ L"Extension" };
-	const std::wstring EXT_KEY{ L"Ext" };
-	const std::wstring COLOR_KEY{ L"Color" };
-	const std::wstring EMPTY{ L"" };
-	const wchar_t EXT_DIV{ L'|' };
+	inline static const std::wstring EXT_SECTION{ L"Extension" };
+	inline static const std::wstring EXT_KEY{ L"Ext" };
+	inline static const std::wstring COLOR_KEY{ L"Color" };
+	inline static const std::wstring EMPTY{ L"" };
+	inline static const wchar_t EXT_DIV{ L'|' };
 
 	std::map<std::wstring, int> ext_to_id_;
 	std::map<int, int>          id_to_color_;

@@ -71,32 +71,32 @@ public:
 		bool restart = false;
 
 		size_t startIndex = (!cursorIndex) ? 0 : cursorIndex.value() + 1;
-		if (startIndex == items.Count()) startIndex = 0;
+		if (startIndex == items.size()) startIndex = 0;
 
 		if (useMigemo_) {
 			std::wregex pat(migemoPattern_, std::regex_constants::ECMAScript | std::regex_constants::icase);
 
 			for (size_t i = startIndex; ; ++i) {
-				if (i >= items.Count()) {
+				if (i >= items.size()) {
 					i = 0;
 					restart = true;
 				}
 				if (restart && i == startIndex) break;
 
-				if (std::regex_search(items[i]->Name(), pat)) {
+				if (std::regex_search(items.at(i)->name(), pat)) {
 					jumpTo = i;
 					break;
 				}
 			}
 		} else {
 			for (size_t i = startIndex; ; ++i) {
-				if (i >= items.Count()) {
+				if (i >= items.size()) {
 					i = 0;
 					restart = true;
 				}
 				if (restart && i == startIndex) break;
 
-				std::wstring name(items[i]->Name());
+				std::wstring name(items.at(i)->name());
 				transform(name.begin(), name.end(), name.begin(), std::towlower);  // Lower case
 				if (name.find(searchWord_) != std::wstring::npos) {
 					jumpTo = i;

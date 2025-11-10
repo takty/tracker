@@ -2,7 +2,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2025-10-22
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -13,6 +13,7 @@
 
 #include <windows.h>
 
+#include "gsl/gsl"
 #include "Path.hpp"
 #include "Shell.hpp"
 
@@ -78,8 +79,9 @@ public:
 		auto dobj = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(paths, IID_IDataObject));
 		if (!dobj) return;
 
+		[[gsl::suppress(r)]]
 		auto ds = new DropSource();
-		const bool notDrive = !Path::is_root(paths.front());
+		const bool notDrive = !path::is_root(paths.front());
 		DWORD dwEffect;
 		::DoDragDrop(dobj, ds, DROPEFFECT_MOVE * notDrive | DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
 		ds->Release();

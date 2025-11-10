@@ -222,6 +222,7 @@
     <ClInclude Include="drives.h" />
     <ClInclude Include="error_mode.hpp" />
     <ClInclude Include="file_utils.hpp" />
+    <ClInclude Include="info.hpp" />
     <ClInclude Include="operation.hpp" />
     <ClInclude Include="link.hpp" />
     <ClInclude Include="path.hpp" />

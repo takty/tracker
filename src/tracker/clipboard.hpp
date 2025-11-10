@@ -77,16 +77,16 @@ public:
 				::DragQueryFile(hDrop, i, buf.data(), gsl::narrow<UINT>(buf.size()));
 				if (buf.data() != nullptr && buf.front() != L'\0') {
 					std::wstring target{ buf.data() };
-					auto name = Path::name(target);
-					if (Link::is_link(target)) {
-						target = Link::resolve(target);
+					auto name = path::name(target);
+					if (link::is_link(target)) {
+						target = link::resolve(target);
 					} else {
 						name.append(L".lnk");
 					}
 					auto path{ dir };
 					path.append(L"\\").append(name);
-					auto shortcut = FileSystem::unique_name(path);
-					if (Link::create(shortcut, target)) ret = true;
+					auto shortcut = file_system::unique_name(path);
+					if (link::create(shortcut, target)) ret = true;
 				}
 			}
 		}

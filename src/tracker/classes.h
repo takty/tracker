@@ -11,8 +11,6 @@ class Pref;
 class PrefList;
 class Pattern;
 class Regex;
-class Link;
 class Operation;
 class ToolTip;
 class StringConverter;
-class FileSystem;

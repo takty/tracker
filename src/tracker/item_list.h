@@ -2,107 +2,98 @@
  * Item list
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-10
  */
 
 #pragma once
 
 #include <vector>
+#include <memory>
 
-#include "Item.h"
+#include "item.h"
+#include "comparator.h"
 
 class ItemList {
 
-	std::vector<Item*> buf_;
-	std::vector<Item*> items_;
-	size_t selNum_;
-
-	void DeleteItem(Item *f) {
-		if (buf_.size() >= 1024) delete f;
-		else buf_.push_back(f);
-	}
+	std::vector<std::shared_ptr<Item>> its_;
+	size_t sel_size_{};
 
 public:
 
-	ItemList() noexcept : selNum_(0) {}
-
+	ItemList() noexcept {}
 	ItemList(const ItemList&) = delete;
 	ItemList& operator=(const ItemList&) = delete;
 	ItemList(ItemList&&) = delete;
 	ItemList& operator=(ItemList&&) = delete;
+	~ItemList() = default;
 
-	~ItemList() {
-		for (auto& i : items_) delete i;
-		for (auto& i : buf_) delete i;
+	size_t size() const noexcept {
+		return its_.size();
 	}
 
-	size_t Count() const noexcept {
-		return items_.size();
+	std::shared_ptr<Item> at(size_t idx) {
+		return its_.at(idx);
 	}
 
-	Item* operator[](size_t index) {
-		return items_.at(index);
+	const std::shared_ptr<Item> at(size_t idx) const {
+		return its_.at(idx);
 	}
 
-	const Item* operator[](size_t index) const {
-		return items_.at(index);
+	void add(std::shared_ptr<Item> it) {
+		its_.push_back(it);
 	}
 
-	Item* CreateItem() {
-		Item* f{};
-		if (buf_.empty()) {
-			f = new Item();
-		} else {
-			f = buf_.back();
-			buf_.pop_back();
+	void insert(size_t index, std::shared_ptr<Item> it) {
+		its_.insert(its_.begin() + index, it);
+	}
+
+	void clear() {
+		for (auto& it : its_) {
+			Item::destroy(it);
 		}
-		if (f) f->Clear();
-		return f;
+		its_.clear();
 	}
 
-	void Add(Item* item) {
-		items_.push_back(item);
+	void sort(const int by, const bool reverse) {
+		auto proj = [](auto const& sp) noexcept { return sp.get(); };
+		switch (by) {
+		case 0: std::ranges::sort(its_, CompByName(reverse), proj); break;
+		case 1: std::ranges::sort(its_, CompByType(reverse), proj); break;
+		case 2: std::ranges::sort(its_, CompByDate(reverse), proj); break;
+		case 3: std::ranges::sort(its_, CompBySize(reverse), proj); break;
+		default: break;
+		}
 	}
 
-	void Insert(size_t index, Item* item) {
-		items_.insert(items_.begin() + index, item);
-	}
-
-	void Clear() {
-		for (auto& i : items_) DeleteItem(i);
-		items_.clear();
-	}
-
-	template<class Pred> void Sort(Pred p) {
-		sort(items_.begin(), items_.end(), p);
-	}
-
-	size_t Select(size_t front, size_t back, bool all) noexcept {
+	size_t select(size_t front, size_t back, bool all) noexcept {
 		if (back < front) std::swap(front, back);
 		if (all) {
 			for (size_t i = front; i <= back; ++i) {
-				auto &it = items_.at(i);
+				auto &it = its_.at(i);
 				if (it->data() != 0) continue;
-				it->SetSelected(true);
+				it->set_sel(true);
 			}
-			selNum_ = back - front + 1;
+			sel_size_ = back - front + 1;
 		} else {
 			for (size_t i = front; i <= back; ++i) {
-				auto& it = items_.at(i);
+				auto& it = its_.at(i);
 				if (it->data() != 0) continue;
-				it->SetSelected(!it->IsSelected());
-				selNum_ += (it->IsSelected() ? 1 : -1);
+				it->set_sel(!it->is_sel());
+				sel_size_ += (it->is_sel() ? 1 : -1);
 			}
 		}
-		return selNum_;
+		return sel_size_;
 	}
 
-	void ClearSelection() noexcept {
-		selNum_ = 0;
+	void unselect() noexcept {
+		for (auto& it : its_) {
+			it->set_sel(false);
+		}
+		sel_size_ = 0;
 	}
 
-	size_t SelectionCount() const noexcept {
-		return selNum_;
+	size_t selected_size() const noexcept {
+		return sel_size_;
 	}
 
 };

@@ -2,103 +2,90 @@
  * Document Options
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-11-10
  */
 
 #pragma once
 
 #include <vector>
 
-#include "comparator.h"
 #include "pref.hpp"
 #include "item_list.h"
 
 class Option {
 
-	bool showHidden_, sortRev_;
-	int sortBy_;
+	bool show_hidden_, sort_rev_;
+	int sort_by_;
 
-	bool sortHis_, sortHisRev_;
-	int sortHisBy_;
+	bool sort_his_, sort_his_rev_;
+	int sort_his_by_;
 
 public:
 
 	enum {sbName, sbType, sbDate, sbSize};  // Sort type
 
-	void Restore(Pref& pref) noexcept {
+	void restore(Pref& pref) noexcept {
 		pref.set_current_section(SECTION_WINDOW);
-		showHidden_ = pref.item_int(KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
-		sortRev_    = pref.item_int(KEY_SORT_REV,    VAL_SORT_REV)    != 0;
-		sortBy_     = pref.item_int(KEY_SORT_BY,     VAL_SORT_BY);
+		show_hidden_ = pref.item_int(KEY_SHOW_HIDDEN, VAL_SHOW_HIDDEN) != 0;
+		sort_rev_    = pref.item_int(KEY_SORT_REV,    VAL_SORT_REV)    != 0;
+		sort_by_     = pref.item_int(KEY_SORT_BY,     VAL_SORT_BY);
 
-		sortHis_    = pref.item_int(KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
-		sortHisRev_ = pref.item_int(KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
-		sortHisBy_  = pref.item_int(KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
+		sort_his_     = pref.item_int(KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
+		sort_his_rev_ = pref.item_int(KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
+		sort_his_by_  = pref.item_int(KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
 	}
 
-	void Store(Pref& pref) const noexcept {
-		pref.set_item_int(SECTION_WINDOW, KEY_SHOW_HIDDEN, showHidden_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_REV,    sortRev_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_BY,     sortBy_);
+	void store(Pref& pref) const noexcept {
+		pref.set_item_int(SECTION_WINDOW, KEY_SHOW_HIDDEN, show_hidden_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_REV,    sort_rev_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_BY,     sort_by_);
 
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY,     sortHis_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sortHisRev_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sortHisBy_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY,     sort_his_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sort_his_rev_);
+		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sort_his_by_);
 	}
 
-	int GetSortType() const noexcept {
-		return sortBy_;
+	int get_sort_type() const noexcept {
+		return sort_by_;
 	}
 
-	TCHAR GetSortTypeChar() const noexcept {
-		switch (sortBy_) {
-		case sbName: return sortRev_ ? 'N' : 'n';
-		case sbType: return sortRev_ ? 'T' : 't';
-		case sbDate: return sortRev_ ? 'D' : 'd';
-		case sbSize: return sortRev_ ? 'S' : 's';
-		default:     return sortRev_ ? 'N' : 'n';
+	TCHAR get_sort_type_char() const noexcept {
+		switch (sort_by_) {
+		case sbName: return sort_rev_ ? 'N' : 'n';
+		case sbType: return sort_rev_ ? 'T' : 't';
+		case sbDate: return sort_rev_ ? 'D' : 'd';
+		case sbSize: return sort_rev_ ? 'S' : 's';
+		default:     return sort_rev_ ? 'N' : 'n';
 		}
 	}
 
-	bool GetSortOrder() const noexcept {
-		return sortRev_;
+	bool get_sort_order() const noexcept {
+		return sort_rev_;
 	}
 
-	bool IsShowHidden() const noexcept {
-		return showHidden_;
+	bool is_show_hidden() const noexcept {
+		return show_hidden_;
 	}
 
-	int SetSortType(int t) noexcept {
-		return sortBy_ = t;
+	int set_sort_type(int t) noexcept {
+		return sort_by_ = t;
 	}
 
-	bool SetSortOrder(bool f) noexcept {
-		return sortRev_ = f;
+	bool set_sort_order(bool f) noexcept {
+		return sort_rev_ = f;
 	}
 
-	bool SetShowHidden(bool f) noexcept {
-		return showHidden_ = f;
+	bool set_show_hidden(bool f) noexcept {
+		return show_hidden_ = f;
 	}
 
-	void SortFiles(ItemList& files) const {
-		switch (sortBy_) {
-		case 0: files.Sort(CompByName(sortRev_)); break;
-		case 1: files.Sort(CompByType(sortRev_)); break;
-		case 2: files.Sort(CompByDate(sortRev_)); break;
-		case 3: files.Sort(CompBySize(sortRev_)); break;
-		default: break;
-		}
+	void sort_files(ItemList& il) const {
+		il.sort(sort_by_, sort_rev_);
 	}
 
-	void SortHistory(ItemList& files) const {
-		if (!sortHis_) return;
-		switch (sortHisBy_) {
-		case 0: files.Sort(CompByName(sortHisRev_)); break;
-		case 1: files.Sort(CompByType(sortHisRev_)); break;
-		case 2: files.Sort(CompByDate(sortHisRev_)); break;
-		case 3: files.Sort(CompBySize(sortHisRev_)); break;
-		default: break;
-		}
+	void sort_history(ItemList& il) const {
+		if (!sort_his_) return;
+		il.sort(sort_his_by_, sort_his_rev_);
 	}
 
 };

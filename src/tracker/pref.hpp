@@ -37,7 +37,7 @@ class Pref {
 public:
 
 	Pref() noexcept {
-		iniPath_ = FileSystem::module_file_path();
+		iniPath_ = file_system::module_file_path();
 		iniPath_.resize(iniPath_.size() - 3);
 		iniPath_.append(L"ini");
 	}
@@ -48,14 +48,14 @@ public:
 		auto normalPath{ iniPath_ };
 
 		// Create INI file path for current user
-		auto name = Path::name(normalPath);
-		auto path = Path::parent(normalPath);
+		auto name = path::name(normalPath);
+		auto path = path::parent(normalPath);
 		auto user = get_user_name();
 		path.append(L"\\").append(user);
 		iniPath_.assign(path).append(L"\\").append(name);
 
 		// When a normal INI file exists and there is no INI file for the current user
-		if (FileSystem::is_existing(normalPath) && !FileSystem::is_existing(iniPath_)) {
+		if (file_system::is_existing(normalPath) && !file_system::is_existing(iniPath_)) {
 			::CreateDirectory(path.c_str(), nullptr);  // Make a directory
 			::CopyFile(normalPath.c_str(), iniPath_.c_str(), TRUE);  // Copy
 		}

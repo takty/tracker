@@ -149,6 +149,9 @@
     <ClInclude Include="text_reader_writer.hpp">
       <Filter>Header Files\Document\FileUtils</Filter>
     </ClInclude>
+    <ClInclude Include="info.hpp">
+      <Filter>Header Files\Document\FileUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

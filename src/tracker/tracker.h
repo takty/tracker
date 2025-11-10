@@ -2,7 +2,7 @@
  * Common Header
  *
  * @author Takuto Yanagida
- * @version 2025-10-25
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -78,9 +78,3 @@ const std::wstring COM_CLEAR_HISTORY(L"<ClearHistory>");
 const std::wstring COM_FAVORITE(L"<Favorite>");
 const std::wstring COM_START_DRAG(L"<StartDrag>");
 const std::wstring COM_SHELL_MENU(L"<ShellMenu>");
-
-//
-// Special Extension -----------------------------------------------------------
-//
-
-const std::wstring EXT_FOLDER(L"<folder>");

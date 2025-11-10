@@ -2,7 +2,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 
+#include "gsl/gsl"
 #include "Pref.hpp"
 
 class PopupMenu {
@@ -43,11 +44,15 @@ class PopupMenu {
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addTypeMenu(sec.substr(1), items, hSubMenu);
+
+				[[gsl::suppress(type.1)]]
 				::AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), name.c_str());
 			} else if (path == _T("<New>")) {  // New file menu
 				HMENU hSubMenu = ::CreateMenu();
 				hMenus_.push_back(hSubMenu);
 				addNewFileMenu(hSubMenu, items);
+
+				[[gsl::suppress(type.1)]]
 				::AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), name.c_str());
 			} else {  // Normal menu item
 				UINT flag = MF_STRING;
@@ -64,8 +69,8 @@ class PopupMenu {
 	void addNewFileMenu(HMENU hMenu, std::vector<std::wstring> &items) {
 		std::wstring path;
 
-		const auto dir = Path::parent(pref_.path()) + L"\\newfile\\";
-		FileSystem::find_first_file(dir, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
+		const auto dir = path::parent(pref_.path()) + L"\\newfile\\";
+		file_system::find_first_file(dir, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			path.assign(L"<CreateNew>").append(parent).append(&wfd.cFileName[0]);
 			items.push_back(path);
 			::AppendMenu(hMenu, MF_STRING, items.size(), &wfd.cFileName[0]);
@@ -145,7 +150,7 @@ public:
 			const int id = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, hWnd_, nullptr);
 			ret = (0 < id);  // -1, 0 if not selected
 			if (0 < id) {
-				const auto idx = static_cast<size_t>(id);
+				const auto idx = gsl::narrow<size_t>(id);
 				if (idx <= items.size()) {
 					cmd.assign(items.at(idx - 1));  // Ordinary command
 				}

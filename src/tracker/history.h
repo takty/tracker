@@ -2,7 +2,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -17,7 +17,7 @@
 
 class History {
 
-	const std::wstring FILE_NAME{ L"history.txt" };
+	inline static const std::wstring FILE_NAME{ L"history.txt" };
 
 	const std::wstring path_;
 	std::vector<std::wstring> paths_;
@@ -25,23 +25,23 @@ class History {
 
 public:
 
-	const std::wstring PATH{ L":HISTORY" }, NAME{ L"History" };
+	inline static const std::wstring PATH{ L":HISTORY" }, NAME{ L"History" };
 
-	History(const std::wstring& iniPath) noexcept : path_(Path::parent(iniPath).append(L"\\").append(FILE_NAME)) {}
+	History(const std::wstring& iniPath) noexcept : path_(path::parent(iniPath).append(L"\\").append(FILE_NAME)) {}
 
 	void initialize(Pref& pref) noexcept {
 		max_size_ = pref.item_int(KEY_MAX_HISTORY, VAL_MAX_HISTORY);
 	}
 
 	void restore(Pref& pref) {
-		paths_ = TextReaderWriter::read(path_);
+		paths_ = text_reader_writer::read(path_);
 		if (paths_.empty()) {
 			paths_ = pref.items<std::vector<std::wstring>>(SECTION_HISTORY, KEY_FILE, MAX_HISTORY);
 		}
 	}
 
 	void store() const {
-		TextReaderWriter::write(path_, paths_);
+		text_reader_writer::write(path_, paths_);
 	}
 
 	size_t size() noexcept {
@@ -54,7 +54,7 @@ public:
 
 	void add(const std::wstring& path) {
 		auto root = std::wstring(1, path.front()) + L":\\";
-		if (FileSystem::is_removable(root)) return;  // Do not leave removable
+		if (file_system::is_removable(root)) return;  // Do not leave removable
 
 		paths_.erase(remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
 		paths_.insert(paths_.begin(), path);  // Add
@@ -70,7 +70,7 @@ public:
 			remove_if(
 				paths_.begin(),
 				paths_.end(),
-				[](std::wstring& p) noexcept {return !FileSystem::is_existing(p); }
+				[](std::wstring& p) noexcept {return !file_system::is_existing(p); }
 			),
 			paths_.end()
 		);

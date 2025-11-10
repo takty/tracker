@@ -2,7 +2,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -18,42 +18,39 @@
 
 class Selection {
 
-	static std::wstring Format(long long l) {
-		std::wstring s;
-		for (int d = 0; l; d++, l /= 10) {
-			s = std::to_wstring(L'0' + (l % 10)) + (((!(d % 3) && d) ? L"," : L"") + s);
-		}
-		return s;
-	}
-
 	HWND hWnd_ = nullptr;
 	std::vector<std::wstring> objects_;
 	std::wstring defaultOpener_;
 	ULONG idNotify_ = 0;
 
-	const TypeTable& extensions_;
+	const TypeTable& exts_;
 	const Pref& pref_;
 
 	// Open file (specify target)
-	bool OpenFile(const std::vector<std::wstring>& objs) {
+	bool open_file(const std::vector<std::wstring>& objs) {
 		Operation so(hWnd_);
 		const auto& obj = objs.front();
+
 		std::wstring cmd;
-		auto ext = FileSystem::is_directory(obj) ? PATH_EXT_DIR : Path::ext(obj);
-		if (extensions_.get_command(pref_, ext, cmd)) {
-			return so.open(objs, cmd);
+		auto ext = file_system::is_directory(obj) ? PATH_EXT_DIR : path::ext(obj);
+		bool ret = false;
+
+		if (exts_.get_command(pref_, ext, cmd)) {
+			ret = so.open(objs, cmd);
+		} else {
+			// Normal file open behavior
+			ret = so.open(obj);  // Try to open normally
+			if (!ret && !file_system::is_directory(obj) && !defaultOpener_.empty()) {
+				// In the case of a file without association
+				ret = so.open(objs, defaultOpener_);
+			}
 		}
-		// Normal file open behavior
-		bool ret = so.open(obj);  // Try to open normally
-		if (!ret && !FileSystem::is_directory(obj) && !defaultOpener_.empty()) {
-			// In the case of a file without association
-			ret = so.open(objs, defaultOpener_);
-		}
+		so.release();
 		return ret;
 	}
 
 	// Register Shell Notifications
-	void SetShellNotify(const std::wstring& path) {
+	void set_shell_notify(const std::wstring& path) {
 		LPSHELLFOLDER desktopFolder{};
 		LPITEMIDLIST currentFolder{};
 		SHChangeNotifyEntry scne{};
@@ -82,81 +79,26 @@ class Selection {
 	}
 
 	// Manually request an update
-	void RequestUpdate() const noexcept {
+	void request_update() const noexcept {
 		::SendMessage(hWnd_, WM_REQUESTUPDATE, 0, 0);
 	}
 
-	// Determine file size
-	bool FilesSize(uint64_t& size, const uint64_t limitTime) {
-		uint64_t s{};
-		size = 0;
+	//// Determine file size
+	//bool files_size(uint64_t& size, const uint64_t limitTime) {
+	//	uint64_t s{};
+	//	size = 0;
 
-		for (const auto& e : objects_) {
-			const bool success = FileSystem::calc_file_size(e, s, limitTime);
-			size += s;
-			if (!success) return false;
-		}
-		return true;
-	}
-
-	// Generate a string representing the size of the file or drive
-	std::wstring FileSizeToStr(const uint64_t& size, bool success, const wchar_t* prefix) {
-		std::wstring dest;
-		std::wstring u;
-		bool ab{ false };
-		double val{};
-
-		if (size >= (1 << 30)) {
-			val = static_cast<double>(size) / (1ULL << 30);
-			u   = L" GB";
-		}
-		else if (size >= (1 << 20)) {
-			val = static_cast<double>(size) / (1ULL << 20);
-			u   = L" MB";
-			ab  = true;
-		}
-		else if (size >= (1 << 10)) {
-			val = static_cast<double>(size) / (1ULL << 10);
-			u   = L" kB";
-			ab  = true;
-		}
-		else {
-			val = static_cast<double>(size) / (1ULL << 0);
-			u   = L" Bytes";
-		}
-
-		int pre = 0;
-		if (val < 100) ++pre;
-		if (val < 10) ++pre;
-		if (val < 1) ++pre;
-
-		wchar_t format[100]{}, temp[100]{};
-		swprintf_s(&format[0], 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, u.c_str());
-		swprintf_s(&temp[0], 100, &format[0], val);
-		dest.assign(&temp[0]);
-		if (ab) {
-			dest.append(L" (").append(Format(size)).append(L" Bytes)");
-		}
-		return dest;
-	}
-
-	// Generate a string representing the file's timestamp
-	std::wstring& FileTimeToStr(const FILETIME& time, const wchar_t* prefix, std::wstring& dest) {
-		FILETIME local;
-		SYSTEMTIME st;
-
-		::FileTimeToLocalFileTime(&time, &local);
-		::FileTimeToSystemTime(&local, &st);
-
-		wchar_t temp[100]{};  // pre + 19 characters
-		swprintf_s(&temp[0], 100, L"%s%d/%02d/%02d (%02d:%02d:%02d)", prefix, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-		dest.assign(&temp[0]);
-		return dest;
-	}
+	//	for (const auto& e : objects_) {
+	//		const bool success = file_system::calc_file_size(e, s, limitTime);
+	//		size += s;
+	//		if (!success) return false;
+	//	}
+	//	return true;
+	//}
 
 public:
 
-	Selection(const TypeTable& exts, const Pref& pref) noexcept : extensions_(exts), pref_(pref) {}
+	Selection(const TypeTable& exts, const Pref& pref) noexcept : exts_(exts), pref_(pref) {}
 
 	Selection(const Selection&) = delete;
 	Selection& operator=(const Selection&) = delete;
@@ -164,26 +106,28 @@ public:
 	Selection& operator=(Selection&&) = delete;
 
 	~Selection() {
-		if (idNotify_) ::SHChangeNotifyDeregister(idNotify_);
+		if (idNotify_) {
+			::SHChangeNotifyDeregister(idNotify_);
+		}
 	}
 
 	// Specify a window handle.
-	void SetWindowHandle(HWND hWnd) noexcept {
+	void set_window_handle(HWND hWnd) noexcept {
 		hWnd_ = hWnd;
 	}
 
 	// Set default application path to open file without association
-	void SetDefaultOpener(const std::wstring& path) {
+	void set_default_opener(const std::wstring& path) {
 		defaultOpener_ = path;
 	}
 
 	// Add operation target file
-	void Add(const std::wstring& path) {
+	void add(const std::wstring& path) {
 		objects_.push_back(path);
 	}
 
 	// Clear operation target file
-	void Clear() noexcept {
+	void clear() noexcept {
 		objects_.clear();
 	}
 
@@ -193,188 +137,214 @@ public:
 	}
 
 	// Size
-	size_t Count() const noexcept {
+	size_t size() const noexcept {
 		return objects_.size();
 	}
 
 	// Open file based on association
-	bool OpenWithAssociation() {
-		return OpenFile(objects_);
+	bool open_with_association() {
+		return open_file(objects_);
 	}
 
 	// Resolve the shortcut and then open
-	bool OpenAfterResolve() {
-		if (!Link::is_link(objects_.front())) return false;  // If it is not a shortcut
+	bool open_after_resolve() {
+		if (!link::is_link(objects_.front())) return false;  // If it is not a shortcut
 
 		// OpenBy processing
-		auto path = Link::resolve(objects_.front());
-		return OpenFile({ path });
+		auto path = link::resolve(objects_.front());
+		return open_file({ path });
 	}
 
 	// Open in shell function based on command line
-	int OpenBy(const std::wstring& line) {
+	int open_by(const std::wstring& line) {
 		Operation so(hWnd_);
-		return so.open(objects_, line);
+		const bool ret = so.open(objects_, line);
+		so.release();
+		return ret;
 	}
 
 	// Start dragging
-	void StartDrag() const {
+	void start_drag() const {
 		DragFile::start(objects_);
 	}
 
 	// Display shell menu
-	void PopupShellMenu(const POINT& pt, UINT f) {
-		SetShellNotify(Path::parent(objects_.front()));
+	void popup_shell_menu(const POINT& pt, UINT f) {
+		set_shell_notify(path::parent(objects_.front()));
 		ContextMenu cm(hWnd_);
 		cm.popup(objects_, TPM_RIGHTBUTTON | f, pt);
 	}
 
 	// Create New
-	bool CreateNewFile(const std::wstring& orig) {
-		if (!FileSystem::is_directory(objects_.front())) return false;  // Fail if not folder
+	bool create_new_file(const std::wstring& orig) {
+		if (!file_system::is_directory(objects_.front())) return false;  // Fail if not folder
 
-		//std::wstring orig{ org };
+		auto fname = path::name(orig);
 		std::wstring npath{ objects_.front() };
-		auto fname = Path::name(orig);
 		npath.append(1, L'\\').append(fname);
-		auto newPath = FileSystem::unique_name(npath);
+		auto newPath   = file_system::unique_name(npath);
+		auto new_fname = path::name(newPath);
 
-		auto new_fname = Path::name(newPath);
 		Operation so(hWnd_);
 		const bool ret = so.copy_one_file(orig, objects_.front(), new_fname);
-
-		if (ret) RequestUpdate();
+		if (ret) {
+			request_update();
+		}
+		so.release();
 		return ret;
 	}
 
 	// Create a new folder
-	bool CreateNewFolderIn() {
-		if (!FileSystem::is_directory(objects_.front())) {
+	bool create_new_folder_in() {
+		if (!file_system::is_directory(objects_.front())) {
 			return false;  // Fail if not folder
 		}
 		auto npath = objects_.front() + L"\\NewFolder";
-		auto newPath = FileSystem::unique_name(npath);
+		auto newPath = file_system::unique_name(npath);
 
-		const BOOL ret = ::CreateDirectory(newPath.c_str(), nullptr);
-		if (ret) RequestUpdate();
-		return ret == TRUE;
+		const bool ret = ::CreateDirectory(newPath.c_str(), nullptr) == TRUE;
+		if (ret) {
+			request_update();
+		}
+		return ret;
 	}
 
 	// Delete
-	bool DeleteFile() {
+	bool delete_file() {
 		Operation so(hWnd_);
 		const bool ret = so.delete_files(objects_);
-		if (ret) RequestUpdate();
+		if (ret) {
+			request_update();
+		}
+		so.release();
 		return ret;
 	}
 
 	// Make a duplicate
-	bool CloneHere() {
+	bool clone_here() {
 		bool ret = false;
 		Operation so(hWnd_);
 
 		for (const auto& o : objects_) {
-			auto clonePath = FileSystem::unique_name(o, L"_Clone");
-			if (clonePath.empty()) return false;
-			auto new_fname = Path::name(clonePath);
-			auto dest_path = Path::parent(o);
+			auto clonePath = file_system::unique_name(o, L"_Clone");
+			if (clonePath.empty()) {
+				ret = false;
+				break;
+			}
+			auto new_fname = path::name(clonePath);
+			auto dest_path = path::parent(o);
 			if (so.copy_one_file(o, dest_path, new_fname)) ret = true;
 		}
-		if (ret) RequestUpdate();
+		if (ret) {
+			request_update();
+		}
+		so.release();
 		return ret;
 	}
 
 	// Make a shortcut
-	bool CreateShortcutHere() {
+	bool create_shortcut_here() {
 		bool ret = false;
 		std::wstring path, target;
 
 		for (auto& obj : objects_) {
-			if (Link::is_link(obj)) {  // When it is a link
-				target = Link::resolve(obj);
+			if (link::is_link(obj)) {  // When it is a link
+				target = link::resolve(obj);
 				path.assign(obj);
 			} else {
 				target.assign(obj);
 				path = obj + L".lnk";
 			}
-			if (Link::create(FileSystem::unique_name(path), target)) ret = true;
+			if (link::create(file_system::unique_name(path), target)) ret = true;
 		}
-		if (ret) RequestUpdate();
+		if (ret) {
+			request_update();
+		}
 		return ret;
 	}
 
 	// Copy to desktop
-	bool CopyToDesktop() {
+	bool copy_to_desktop() {
 		Operation so(hWnd_);
-		const bool ret = so.copy_files(objects_, FileSystem::desktop_path());
-		if (ret) RequestUpdate();
+		const bool ret = so.copy_files(objects_, file_system::desktop_path());
+		if (ret) {
+			request_update();
+		}
+		so.release();
 		return ret;
 	}
 
 	// Move to desktop
-	bool MoveToDesktop() {
+	bool move_to_desktop() {
 		Operation so(hWnd_);
-		const bool ret = so.move_files(objects_, FileSystem::desktop_path());
-		if (ret) RequestUpdate();
+		const bool ret = so.move_files(objects_, file_system::desktop_path());
+		if (ret) {
+			request_update();
+		}
+		so.release();
 		return ret;
 	}
 
 	// Copy path to clipboard
-	bool CopyPathInClipboard() {
+	bool copy_path_in_clipboard() {
 		const Clipboard cb(hWnd_);
 		return cb.copy_path(objects_);
 	}
 
-	void Copy() {
+	void copy() {
 		const ContextMenu cm(hWnd_);
 		cm.copy(objects_);
 	}
 
-	void Cut() {
+	void cut() {
 		const ContextMenu cm(hWnd_);
 		cm.cut(objects_);
 	}
 
-	void PasteIn() {
+	void paste_in() {
 		const ContextMenu cm(hWnd_);
-		SetShellNotify(objects_.front());
+		set_shell_notify(objects_.front());
 		cm.paste_in(objects_);
 	}
 
 	// Paste as a shortcut
-	bool PasteAsShortcutIn() {
+	bool paste_as_shortcut_in() {
 		const Clipboard cb(hWnd_);
 		const bool ret = cb.paste_as_link_in(objects_.front());
-		if (ret) RequestUpdate();
+		if (ret) {
+			request_update();
+		}
 		return ret;
 	}
 
 	// Display file properties
-	void PopupFileProperty() {
+	void popup_file_property() {
 		const ContextMenu cm(hWnd_);
 		cm.show_property(objects_);
 	}
 
 	// Change the file name
-	bool Rename(const std::wstring& path, const std::wstring& newFileName) {
+	bool rename(const std::wstring& path, const std::wstring& newFileName) {
 		Operation so(hWnd_);
-		return so.rename(path, newFileName);
+		const bool ret = so.rename(path, newFileName);
+		so.release();
+		return ret;
 	}
 
 	// Get file information string
-	void InformationStrings(std::vector<std::wstring>& items) {
-		if (Path::is_root(objects_.front())) {  // When it is a drive
+	void create_information_strings(std::vector<std::wstring>& items) {
+		if (path::is_root(objects_.front())) {  // When it is a drive
 			uint64_t dSize, dFree;
-			FileSystem::drive_size(objects_.front(), dSize, dFree);
-			auto sizeStr = FileSizeToStr(dSize, true, L"");
-			auto usedStr = FileSizeToStr(dSize - dFree, true, L"");
+			file_system::drive_size(objects_.front(), dSize, dFree);
+			auto sizeStr = info::file_size_to_str(dSize, true, L"");
+			auto usedStr = info::file_size_to_str(dSize - dFree, true, L"");
 			items.push_back(usedStr.append(1, L'/').append(sizeStr));
-			items.push_back(FileSizeToStr(dFree, true, L"Free: "));
+			items.push_back(info::file_size_to_str(dFree, true, L"Free: "));
 		} else {  // When it is a normal file
 			std::wstring ctStr, mtStr;
 			uint64_t size;
-			const bool suc = FilesSize(size, ::GetTickCount64() + 1000);
-			items.push_back(FileSizeToStr(size, suc, L"Size:\t"));
+			const bool suc = file_system::calc_file_size(objects_, size, ::GetTickCount64() + 1000);
+			items.push_back(info::file_size_to_str(size, suc, L"Size:\t"));
 
 			// Get date
 			HANDLE hf = ::CreateFile(objects_.front().c_str(), 0, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
@@ -382,14 +352,14 @@ public:
 				FILETIME ctime, mtime;
 				::GetFileTime(hf, &ctime, nullptr, &mtime);
 				::CloseHandle(hf);
-				items.push_back(FileTimeToStr(ctime, L"Created:\t", ctStr));
-				items.push_back(FileTimeToStr(mtime, L"Modified:\t", mtStr));
+				items.push_back(info::file_time_to_str(ctime, L"Created:\t", ctStr));
+				items.push_back(info::file_time_to_str(mtime, L"Modified:\t", mtStr));
 			}
 		}
 	}
 
 	// Perform processing after update notification
-	void DoneRequest() noexcept {
+	void done_request() noexcept {
 		if (idNotify_) {
 			::SHChangeNotifyDeregister(idNotify_);
 			idNotify_ = 0;
@@ -397,22 +367,22 @@ public:
 	}
 
 	// Execute a string command
-	int Command(const std::wstring& cmd) {
-		if (cmd.find(COM_CREATE_NEW) == 0) { CreateNewFile(cmd.substr(COM_CREATE_NEW.size())); return 1; }
-		if (cmd == COM_NEW_FOLDER)         { CreateNewFolderIn(); return 1; }
-		if (cmd == COM_DELETE)             { DeleteFile(); return 1; }
-		if (cmd == COM_CLONE)              { CloneHere(); return 1; }
-		if (cmd == COM_SHORTCUT)           { CreateShortcutHere(); return 1; }
-		if (cmd == COM_COPY_TO_DESKTOP)    { CopyToDesktop(); return 1; }
-		if (cmd == COM_MOVE_TO_DESKTOP)    { MoveToDesktop(); return 1; }
-		if (cmd == COM_COPY_PATH)          { CopyPathInClipboard(); return 1; }
-		if (cmd == COM_COPY)               { Copy(); return 1; }
-		if (cmd == COM_CUT)                { Cut(); return 1; }
-		if (cmd == COM_PASTE)              { PasteIn(); return 1; }
-		if (cmd == COM_PASTE_SHORTCUT)     { PasteAsShortcutIn(); return 1; }
-		if (cmd == COM_PROPERTY)           { PopupFileProperty(); return 1; }
-		if (cmd == COM_OPEN)               { return OpenWithAssociation() ? -1 : 0; }
-		if (cmd == COM_OPEN_RESOLVE)       { return OpenAfterResolve() ? -1 : 0; }
+	int command(const std::wstring& cmd) {
+		if (cmd.find(COM_CREATE_NEW) == 0) { create_new_file(cmd.substr(COM_CREATE_NEW.size())); return 1; }
+		if (cmd == COM_NEW_FOLDER)         { create_new_folder_in(); return 1; }
+		if (cmd == COM_DELETE)             { delete_file(); return 1; }
+		if (cmd == COM_CLONE)              { clone_here(); return 1; }
+		if (cmd == COM_SHORTCUT)           { create_shortcut_here(); return 1; }
+		if (cmd == COM_COPY_TO_DESKTOP)    { copy_to_desktop(); return 1; }
+		if (cmd == COM_MOVE_TO_DESKTOP)    { move_to_desktop(); return 1; }
+		if (cmd == COM_COPY_PATH)          { copy_path_in_clipboard(); return 1; }
+		if (cmd == COM_COPY)               { copy(); return 1; }
+		if (cmd == COM_CUT)                { cut(); return 1; }
+		if (cmd == COM_PASTE)              { paste_in(); return 1; }
+		if (cmd == COM_PASTE_SHORTCUT)     { paste_as_shortcut_in(); return 1; }
+		if (cmd == COM_PROPERTY)           { popup_file_property(); return 1; }
+		if (cmd == COM_OPEN)               { return open_with_association() ? -1 : 0; }
+		if (cmd == COM_OPEN_RESOLVE)       { return open_after_resolve() ? -1 : 0; }
 		return 0;
 	}
 

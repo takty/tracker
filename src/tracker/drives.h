@@ -2,7 +2,7 @@
  * Drives
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-10
  */
 
 #pragma once
@@ -16,16 +16,16 @@
 
 class Drives {
 
-	static const wchar_t FIRST_LETTER = L'A';
-	static const wchar_t LAST_LETTER  = L'Z';
-	static const int WAITING_TIME     = 200;
+	inline static const wchar_t FIRST_LETTER = L'A';
+	inline static const wchar_t LAST_LETTER  = L'Z';
+	inline static const int WAITING_TIME     = 200;
 
 	std::vector<std::wstring> paths_;
 	std::vector<bool> slowDrives_;
 
 public:
 
-	const std::wstring PATH{ L":DRIVES" }, NAME{ L"Drives" };
+	inline static const std::wstring PATH{ L":DRIVES" }, NAME{ L"Drives" };
 
 	Drives() noexcept : slowDrives_(LAST_LETTER - FIRST_LETTER + 1, false) {}
 

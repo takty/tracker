@@ -9,3 +9,4 @@
 #include "drag_file.hpp"
 #include "clipboard.hpp"
 #include "context_menu.hpp"
+#include "info.hpp"

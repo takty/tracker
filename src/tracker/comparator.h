@@ -2,10 +2,12 @@
  * Comparator of File Items
  *
  * @author Takuto Yanagida
- * @version 2025-11-04
+ * @version 2025-11-10
  */
 
 #pragma once
+
+#include <memory>
 
 #include "Item.h"
 
@@ -18,15 +20,15 @@ public:
 
 	CompByName(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) noexcept {
-		if (it1 == nullptr || it2 == nullptr) {
+	bool operator()(const Item* it1, const Item* it2) const noexcept {
+		if (!it1 || !it2) {
 			return false;
 		}
 		bool ret = false;
-		if ((it1->IsDir()) ^ (it2->IsDir())) {
-			if ((it1->IsDir()) > (it2->IsDir())) ret = true;
+		if ((it1->is_dir()) ^ (it2->is_dir())) {
+			if ((it1->is_dir()) > (it2->is_dir())) ret = true;
 		} else {
-			if (::lstrcmp(it1->Name().c_str(), it2->Name().c_str()) < 0) ret = true;
+			if (::lstrcmp(it1->name().c_str(), it2->name().c_str()) < 0) ret = true;
 		}
 		return rev_ ? !ret : ret;
 	}
@@ -42,18 +44,18 @@ public:
 
 	CompByType(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) noexcept {
-		if (it1 == nullptr || it2 == nullptr) {
+	bool operator()(const Item* it1, const Item* it2) const noexcept {
+		if (!it1 || !it2) {
 			return false;
 		}
 		bool ret = false;
-		if ((it1->IsDir()) ^ (it2->IsDir())) {
-			if (it1->IsDir() > it2->IsDir()) ret = true;
+		if ((it1->is_dir()) ^ (it2->is_dir())) {
+			if (it1->is_dir() > it2->is_dir()) ret = true;
 		} else {
-			auto ext1 = Path::ext(it1->Path());
-			auto ext2 = Path::ext(it2->Path());
+			auto ext1 = path::ext(it1->path());
+			auto ext2 = path::ext(it2->path());
 			int res = ::lstrcmp(ext1.c_str(), ext2.c_str());
-			if (res == 0) res = ::lstrcmp(it1->Name().c_str(), it2->Name().c_str());
+			if (res == 0) res = ::lstrcmp(it1->name().c_str(), it2->name().c_str());
 			if (res < 0) ret = true;
 		}
 		return rev_ ? !ret : ret;
@@ -70,15 +72,15 @@ public:
 
 	CompByDate(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) noexcept {
-		if (it1 == nullptr || it2 == nullptr) {
+	bool operator()(const Item* it1, const Item* it2) const noexcept {
+		if (!it1 || !it2) {
 			return false;
 		}
 		bool ret = false;
-		if ((it1->IsDir()) ^ (it2->IsDir())) {
-			if ((it1->IsDir()) > (it2->IsDir())) ret = true;
+		if ((it1->is_dir()) ^ (it2->is_dir())) {
+			if ((it1->is_dir()) > (it2->is_dir())) ret = true;
 		} else {
-			ret = ::CompareFileTime(&(it1->Date()), &(it2->Date())) == 1;
+			ret = ::CompareFileTime(&(it1->time()), &(it2->time())) == 1;
 		}
 		return rev_ ? !ret : ret;
 	}
@@ -94,18 +96,18 @@ public:
 
 	CompBySize(bool rev) noexcept : rev_(rev) {}
 
-	bool operator()(const Item* it1, const Item* it2) noexcept {
-		if (it1 == nullptr || it2 == nullptr) {
+	bool operator()(const Item* it1, const Item* it2) const noexcept {
+		if (!it1 || !it2) {
 			return false;
 		}
 		bool ret = false;
-		if ((it1->IsDir()) ^ (it2->IsDir())) {
-			if ((it1->IsDir()) > (it2->IsDir())) ret = true;
+		if ((it1->is_dir()) ^ (it2->is_dir())) {
+			if ((it1->is_dir()) > (it2->is_dir())) ret = true;
 		} else {
-			if (it1->Size() == it1->Size()) {
-				if (::lstrcmp(it1->Name().c_str(), it2->Name().c_str()) < 0) ret = true;
+			if (it1->size() == it1->size()) {
+				if (::lstrcmp(it1->name().c_str(), it2->name().c_str()) < 0) ret = true;
 			} else {
-				if (it1->Size() < it2->Size()) ret = true;
+				if (it1->size() < it2->size()) ret = true;
 			}
 		}
 		return rev_ ? !ret : ret;
