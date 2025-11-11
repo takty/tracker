@@ -264,9 +264,9 @@ public:
 		}
 	}
 
-	//void wmEndSession() {
-	//	doc_.Finalize();
-	//}
+	void wmEndSession() {
+		doc_.Finalize();
+	}
 
 	void wmRequestUpdate() {
 		ope_.done_request();
