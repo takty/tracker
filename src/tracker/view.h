@@ -672,7 +672,9 @@ public:
 		const bool rbtn = (mkey & MK_RBUTTON) != 0;
 
 		if ((vkey == VK_RBUTTON && lbtn) || (vkey == VK_LBUTTON && rbtn)) {
-			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_) selectFile(mouseDownIndex_, listCursorIndex_);
+			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_) {
+				selectFile(mouseDownIndex_, listCursorIndex_);
+			}
 			action(COM_SHELL_MENU, type, listCursorIndex_);
 		} else if (vkey == VK_LBUTTON) {
 			if (type == Document::ListType::FILE && (listCursorIndex_ != mouseDownIndex_ || WindowUtils::CtrlPressed())) {
@@ -681,9 +683,14 @@ public:
 				action(COM_OPEN, type, listCursorIndex_);
 			}
 		} else if (vkey == VK_RBUTTON) {
-			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_) selectFile(mouseDownIndex_, listCursorIndex_);
-			if (WindowUtils::CtrlPressed()) action(COM_SHELL_MENU, type, listCursorIndex_);
-			else popupMenu(type, listCursorIndex_);
+			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_) {
+				selectFile(mouseDownIndex_, listCursorIndex_);
+			}
+			if (WindowUtils::CtrlPressed()) {
+				action(COM_SHELL_MENU, type, listCursorIndex_);
+			} else {
+				popupMenu(type, listCursorIndex_);
+			}
 		} else if (vkey == VK_MBUTTON) {
 			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_ && doc_.ArrangeFavorites(mouseDownIndex_, listCursorIndex_)) {
 				doc_.Update();
