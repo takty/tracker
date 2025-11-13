@@ -2,7 +2,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-13
  */
 
 #include <memory>
@@ -78,7 +78,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 		break;
 	case WM_DESTROY:           view->finalize(); break;
 	case WM_DPICHANGED:        view->wmDpiChanged(LOWORD(wp), HIWORD(wp)); break;
-	case WM_WINDOWPOSCHANGING: 
+	case WM_WINDOWPOSCHANGING:
 		[[gsl::suppress(type.1)]]
 		if (view) view->wmWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lp));
 		break;
@@ -97,8 +97,7 @@ LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
 	case WM_MOUSEWHEEL:        view->wmMouseWheel(GET_WHEEL_DELTA_WPARAM(wp)); break;
 	case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
-	case WM_QUERYENDSESSION:   view->wmEndSession(); return 1;
-	//case WM_ENDSESSION:        view->wmEndSession(); break;
+	case WM_ENDSESSION:        view->wmEndSession(); break;
 	case WM_REQUESTUPDATE:     view->wmRequestUpdate(); break;
 	case WM_RENAMEEDITCLOSED:  view->wmRenameEditClosed(); break;
 	case WM_KEYDOWN:           view->wmKeyDown(wp); break;
