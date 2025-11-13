@@ -104,6 +104,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <EnablePREfast>true</EnablePREfast>
       <LanguageStandard>stdcpp23</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -129,6 +130,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <EnablePREfast>true</EnablePREfast>
       <LanguageStandard>stdcpp23</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +159,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnablePREfast>true</EnablePREfast>
       <LanguageStandard>stdcpp23</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -189,6 +192,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnablePREfast>true</EnablePREfast>
       <LanguageStandard>stdcpp23</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
