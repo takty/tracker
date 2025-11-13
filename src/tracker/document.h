@@ -2,7 +2,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-13
  */
 
 #pragma once
@@ -278,7 +278,7 @@ public:
 		auto &vec = (w == ListType::FILE) ? files_ : navis_;
 
 		if (vec.at(index)->is_empty()) return;
-		if (InBookmark()) {
+		if (InBookmark() && w == ListType::FILE) {
 			fav_.remove(files_.at(index)->id());
 		} else {
 			fav_.add(obj);
