@@ -15,22 +15,14 @@
 
 #include "gsl/gsl"
 
-#include "Path.hpp"
-#include "Link.hpp"
-#include "Shell.hpp"
+#include "path.hpp"
+#include "link.hpp"
+#include "shell.hpp"
 
-class Clipboard {
-
-	const HWND hWnd_;
-
-public:
-
-	Clipboard(HWND hWnd) noexcept : hWnd_(hWnd) {}
-
-	~Clipboard() = default;
+namespace clipboard {
 
 	// Copy file paths to the clipboard
-	bool copy_path(const std::vector<std::wstring>& paths) const {
+	bool copy_path(const std::vector<std::wstring>& paths) {
 		std::wstring str;
 		for (const auto& e : paths) {
 			if (1 < e.size() && e.back() == L':') {  // Drive
@@ -60,11 +52,11 @@ public:
 	}
 
 	// Paste as links in the directory
-	bool paste_as_link_in(const std::wstring& dir) const {
+	bool paste_as_link_in(const std::wstring& dir) {
 		std::vector<wchar_t> buf(MAX_PATH);
 		bool ret = false;
 
-		if (!::OpenClipboard(hWnd_)) return false;
+		if (!::OpenClipboard(nullptr)) return false;
 
 		auto hDrop = static_cast<HDROP>(::GetClipboardData(CF_HDROP));
 		if (hDrop) {

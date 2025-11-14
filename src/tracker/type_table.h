@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 
-#include "Pref.hpp"
+#include "pref.hpp"
 
 class TypeTable {
 

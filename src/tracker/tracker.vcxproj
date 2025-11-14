@@ -221,7 +221,8 @@
     <ClInclude Include="bookmark.h" />
     <ClInclude Include="classes.h" />
     <ClInclude Include="context_menu.hpp" />
-    <ClInclude Include="drag_file.hpp" />
+    <ClInclude Include="execute.hpp" />
+    <ClInclude Include="file_drag.hpp" />
     <ClInclude Include="clipboard.hpp" />
     <ClInclude Include="drives.h" />
     <ClInclude Include="error_mode.hpp" />

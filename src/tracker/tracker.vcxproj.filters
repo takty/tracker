@@ -110,7 +110,7 @@
     <ClInclude Include="file_system.hpp">
       <Filter>Header Files\Document\FileUtils</Filter>
     </ClInclude>
-    <ClInclude Include="drag_file.hpp">
+    <ClInclude Include="file_drag.hpp">
       <Filter>Header Files\Document\FileUtils</Filter>
     </ClInclude>
     <ClInclude Include="context_menu.hpp">
@@ -150,6 +150,9 @@
       <Filter>Header Files\Document\FileUtils</Filter>
     </ClInclude>
     <ClInclude Include="info.hpp">
+      <Filter>Header Files\Document\FileUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="execute.hpp">
       <Filter>Header Files\Document\FileUtils</Filter>
     </ClInclude>
   </ItemGroup>

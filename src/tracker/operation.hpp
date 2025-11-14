@@ -2,7 +2,7 @@
  * Shell File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-14
  */
 
 #pragma once
@@ -12,12 +12,10 @@
 #include <shlobj.h>
 
 #include "gsl/gsl"
-#include "classes.h"
 #include "path.hpp"
-#include "file_system.hpp"
 #include "shell.hpp"
 
-class Operation {
+namespace operation {
 
 	class ShellItem {
 
@@ -56,7 +54,7 @@ class Operation {
 
 	class ShellItemIdArray {
 
-		Shell::ItemIdChildList iicl_;
+		shell::ItemIdChildList iicl_;
 		IShellItemArray* sia_ = nullptr;
 
 	public:
@@ -93,15 +91,13 @@ class Operation {
 
 	};
 
-	HWND            hWnd_    = nullptr;
-	IFileOperation* file_op_ = nullptr;
-
-	bool perform() const {
+	bool perform_(IFileOperation* file_op_) {
+		if (!file_op_) return false;
 		const auto res = file_op_->PerformOperations();
 		return SUCCEEDED(res);
 	}
 
-	template<typename F> bool do_multiple_files_op(const std::vector<std::wstring>& paths, F fn) const {
+	template<typename F> bool do_multiple_files_op_(const std::vector<std::wstring>& paths, F fn) {
 		if (paths.empty()) return false;
 
 		auto need_update = false;
@@ -125,158 +121,132 @@ class Operation {
 		return need_update;
 	}
 
-	bool shell_execute(const std::wstring& obj, const wchar_t* opt = nullptr) const noexcept {
-		[[gsl::suppress(type.7)]] 
-		SHELLEXECUTEINFO sei{};
-		sei.cbSize       = sizeof(SHELLEXECUTEINFO);
-		sei.fMask        = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC | SEE_MASK_FLAG_LOG_USAGE;  // To suppress that a caution dialog is shown
-		sei.hwnd         = hWnd_;
-		sei.lpVerb       = nullptr;
-		sei.lpFile       = obj.c_str();
-		sei.lpParameters = opt;  // A nullptr and an empty string make difference
-		sei.lpDirectory  = nullptr;
-		sei.nShow        = SW_SHOW;
-		sei.hInstApp     = nullptr;
-		if (::ShellExecuteEx(&sei) == TRUE) {
-			return true;
-		}
-		// Work around for executing files in OneDrive
-		sei.lpVerb       = L"open";
-		sei.lpFile       = L"explorer";
-		sei.lpParameters = obj.c_str();
-		return ::ShellExecuteEx(&sei) == TRUE;
-	}
-
-public:
-
-	Operation(HWND hWnd = nullptr) noexcept {
-		hWnd_ = hWnd;
-
+	IFileOperation* create_file_op_() {
 		LPVOID dest = nullptr;
 		const auto res = ::CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_IFileOperation, &dest);
 
 		if (SUCCEEDED(res) && dest) {
-			file_op_ = static_cast<IFileOperation*>(dest);
+			IFileOperation* fop = static_cast<IFileOperation*>(dest);
+			if (fop) {
+				const auto r = fop->SetOperationFlags(FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOFX_NOMINIMIZEBOX);
+				if (SUCCEEDED(r)) return fop;
+				fop->Release();
+			}
 		}
+		return nullptr;
 	}
 
-	Operation(const Operation&) = delete;
-	Operation& operator=(const Operation&) = delete;
-	Operation(Operation&&) = delete;
-	Operation& operator=(Operation&&) = delete;
-	~Operation() = default;
-
-	void release() {
+	void release_(IFileOperation* file_op_) {
 		if (file_op_) {
 			file_op_->Release();
 		}
 	}
 
-	bool check_initialized() const {
-		if (!file_op_) return false;
-		const auto res = file_op_->SetOperationFlags(FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOFX_NOMINIMIZEBOX);
-		if (FAILED(res)) return false;
-		return true;
-	}
-
-	// Open file
-	bool open(const std::wstring& obj) const {
-		if (file_system::is_directory(obj) && file_system::is_existing_same_name_execution_file(obj)) {
-			std::wstring qobj(L"\"");
-			qobj.append(obj).append(L"\\\"");
-			return shell_execute(qobj);
-		}
-		return shell_execute(obj, L"");
-	}
-
-	// Open files with a specific application
-	bool open(const std::vector<std::wstring>& objs, const std::wstring& line) const {
-		auto ret = file_system::extract_command_line_string(line, objs);
-		return shell_execute(ret.first, ret.second.c_str());
-	}
-
 	// Rename files
-	bool rename(const std::wstring& path, const std::wstring& new_fname) const {
-		if (!check_initialized()) return false;
-		ShellItem path_si(path);
-		if (!path_si.ptr()) return false;
-
-		const auto res = file_op_->RenameItem(path_si.ptr(), new_fname.c_str(), nullptr);
-		if (SUCCEEDED(res)) {
-			return perform();
+	bool rename(const std::wstring& path, const std::wstring& new_fname) {
+		bool ret = false;
+		IFileOperation* file_op = create_file_op_();
+		if (file_op) {
+			ShellItem path_si(path);
+			if (path_si.ptr()) {
+				const auto res = file_op->RenameItem(path_si.ptr(), new_fname.c_str(), nullptr);
+				if (SUCCEEDED(res)) {
+					ret = perform_(file_op);
+				}
+			}
+			release_(file_op);
 		}
-		return false;
+		return ret;
 	}
 
 	// Copy one file
-	bool copy_one_file(const std::wstring& path, const std::wstring& dest_dir, const std::wstring& new_fname) const {
-		if (!check_initialized()) return false;
-		ShellItem path_si(path);
-		if (!path_si.ptr()) return false;
-		ShellItem dest_si(dest_dir);
-		if (!dest_si.ptr()) return false;
-
-		const auto res = file_op_->CopyItem(path_si.ptr(), dest_si.ptr(), new_fname.c_str(), nullptr);
-		if (SUCCEEDED(res)) return perform();
-		return false;
+	bool copy_one_file(const std::wstring& path, const std::wstring& dest_dir, const std::wstring& new_fname) {
+		bool ret = false;
+		IFileOperation* file_op = create_file_op_();
+		if (file_op) {
+			ShellItem path_si(path);
+			ShellItem dest_si(dest_dir);
+			if (path_si.ptr() && dest_si.ptr()) {
+				const auto res = file_op->CopyItem(path_si.ptr(), dest_si.ptr(), new_fname.c_str(), nullptr);
+				if (SUCCEEDED(res)) {
+					ret = perform_(file_op);
+				}
+			}
+			release_(file_op);
+		}
+		return ret;
 	}
 
 	// Copy files
-	bool copy_files(const std::vector<std::wstring>& paths, const std::wstring& dest_dir) const {
-		if (!check_initialized()) return false;
-		ShellItem dest_si(dest_dir);
-		if (!dest_si.ptr()) return false;
-
-		return do_multiple_files_op(paths, [&](const std::vector<std::wstring>& ps) {
-			ShellItemIdArray sia(ps);
-			if (sia.shell_item_array()) {
-				const auto res = file_op_->CopyItems(sia.shell_item_array(), dest_si.ptr());
-				if (SUCCEEDED(res)) {
+	bool copy_files(const std::vector<std::wstring>& paths, const std::wstring& dest_dir) {
+		bool ret = false;
+		IFileOperation* file_op = create_file_op_();
+		if (file_op) {
+			ShellItem dest_si(dest_dir);
+			if (dest_si.ptr()) {
+				ret = do_multiple_files_op_(paths, [&](const std::vector<std::wstring>& ps) {
+					ShellItemIdArray sia(ps);
+					if (sia.shell_item_array()) {
+						const auto res = file_op->CopyItems(sia.shell_item_array(), dest_si.ptr());
+						if (SUCCEEDED(res)) {
+							sia.release();
+							return perform_(file_op);
+						}
+					}
 					sia.release();
-					return perform();
-				}
+					return false;
+				});
 			}
-			sia.release();
-			return false;
-		});
+			release_(file_op);
+		}
+		return ret;
 	}
 
 	// Move files
-	bool move_files(const std::vector<std::wstring>& paths, const std::wstring& dest_dir) const {
-		if (!check_initialized()) return false;
-		ShellItem dest_si(dest_dir);
-		if (!dest_si.ptr()) return false;
-
-		return do_multiple_files_op(paths, [&](const std::vector<std::wstring>& ps) {
-			ShellItemIdArray sia(ps);
-			if (sia.shell_item_array()) {
-				const auto res = file_op_->MoveItems(sia.shell_item_array(), dest_si.ptr());
-				if (SUCCEEDED(res)) {
+	bool move_files(const std::vector<std::wstring>& paths, const std::wstring& dest_dir) {
+		bool ret = false;
+		IFileOperation* file_op = create_file_op_();
+		if (file_op) {
+			ShellItem dest_si(dest_dir);
+			if (dest_si.ptr()) {
+				ret = do_multiple_files_op_(paths, [&](const std::vector<std::wstring>& ps) {
+					ShellItemIdArray sia(ps);
+					if (sia.shell_item_array()) {
+						const auto res = file_op->MoveItems(sia.shell_item_array(), dest_si.ptr());
+						if (SUCCEEDED(res)) {
+							sia.release();
+							return perform_(file_op);
+						}
+					}
 					sia.release();
-					return perform();
-				}
+					return false;
+				});
 			}
-			sia.release();
-			return false;
-		});
+			release_(file_op);
+		}
+		return ret;
 	}
 
 	// Delete files
-	bool delete_files(const std::vector<std::wstring>& paths) const {
-		if (!check_initialized()) return false;
-
-		return do_multiple_files_op(paths, [&](const std::vector<std::wstring>& ps) {
-			ShellItemIdArray sia(ps);
-			if (sia.shell_item_array()) {
-				const auto res = file_op_->DeleteItems(sia.shell_item_array());
-				if (SUCCEEDED(res)) {
-					sia.release();
-					return perform();
+	bool delete_files(const std::vector<std::wstring>& paths) {
+		bool ret = false;
+		IFileOperation* file_op = create_file_op_();
+		if (file_op) {
+			ret = do_multiple_files_op_(paths, [&](const std::vector<std::wstring>& ps) {
+				ShellItemIdArray sia(ps);
+				if (sia.shell_item_array()) {
+					const auto res = file_op->DeleteItems(sia.shell_item_array());
+					if (SUCCEEDED(res)) {
+						sia.release();
+						return perform_(file_op);
+					}
 				}
-			}
-			sia.release();
-			return false;
-		});
+				sia.release();
+				return false;
+			});
+			release_(file_op);
+		}
+		return ret;
 	}
 
 };

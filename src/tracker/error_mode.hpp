@@ -2,12 +2,12 @@
  * Utility for Temporal Error Mode Change
  *
  * @author Takuto Yanagida
- * @version 2025-10-21
+ * @version 2025-11-13
  */
 
 #pragma once
 
-#include <WinBase.h>
+#include <winbase.h>
 
 class ErrorMode {
 

@@ -2,7 +2,7 @@
  * Shortcut File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-13
  */
 
 #pragma once

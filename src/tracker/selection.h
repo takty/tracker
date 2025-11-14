@@ -2,7 +2,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-14
  */
 
 #pragma once
@@ -28,7 +28,6 @@ class Selection {
 
 	// Open file (specify target)
 	bool open_file(const std::vector<std::wstring>& objs) {
-		Operation so(hWnd_);
 		const auto& obj = objs.front();
 
 		std::wstring cmd;
@@ -36,16 +35,15 @@ class Selection {
 		bool ret = false;
 
 		if (exts_.get_command(pref_, ext, cmd)) {
-			ret = so.open(objs, cmd);
+			ret = execute::open(hWnd_, objs, cmd);
 		} else {
 			// Normal file open behavior
-			ret = so.open(obj);  // Try to open normally
+			ret = execute::open(hWnd_, obj);  // Try to open normally
 			if (!ret && !file_system::is_directory(obj) && !defaultOpener_.empty()) {
 				// In the case of a file without association
-				ret = so.open(objs, defaultOpener_);
+				ret = execute::open(hWnd_, objs, defaultOpener_);
 			}
 		}
-		so.release();
 		return ret;
 	}
 
@@ -82,19 +80,6 @@ class Selection {
 	void request_update() const noexcept {
 		::SendMessage(hWnd_, WM_REQUESTUPDATE, 0, 0);
 	}
-
-	//// Determine file size
-	//bool files_size(uint64_t& size, const uint64_t limitTime) {
-	//	uint64_t s{};
-	//	size = 0;
-
-	//	for (const auto& e : objects_) {
-	//		const bool success = file_system::calc_file_size(e, s, limitTime);
-	//		size += s;
-	//		if (!success) return false;
-	//	}
-	//	return true;
-	//}
 
 public:
 
@@ -157,15 +142,13 @@ public:
 
 	// Open in shell function based on command line
 	int open_by(const std::wstring& line) {
-		Operation so(hWnd_);
-		const bool ret = so.open(objects_, line);
-		so.release();
+		const bool ret = execute::open(hWnd_, objects_, line);
 		return ret;
 	}
 
 	// Start dragging
 	void start_drag() const {
-		DragFile::start(objects_);
+		file_drag::start(objects_);
 	}
 
 	// Display shell menu
@@ -185,12 +168,10 @@ public:
 		auto newPath   = file_system::unique_name(npath);
 		auto new_fname = path::name(newPath);
 
-		Operation so(hWnd_);
-		const bool ret = so.copy_one_file(orig, objects_.front(), new_fname);
+		const bool ret = operation::copy_one_file(orig, objects_.front(), new_fname);
 		if (ret) {
 			request_update();
 		}
-		so.release();
 		return ret;
 	}
 
@@ -211,19 +192,16 @@ public:
 
 	// Delete
 	bool delete_file() {
-		Operation so(hWnd_);
-		const bool ret = so.delete_files(objects_);
+		const bool ret = operation::delete_files(objects_);
 		if (ret) {
 			request_update();
 		}
-		so.release();
 		return ret;
 	}
 
 	// Make a duplicate
 	bool clone_here() {
 		bool ret = false;
-		Operation so(hWnd_);
 
 		for (const auto& o : objects_) {
 			auto clonePath = file_system::unique_name(o, L"_Clone");
@@ -233,12 +211,13 @@ public:
 			}
 			auto new_fname = path::name(clonePath);
 			auto dest_path = path::parent(o);
-			if (so.copy_one_file(o, dest_path, new_fname)) ret = true;
+			if (operation::copy_one_file(o, dest_path, new_fname)) {
+				ret = true;
+			}
 		}
 		if (ret) {
 			request_update();
 		}
-		so.release();
 		return ret;
 	}
 
@@ -255,7 +234,9 @@ public:
 				target.assign(obj);
 				path = obj + L".lnk";
 			}
-			if (link::create(file_system::unique_name(path), target)) ret = true;
+			if (link::create(file_system::unique_name(path), target)) {
+				ret = true;
+			}
 		}
 		if (ret) {
 			request_update();
@@ -265,52 +246,43 @@ public:
 
 	// Copy to desktop
 	bool copy_to_desktop() {
-		Operation so(hWnd_);
-		const bool ret = so.copy_files(objects_, file_system::desktop_path());
+		const bool ret = operation::copy_files(objects_, file_system::desktop_path());
 		if (ret) {
 			request_update();
 		}
-		so.release();
 		return ret;
 	}
 
 	// Move to desktop
 	bool move_to_desktop() {
-		Operation so(hWnd_);
-		const bool ret = so.move_files(objects_, file_system::desktop_path());
+		const bool ret = operation::move_files(objects_, file_system::desktop_path());
 		if (ret) {
 			request_update();
 		}
-		so.release();
 		return ret;
 	}
 
 	// Copy path to clipboard
 	bool copy_path_in_clipboard() {
-		const Clipboard cb(hWnd_);
-		return cb.copy_path(objects_);
+		return clipboard::copy_path(objects_);
 	}
 
 	void copy() {
-		const ContextMenu cm(hWnd_);
-		cm.copy(objects_);
+		shell::copy(objects_);
 	}
 
 	void cut() {
-		const ContextMenu cm(hWnd_);
-		cm.cut(objects_);
+		shell::cut(objects_);
 	}
 
 	void paste_in() {
-		const ContextMenu cm(hWnd_);
 		set_shell_notify(objects_.front());
-		cm.paste_in(objects_);
+		shell::paste_in(objects_);
 	}
 
 	// Paste as a shortcut
 	bool paste_as_shortcut_in() {
-		const Clipboard cb(hWnd_);
-		const bool ret = cb.paste_as_link_in(objects_.front());
+		const bool ret = clipboard::paste_as_link_in(objects_.front());
 		if (ret) {
 			request_update();
 		}
@@ -319,16 +291,12 @@ public:
 
 	// Display file properties
 	void popup_file_property() {
-		const ContextMenu cm(hWnd_);
-		cm.show_property(objects_);
+		shell::show_property(objects_);
 	}
 
 	// Change the file name
 	bool rename(const std::wstring& path, const std::wstring& newFileName) {
-		Operation so(hWnd_);
-		const bool ret = so.rename(path, newFileName);
-		so.release();
-		return ret;
+		return operation::rename(path, newFileName);
 	}
 
 	// Get file information string

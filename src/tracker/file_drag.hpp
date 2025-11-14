@@ -2,7 +2,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-13
  */
 
 #pragma once
@@ -14,10 +14,10 @@
 #include <windows.h>
 
 #include "gsl/gsl"
-#include "Path.hpp"
-#include "Shell.hpp"
+#include "path.hpp"
+#include "shell.hpp"
 
-class DragFile {
+namespace file_drag {
 
 	// Implementation of OLE IDropSource
 	class DropSource : public IDropSource {
@@ -71,12 +71,10 @@ class DragFile {
 
 	};
 
-public:
-
-	static void start(const std::vector<std::wstring>& paths) {
+	void start(const std::vector<std::wstring>& paths) {
 		if (paths.empty()) return;
 
-		auto dobj = static_cast<LPDATAOBJECT>(Shell::get_ole_ui_object(paths, IID_IDataObject));
+		auto dobj = static_cast<LPDATAOBJECT>(shell::get_ole_ui_object(paths, IID_IDataObject));
 		if (!dobj) return;
 
 		[[gsl::suppress(r)]]
