@@ -2,7 +2,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-19
  */
 
 #pragma once
@@ -10,63 +10,63 @@
 #include <windows.h>
 #include <vector>
 #include <string>
+#include <format>
 
 #include "gsl/gsl"
-#include "Pref.hpp"
+#include "pref.hpp"
 
 class PopupMenu {
 
-	HWND hWnd_ = nullptr;
-	std::vector<HMENU> hMenus_;
+	HWND hwnd_ = nullptr;
+	std::vector<HMENU> hmenus_;
 
 	const Pref &pref_;
 
 	// Add Menu Items in INI File to Menu
-	void addTypeMenu(const std::wstring &sec, std::vector<std::wstring> &items, HMENU hMenu) {
-		TCHAR key[16]{};
-		bool paste, pasteShortcut;
+	void add_type_menu(const std::wstring &sec, std::vector<std::wstring> &items, HMENU hmenu) {
+		bool paste, paste_shortcut;
 		std::wstring def;
 
-		canPaste(paste, pasteShortcut);
+		can_paste(paste, paste_shortcut);
 		for (int i = 0; i < 32; ++i) {
-			wsprintf(&key[0], _T("Name%d"), i + 1);
-			auto name = pref_.item(sec, &key[0], def);
+			auto name = pref_.item(sec, std::format(L"Name{}", i + 1), def);
 			if (name.empty()) continue;
-			wsprintf(&key[0], _T("Path%d"), i + 1);
-			auto path = pref_.item(sec, &key[0], def);
+
+			auto path = pref_.item(sec, std::format(L"Path{}", i + 1), def);
 			if (name.size() == 2 && name.front() == '&') continue;  // Hidden item
+
 			if (i == 0 && items.size() > 0) {  // When connecting to another menu
-				::AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
+				::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 			}
 			if (name == _T("-")) {  // Separator
-				::AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
+				::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 			} else if (path == _T(">")) {  // Sub-menu
-				HMENU hSubMenu = ::CreateMenu();
-				hMenus_.push_back(hSubMenu);
-				addTypeMenu(sec.substr(1), items, hSubMenu);
+				HMENU hsub_menu = ::CreateMenu();
+				hmenus_.push_back(hsub_menu);
+				add_type_menu(sec.substr(1), items, hsub_menu);
 
 				[[gsl::suppress(type.1)]]
-				::AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), name.c_str());
+				::AppendMenu(hmenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hsub_menu), name.c_str());
 			} else if (path == _T("<New>")) {  // New file menu
-				HMENU hSubMenu = ::CreateMenu();
-				hMenus_.push_back(hSubMenu);
-				addNewFileMenu(hSubMenu, items);
+				HMENU hsub_menu = ::CreateMenu();
+				hmenus_.push_back(hsub_menu);
+				add_new_file_menu(hsub_menu, items);
 
 				[[gsl::suppress(type.1)]]
-				::AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), name.c_str());
+				::AppendMenu(hmenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hsub_menu), name.c_str());
 			} else {  // Normal menu item
 				UINT flag = MF_STRING;
-				if ((!paste && path == _T("<Paste>")) || (!pasteShortcut && path == _T("<PasteShortcut>"))) {
+				if ((!paste && path == _T("<Paste>")) || (!paste_shortcut && path == _T("<PasteShortcut>"))) {
 					flag |= MF_GRAYED;
 				}
 				items.push_back(path);
-				::AppendMenu(hMenu, flag, items.size(), name.c_str());
+				::AppendMenu(hmenu, flag, items.size(), name.c_str());
 			}
 		}
 	}
 
 	// Create new file menu
-	void addNewFileMenu(HMENU hMenu, std::vector<std::wstring> &items) {
+	void add_new_file_menu(HMENU hMenu, std::vector<std::wstring> &items) {
 		std::wstring path;
 
 		const auto dir = path::parent(pref_.path()) + L"\\newfile\\";
@@ -79,19 +79,19 @@ class PopupMenu {
 	}
 
 	// Whether you can paste files
-	void canPaste(bool &canPaste, bool &canPasteShortcut) const noexcept {
-		canPaste = canPasteShortcut = false;
-		if (!::OpenClipboard(hWnd_)) return;
-		canPaste = (::GetClipboardData(CF_HDROP) != nullptr);
-		if (canPaste) {
+	void can_paste(bool &can_paste, bool &can_paste_shortcut) const noexcept {
+		can_paste = can_paste_shortcut = false;
+		if (!::OpenClipboard(hwnd_)) return;
+		can_paste = (::GetClipboardData(CF_HDROP) != nullptr);
+		if (can_paste) {
 			const UINT CF_DROPEFFECT = ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
-			const HANDLE hDropEffect = ::GetClipboardData(CF_DROPEFFECT);
-			if (hDropEffect) {
-				void* ptr = ::GlobalLock(hDropEffect);
+			const HANDLE hde         = ::GetClipboardData(CF_DROPEFFECT);
+			if (hde) {
+				void* ptr = ::GlobalLock(hde);
 				if (ptr != nullptr) {
-					const DWORD dwEffect = *static_cast<DWORD*>(ptr);
-					::GlobalUnlock(hDropEffect);
-					if (dwEffect & DROPEFFECT_LINK) canPasteShortcut = true;
+					const DWORD e = *static_cast<DWORD*>(ptr);
+					::GlobalUnlock(hde);
+					if (e & DROPEFFECT_LINK) can_paste_shortcut = true;
 				}
 			}
 		}
@@ -99,17 +99,15 @@ class PopupMenu {
 	}
 
 	// Search for specified accelerator command from menu item of INI file
-	bool searchMenu(const std::wstring &sec, TCHAR accel, std::wstring &cmd) {
-		TCHAR key[16]{};
+	bool search_menu(const std::wstring &sec, TCHAR accel, std::wstring &cmd) {
 		std::wstring a, def;
 
 		a.assign(_T("&")).append(1, accel);  // Make search string
 		for (int i = 0; i < 32; i++) {
-			wsprintf(&key[0], _T("Name%d"), i + 1);
-			auto name = pref_.item(sec, &key[0], def);
+			auto name = pref_.item(sec, std::format(L"Name{}", i + 1), def);
 			if (name.empty()) continue;
-			wsprintf(&key[0], _T("Path%d"), i + 1);
-			auto path = pref_.item(sec, &key[0], def);
+
+			auto path = pref_.item(sec, std::format(L"Path{}", i + 1), def);
 			if (name.find(a) != std::wstring::npos) {  // Find
 				cmd.assign(path);
 				return true;
@@ -120,34 +118,32 @@ class PopupMenu {
 
 public:
 
-	PopupMenu(HWND hWnd, const Pref* pref) noexcept : hWnd_(hWnd), pref_(*pref) {}
+	PopupMenu(HWND hWnd, const Pref* pref) noexcept : hwnd_(hWnd), pref_(*pref) {}
 
 	// Display pop-up menu and get command
 	bool popup(int type, const POINT &pt, UINT f, std::wstring& cmd, const std::vector<std::wstring> &additional) {
-		TCHAR key[16]{};
 		bool ret = false;
 		std::vector<std::wstring> items;
-		HMENU hMenu = ::CreatePopupMenu();  // Create menu
-		if (hMenu == nullptr) {
+		HMENU hmenu = ::CreatePopupMenu();  // Create menu
+		if (hmenu == nullptr) {
 			return false;
 		}
-		hMenus_.push_back(hMenu);
+		hmenus_.push_back(hmenu);
 
 		if (type) {  // When a menu number is specified
-			wsprintf(&key[0], _T("Menu%d"), type);
-			addTypeMenu(&key[0], items, hMenu);
+			add_type_menu(std::format(L"Menu{}", type), items, hmenu);
 		}
-		addTypeMenu(_T("CommonMenu"), items, hMenu);
+		add_type_menu(_T("CommonMenu"), items, hmenu);
 
 		if (!additional.empty()) {
-			::AppendMenu(hMenu, MF_SEPARATOR, 0, nullptr);
+			::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 			for (size_t i = 0; i < additional.size(); ++i) {
-				::AppendMenu(hMenu, MF_STRING, i, additional.at(i).c_str());
+				::AppendMenu(hmenu, MF_STRING, i, additional.at(i).c_str());
 			}
 		}
 
 		if (items.size()) {
-			const int id = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, hWnd_, nullptr);
+			const int id = ::TrackPopupMenuEx(hmenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, hwnd_, nullptr);
 			ret = (0 < id);  // -1, 0 if not selected
 			if (0 < id) {
 				const auto idx = gsl::narrow<size_t>(id);
@@ -156,22 +152,20 @@ public:
 				}
 			}
 		}
-		for (const auto& m : hMenus_) {
+		for (const auto& m : hmenus_) {
 			::DestroyMenu(m);
 		}
 		return ret;
 	}
 
 	// Get command from accelerator
-	bool getAccelCommand(int type, TCHAR acce, std::wstring& cmd) {
-		TCHAR key[16]{};
+	bool get_accel_command(int type, TCHAR acce, std::wstring& cmd) {
 		bool ret = false;
 
 		if (type) {  // When a menu number is specified
-			wsprintf(&key[0], _T("Menu%d"), type);
-			ret = searchMenu(&key[0], acce, cmd);
+			ret = search_menu(std::format(L"Menu{}", type), acce, cmd);
 		}
-		if (!ret) ret = searchMenu(_T("CommonMenu"), acce, cmd);  // Search from common menu
+		if (!ret) ret = search_menu(_T("CommonMenu"), acce, cmd);  // Search from common menu
 		return ret;
 	}
 

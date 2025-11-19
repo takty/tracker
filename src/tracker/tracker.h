@@ -2,7 +2,7 @@
  * Common Header
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-19
  */
 
 #pragma once
@@ -71,10 +71,10 @@ const std::wstring CMD_PASTE_SHORTCUT(L"<PasteShortcut>");
 const std::wstring CMD_PROPERTY(L"<Property>");
 const std::wstring CMD_OPEN(L"<Open>");
 const std::wstring CMD_OPEN_RESOLVE(L"<OpenResolve>");
-const std::wstring COM_SELECT_ALL(L"<SelectAll>");
-const std::wstring COM_RENAME(L"<Rename>");
-const std::wstring COM_POPUP_INFO(L"<PopupInfo>");
-const std::wstring COM_CLEAR_HISTORY(L"<ClearHistory>");
-const std::wstring COM_FAVORITE(L"<Favorite>");
-const std::wstring COM_START_DRAG(L"<StartDrag>");
-const std::wstring COM_SHELL_MENU(L"<ShellMenu>");
+const std::wstring CMD_SELECT_ALL(L"<SelectAll>");
+const std::wstring CMD_RENAME(L"<Rename>");
+const std::wstring CMD_POPUP_INFO(L"<PopupInfo>");
+const std::wstring CMD_CLEAR_HISTORY(L"<ClearHistory>");
+const std::wstring CMD_FAVORITE(L"<Favorite>");
+const std::wstring CMD_START_DRAG(L"<StartDrag>");
+const std::wstring CMD_SHELL_MENU(L"<ShellMenu>");

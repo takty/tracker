@@ -2,7 +2,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2025-11-13
+ * @version 2025-11-19
  */
 
 #pragma once
@@ -73,20 +73,20 @@ public:
 		LPCONTEXTMENU2 cm2 = static_cast<LPCONTEXTMENU2>(temp);
 
 		// Create a menu
-		auto hMenu = ::CreatePopupMenu();
-		if (hMenu == nullptr) {
+		auto hmenu = ::CreatePopupMenu();
+		if (hmenu == nullptr) {
 			if (cm2) cm2->Release();
 			cm->Release();
 			return false;
 		}
-		cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, CMF_NORMAL);
+		cm->QueryContextMenu(hmenu, 0, 1, 0x7fff, CMF_NORMAL);
 
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
 		[[gsl::suppress(type.1)]]
 		orig_proc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(MenuProc)));
-		const int id = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
+		const int id = ::TrackPopupMenu(hmenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
 		[[gsl::suppress(type.1)]]
 		::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(orig_proc_));
@@ -94,7 +94,7 @@ public:
 
 		bool res = false;
 		if (id > 0) res = SUCCEEDED(shell::invoke(cm, MAKEINTRESOURCEA(id - 1))) ? true : false;
-		::DestroyMenu(hMenu);
+		::DestroyMenu(hmenu);
 		if (cm2) cm2->Release();
 		cm->Release();
 		return res;

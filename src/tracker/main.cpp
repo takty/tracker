@@ -34,7 +34,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 	iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
 	::InitCommonControlsEx(&iccex);
 
-	if (!InitApplication(hInst, &CLASS_NAME[0])) {
+	if (!init_application(hInst, &CLASS_NAME[0])) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
@@ -55,10 +55,10 @@ int WINAPI wWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 	return gsl::narrow<int>(msg.wParam);
 }
 
-BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
+BOOL init_application(HINSTANCE hInst, const wchar_t* className) noexcept {
 	WNDCLASS wc{};
 	wc.style         = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc   = (WNDPROC)wndProc;
+	wc.lpfnWndProc   = (WNDPROC)wnd_proc;
 	wc.cbClsExtra    = 0;
 	wc.cbWndExtra    = 0;
 	wc.hInstance     = hInst;
@@ -70,7 +70,7 @@ BOOL InitApplication(HINSTANCE hInst, const wchar_t* className) noexcept {
 	return ::RegisterClass(&wc);
 }
 
-LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	switch (msg) {
 	case WM_CREATE:
 		view = std::make_unique<View>(hWnd);

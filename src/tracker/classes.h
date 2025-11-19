@@ -2,15 +2,11 @@
  * Classes
  *
  * @author Takuto Yanagida
- * @version 2025-10-25
+ * @version 2025-11-19
  */
 
 #pragma once
 
 class Pref;
-class PrefList;
-class Pattern;
-class Regex;
-class Operation;
 class ToolTip;
 class StringConverter;

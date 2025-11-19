@@ -20,7 +20,7 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <dwmapi.h>
-#include <ShellScalingAPI.h>
+#include <shellscalingapi.h>
 
 #include <algorithm>
 #include <string>

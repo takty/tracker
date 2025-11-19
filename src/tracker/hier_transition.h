@@ -2,7 +2,7 @@
  * Transition of Folder Hierarchy
  *
  * @author Takuto Yanagida
- * @version 2025-10-24
+ * @version 2025-11-19
  */
 
 #pragma once
@@ -15,11 +15,14 @@ class HierTransition {
 		std::wstring path_;
 		size_t index_;
 		ViewData() noexcept : index_(0U) {}
-		void set(const std::wstring& path, size_t index) { path_.assign(path), index_ = index; }
+		void set(const std::wstring& path, size_t index) { 
+			path_.assign(path);
+			index_ = index;
+		}
 	};
 
 	std::vector<ViewData> views_;
-	size_t currentViewIndex_ = 0U;
+	size_t cur_view_idx_ = 0U;
 
 public:
 
@@ -28,34 +31,34 @@ public:
 	}
 
 	size_t index() const noexcept {
-		return views_.at(currentViewIndex_).index_;
+		return views_.at(cur_view_idx_).index_;
 	}
 
-	void setIndex(size_t index) noexcept {
-		views_.at(currentViewIndex_).index_ = index;
+	void set_index(size_t idx) noexcept {
+		views_.at(cur_view_idx_).index_ = idx;
 	}
 
-	bool canGoBack() const noexcept {
-		return currentViewIndex_ > 0;
+	bool can_go_back() const noexcept {
+		return cur_view_idx_ > 0;
 	}
 
-	std::wstring& goBack() noexcept {
-		--currentViewIndex_;
-		return views_.at(currentViewIndex_).path_;
+	std::wstring& go_back() noexcept {
+		--cur_view_idx_;
+		return views_.at(cur_view_idx_).path_;
 	}
 
-	void goForward(size_t index, const std::wstring& path) {
-		if (canGoBack() && views_.at(currentViewIndex_ - 1).path_ == path) {
+	void go_forward(size_t idx, const std::wstring& path) {
+		if (can_go_back() && views_.at(cur_view_idx_ - 1).path_ == path) {
 			return;
 		}
-		views_.at(currentViewIndex_).set(path, index);
-		++currentViewIndex_;
-		views_.resize(currentViewIndex_ + 1);
+		views_.at(cur_view_idx_).set(path, idx);
+		++cur_view_idx_;
+		views_.resize(cur_view_idx_ + 1);
 	}
 
-	void clearIndexes() noexcept {
+	void clear_indexes() noexcept {
 		for (auto i = 0U; i < views_.size(); ++i) {
-			if (i != currentViewIndex_) {
+			if (i != cur_view_idx_) {
 				views_.at(i).index_ = 0U;
 			}
 		}

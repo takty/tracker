@@ -2,7 +2,7 @@
  * String Converter
  *
  * @author Takuto Yanagida
- * @version 2025-10-26
+ * @version 2025-11-19
  */
 
 #pragma once
@@ -26,12 +26,10 @@ class StringConverter {
 public:
 
 	StringConverter() noexcept = default;
-
 	StringConverter(const StringConverter&) = delete;
 	StringConverter& operator=(const StringConverter&) = delete;
 	StringConverter(StringConverter&&) = delete;
 	StringConverter& operator=(StringConverter&&) = delete;
-
 	~StringConverter() = default;
 
 	std::shared_ptr<char[]> wc2mb(const std::wstring& str) {
