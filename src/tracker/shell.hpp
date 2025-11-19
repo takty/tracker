@@ -2,7 +2,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-13
+ * @version 2025-11-18
  */
 
 #pragma once
@@ -180,6 +180,44 @@ namespace shell {
 		if (!cm) return;
 		::SHMultiFileProperties(cm, 0);
 		cm->Release();
+	}
+
+	// ----
+
+	unsigned long set_shell_notify(unsigned long id_notify, HWND hwnd, UINT msg, const std::wstring& path) {
+		LPSHELLFOLDER desktop_folder{};
+		LPITEMIDLIST current_folder{};
+		SHChangeNotifyEntry scne{};
+
+		if (id_notify) {
+			::SHChangeNotifyDeregister(id_notify);
+			id_notify = 0;
+		}
+		HRESULT r{};
+		if (path.empty()) {
+			r = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &current_folder);
+		} else {
+			if (::SHGetDesktopFolder(&desktop_folder) != NOERROR) return 0;
+			if (!desktop_folder) return 0;
+			std::wstring display_name = path;
+			r = desktop_folder->ParseDisplayName(hwnd, nullptr, display_name.data(), nullptr, &current_folder, nullptr);
+			desktop_folder->Release();
+		}
+		if (r != S_OK) return 0;
+		scne.pidl = current_folder;
+		scne.fRecursive = FALSE;
+		id_notify = ::SHChangeNotifyRegister(hwnd, 0x0001 | 0x0002 | 0x1000 | 0x8000,
+			SHCNE_RENAMEITEM | SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR | SHCNE_UPDATEITEM | SHCNE_RENAMEFOLDER,
+			msg, 1, &scne);
+		::CoTaskMemFree(current_folder);
+		return id_notify;
+	}
+
+	unsigned long clear_shell_notify(unsigned long id_notify) noexcept {
+		if (id_notify) {
+			::SHChangeNotifyDeregister(id_notify);
+		}
+		return 0;
 	}
 
 };

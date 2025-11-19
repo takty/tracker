@@ -2,7 +2,7 @@
  * File Item
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-18
  */
 
 #pragma once
@@ -67,12 +67,12 @@ private:
 		id_ = 0;
 	}
 
-	void check_file(bool isDir, bool isHidden, const TypeTable& exts) {
+	void check_file(bool is_dir, bool is_hidden, const TypeTable& exts) {
 		auto ext = path::ext(name_);  // Get extension
 		style_ = 0;
-		if (!isDir && ext == L"lnk") {  // When it is a link
+		if (!is_dir && ext == L"lnk") {  // When it is a link
 			name_.resize(name_.size() - 4);  // remove .lnk
-			auto linkPath   = link::resolve(path_);
+			auto link_path  = link::resolve(path_);
 			const auto attr = ::GetFileAttributes(path::ensure_unc_prefix(path_).c_str());
 
 			if (attr == INVALID_FILE_ATTRIBUTES) {  // When the link is broken
@@ -80,12 +80,12 @@ private:
 				color_ = -1;
 				return;
 			}
-			isDir = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
-			if (!isDir) ext = path::ext(linkPath);  // Acquisition of extension of link destination
+			is_dir = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
+			if (!is_dir) ext = path::ext(link_path);  // Acquisition of extension of link destination
 			style_ = LINK;
 		}
-		style_ |= (isDir ? DIR : 0) | (isHidden ? HIDE : 0);
-		color_ = exts.get_color(isDir ? EXT_FOLDER : ext);
+		style_ |= (is_dir ? DIR : 0) | (is_hidden ? HIDE : 0);
+		color_ = exts.get_color(is_dir ? EXT_FOLDER : ext);
 	}
 
 public:
@@ -97,17 +97,17 @@ public:
 	Item& operator=(Item&&) = delete;
 	~Item() = default;
 
-	void set_file(const std::wstring& parentPath, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
+	void set_file(const std::wstring& parent_path, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
 		// parentPath must include \ at the end
-		path_ = parentPath + std::wstring{ &wfd.cFileName[0] };
+		path_ = parent_path + std::wstring{ &wfd.cFileName[0] };
 		name_ = std::wstring{ &wfd.cFileName[0] };
 		time_ = wfd.ftLastWriteTime;
 		size_ = (static_cast<unsigned long long>(wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
 
-		const auto isDir    = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-		const auto isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)    != 0;
+		const auto is_dir    = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		const auto is_hidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)    != 0;
 
-		check_file(isDir, isHidden, exts);
+		check_file(is_dir, is_hidden, exts);
 	}
 
 	void set_file(const std::wstring& path, const TypeTable& exts, size_t id = 0) {
@@ -116,18 +116,18 @@ public:
 		id_   = id;
 
 		const auto attr = ::GetFileAttributes(path::ensure_unc_prefix(path_).c_str());
-		auto isDir      = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
-		auto isHidden   = (attr & FILE_ATTRIBUTE_HIDDEN) != 0;
+		auto is_dir     = (attr & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		auto is_hidden  = (attr & FILE_ATTRIBUTE_HIDDEN) != 0;
 
 		// When there is no file
 		if (attr == INVALID_FILE_ATTRIBUTES) {
-			isDir    = false;
-			isHidden = true;
+			is_dir    = false;
+			is_hidden = true;
 		}
 		// Measures to prevent drive from appearing as hidden file
-		if (path::is_root(path_)) isHidden = false;
+		if (path::is_root(path_)) is_hidden = false;
 
-		check_file(isDir, isHidden, exts);  // File item check
+		check_file(is_dir, is_hidden, exts);  // File item check
 	}
 
 	void set_empty() {

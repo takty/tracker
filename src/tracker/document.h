@@ -2,7 +2,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2025-11-13
+ * @version 2025-11-18
  */
 
 #pragma once
@@ -42,15 +42,15 @@ private:
 	History  his_;
 	Drives   dri_;
 
-	std::wstring currentPath_, lastCurrentPath_;
+	std::wstring cur_path_, last_cur_path_;
 	ItemList files_, navis_;
 	Option opt_;
 
-	int special_separator_option_data_;
-	int hierarchy_separator_option_data_;
+	int special_sep_opt_data_;
+	int hierarchy_sep_opt_data_;
 
 	// Make a file list of ordinary folders
-	void SetNormalFolder(const std::wstring& path) {
+	void set_normal_folder(const std::wstring& path) {
 		// Create hierarchical list
 		const auto last = navis_.size();
 		std::wstring cur(path);
@@ -62,13 +62,13 @@ private:
 			cur = path::parent(cur);
 		}
 		const auto it = Item::create();
-		it->data() = hierarchy_separator_option_data_;
+		it->data() = hierarchy_sep_opt_data_;
 		navis_.add(it);
 
 		// Add files
 		file_system::find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
-			const bool isHidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
-			if (!isHidden || opt_.is_show_hidden()) {
+			const bool is_hidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
+			if (!is_hidden || opt_.is_show_hidden()) {
 				const auto it = Item::create();
 				it->set_file(parent, wfd, exts_);
 				files_.add(it);
@@ -79,32 +79,32 @@ private:
 	}
 
 	// Make a file list
-	void MakeFileList() {
+	void make_file_list() {
 		files_.clear();
 		navis_.clear();
 
-		const auto itFav = Item::create();
-		const auto itHis = Item::create();
-		const auto itDri = Item::create();
-		itFav->set_special(fav_.PATH, fav_.NAME);
-		itHis->set_special(his_.PATH, his_.NAME);
-		itDri->set_special(dri_.PATH, dri_.NAME);
-		navis_.add(itFav);
-		navis_.add(itHis);
-		navis_.add(itDri);
+		const auto it_fav = Item::create();
+		const auto it_his = Item::create();
+		const auto it_dri = Item::create();
+		it_fav->set_special(fav_.PATH, fav_.NAME);
+		it_his->set_special(his_.PATH, his_.NAME);
+		it_dri->set_special(dri_.PATH, dri_.NAME);
+		navis_.add(it_fav);
+		navis_.add(it_his);
+		navis_.add(it_dri);
 
-		const auto itSp = Item::create();
-		itSp->data() = special_separator_option_data_;
-		navis_.add(itSp);
+		const auto it_sp = Item::create();
+		it_sp->data() = special_sep_opt_data_;
+		navis_.add(it_sp);
 
 		const ErrorMode em;
-		if (currentPath_ == fav_.PATH) {
+		if (cur_path_ == fav_.PATH) {
 			for (size_t i = 0; i < fav_.size(); ++i) {
 				const auto it = Item::create();
 				it->set_file(fav_[i], exts_, i);
 				files_.add(it);
 			}
-		} else if (currentPath_ == his_.PATH) {
+		} else if (cur_path_ == his_.PATH) {
 			his_.clean_up();
 			for (size_t i = 0; i < his_.size(); ++i) {
 				const auto it = Item::create();
@@ -112,7 +112,7 @@ private:
 				files_.add(it);
 			}
 			opt_.sort_history(files_);
-		} else if (currentPath_ == dri_.PATH) {
+		} else if (cur_path_ == dri_.PATH) {
 			dri_.clean_up();
 			for (size_t i = 0; i < dri_.size(); ++i) {
 				const auto it = Item::create();
@@ -120,11 +120,11 @@ private:
 				files_.add(it);
 			}
 		} else {
-			while (!currentPath_.empty()) {  // Go back to the folder where the file exists
-				if (file_system::is_existing(currentPath_)) break;
-				currentPath_ = path::parent(currentPath_);
+			while (!cur_path_.empty()) {  // Go back to the folder where the file exists
+				if (file_system::is_existing(cur_path_)) break;
+				cur_path_ = path::parent(cur_path_);
 			}
-			if (!currentPath_.empty()) SetNormalFolder(currentPath_);  // Folder found
+			if (!cur_path_.empty()) set_normal_folder(cur_path_);  // Folder found
 			else {
 				dri_.clean_up();
 				for (size_t i = 0; i < dri_.size(); ++i) {
@@ -143,17 +143,17 @@ private:
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, int special_separator_option_data, int hierarchy_separator_option_data) : exts_(exts), pref_(pref), opt_(), observer_(), fav_(pref.path()), his_(pref.path()) {
-		special_separator_option_data_   = special_separator_option_data;
-		hierarchy_separator_option_data_ = hierarchy_separator_option_data;
-		currentPath_                     = dri_.PATH;
+	Document(const TypeTable& exts, Pref& pref, int special_sep_opt_data, int hierarchy_sep_opt_data) : exts_(exts), pref_(pref), opt_(), observer_(), fav_(pref.path()), his_(pref.path()) {
+		special_sep_opt_data_   = special_sep_opt_data;
+		hierarchy_sep_opt_data_ = hierarchy_sep_opt_data;
+		cur_path_               = dri_.PATH;
 	}
 
-	void SetObserver(Observer* o) noexcept {
+	void set_observer(Observer* o) noexcept {
 		observer_ = o;
 	}
 
-	void Initialize(bool firstTime = true) {
+	void initialize(bool firstTime = true) {
 		his_.initialize(pref_);
 		if (firstTime) {
 			opt_.restore(pref_);
@@ -162,7 +162,7 @@ public:
 		}
 	}
 
-	void Finalize() {
+	void finalize() {
 		fav_.store();
 		his_.store();
 		opt_.store(pref_);
@@ -171,21 +171,21 @@ public:
 	void Update() {
 		navis_.unselect();
 		files_.unselect();
-		MakeFileList();
+		make_file_list();
 		observer_->updated();
 	}
 
-	void SetCurrentDirectory(const std::wstring& path) {
-		if (path != currentPath_) {
-			lastCurrentPath_.assign(currentPath_);
-			currentPath_.assign(path);
+	void set_current_directory(const std::wstring& path) {
+		if (path != cur_path_) {
+			last_cur_path_.assign(cur_path_);
+			cur_path_.assign(path);
 		}
 		Update();
 	}
 
 	// Move to lower folder
-	bool MoveToLower(ListType w, size_t index) {
-		const std::shared_ptr<Item> it = GetItem(w, index);
+	bool move_to_lower(ListType w, size_t index) {
+		const std::shared_ptr<Item> it = get_item(w, index);
 		if (it == nullptr) return false;
 		if (it->is_empty()) return false;
 
@@ -198,39 +198,39 @@ public:
 			} else {
 				path.assign(it->path());
 			}
-			SetCurrentDirectory(path);
+			set_current_directory(path);
 			return true;
 		}
 		if (link::is_link(it->path())) {  // If it is a shortcut
 			auto path = link::resolve(it->path());
 			path = path::parent(path);  // Get parent path
-			SetCurrentDirectory(path);
+			set_current_directory(path);
 			return true;
 		}
-		if (InBookmark() || InHistory()) {
+		if (in_bookmark() || in_history()) {
 			auto path = path::parent(it->path());
-			SetCurrentDirectory(path);
+			set_current_directory(path);
 			return true;
 		}
 		return false;
 	}
 
 	// Check if it is possible to move to lower folder
-	bool MovableToLower(ListType w, size_t index) {
-		const std::shared_ptr<Item> it = GetItem(w, index);
+	bool is_movable_to_lower(ListType w, size_t index) {
+		const std::shared_ptr<Item> it = get_item(w, index);
 
 		if (it == nullptr) return false;
 		if (it->is_empty()) return false;
 
 		if (it->is_dir()) return true;
 		if (link::is_link(it->path())) return true;
-		if (InBookmark() || InHistory()) return true;
+		if (in_bookmark() || in_history()) return true;
 
 		return false;
 	}
 
 	// Set operators for multiple selected files
-	Selection& SetOperator(std::optional<size_t> index, ListType type, Selection& ope) {
+	Selection& set_operator(std::optional<size_t> index, ListType type, Selection& ope) {
 		ope.clear();
 		if (!index) return ope;
 
@@ -256,29 +256,29 @@ public:
 	}
 
 	// Add to history
-	void SetHistory(const std::wstring& path) {
+	void set_history(const std::wstring& path) {
 		his_.add(path);
 	}
 
 	// Delete history
-	void ClearHistory() {
+	void clear_history() {
 		his_.clear();
 		Update();
 	}
 
 	// Sort favorite
-	bool ArrangeFavorites(std::optional<size_t> drag, std::optional<size_t> drop) {
+	bool arrange_favorites(std::optional<size_t> drag, std::optional<size_t> drop) {
 		if (!drag || !drop || drag == drop) return false;
-		if (!InBookmark()) return false;
+		if (!in_bookmark()) return false;
 		return fav_.arrange(files_.at(drag.value())->id(), files_.at(drop.value())->id());
 	}
 
 	// Add to / Remove from Favorites
-	void AddOrRemoveFavorite(const std::wstring& obj, ListType w, size_t index) {
+	void add_or_remove_favorite(const std::wstring& obj, ListType w, size_t index) {
 		auto &vec = (w == ListType::FILE) ? files_ : navis_;
 
 		if (vec.at(index)->is_empty()) return;
-		if (InBookmark() && w == ListType::FILE) {
+		if (in_bookmark() && w == ListType::FILE) {
 			fav_.remove(files_.at(index)->id());
 		} else {
 			fav_.add(obj);
@@ -287,67 +287,67 @@ public:
 	}
 
 	// Select file by range specification
-	void SelectFile(size_t front, size_t back, ListType type, bool all) noexcept {
+	void select_file(size_t front, size_t back, ListType type, bool all) noexcept {
 		auto &vec = (type == ListType::FILE) ? files_ : navis_;
 		vec.select(front, back, all);
 	}
 
-	Option& GetOpt() noexcept {
+	Option& get_option() noexcept {
 		return opt_;
 	}
 
 	// Return the number of selected files
-	size_t SelectedCount() noexcept {
+	size_t selected_count() noexcept {
 		return files_.selected_size();
 	}
 
 	// The current directory is a bookmark
-	bool InBookmark() noexcept {
-		return currentPath_ == fav_.PATH;
+	bool in_bookmark() noexcept {
+		return cur_path_ == fav_.PATH;
 	}
 
 	// Current directory is history
-	bool InHistory() noexcept {
-		return currentPath_ == his_.PATH;
+	bool in_history() noexcept {
+		return cur_path_ == his_.PATH;
 	}
 
 	// Current directory is drive
-	bool InDrives() noexcept {
-		return currentPath_ == dri_.PATH;
+	bool in_drives() noexcept {
+		return cur_path_ == dri_.PATH;
 	}
 
 	// Return the current path
-	std::wstring& CurrentPath() noexcept {
-		return currentPath_;
+	std::wstring& current_path() noexcept {
+		return cur_path_;
 	}
 
 	// Return the previous current path
-	std::wstring& LastCurrentPath() noexcept {
-		return lastCurrentPath_;
+	std::wstring& last_current_path() noexcept {
+		return last_cur_path_;
 	}
 
 	// Return file information
-	std::shared_ptr<Item> GetItem(ListType w, size_t index) {
+	std::shared_ptr<Item> get_item(ListType w, size_t index) {
 		return (w == ListType::FILE) ? files_.at(index) : navis_.at(index);
 	}
 
-	const ItemList& GetNavis() const noexcept {
+	const ItemList& get_navis() const noexcept {
 		return navis_;
 	}
 
-	const ItemList& GetFiles() const noexcept {
+	const ItemList& get_files() const noexcept {
 		return files_;
 	}
 
-	const size_t GetNaviCount() const noexcept {
+	const size_t get_navi_count() const noexcept {
 		return navis_.size();
 	}
 
-	const size_t GetFileCount() const noexcept {
+	const size_t get_file_count() const noexcept {
 		return files_.size();
 	}
 
-	const bool IsFileEmpty() const {
+	const bool is_file_empty() const {
 		return files_.size() && files_.at(0)->is_empty();
 	}
 

@@ -119,7 +119,7 @@ public:
 	virtual ~View() = default;
 
 	void initialize() {
-		doc_.SetObserver(this);
+		doc_.set_observer(this);
 
 		ope_.set_window_handle(hWnd_);
 		re_.Initialize(hWnd_);
@@ -176,7 +176,7 @@ public:
 		search_.Initialize(useMigemo);
 		extensions_.restore(pref_);  // Load extension color
 
-		doc_.Initialize(firstTime);
+		doc_.initialize(firstTime);
 	}
 
 	void SetHotkey(const wstring& key, int id) const {
@@ -198,7 +198,7 @@ public:
 		pref_.set_item_int(KEY_WIDTH, static_cast<int>((static_cast<__int64>(rw.right) - rw.left) / dpiFactX_));
 		pref_.set_item_int(KEY_HEIGHT, static_cast<int>((static_cast<__int64>(rw.bottom) - rw.top) / dpiFactY_));
 
-		doc_.Finalize();
+		doc_.finalize();
 		::UnregisterHotKey(hWnd_, IDHK);  // Cancel hot key
 		::DeleteObject(hMarkFont_);
 		::DeleteObject(hItemFont_);
@@ -212,7 +212,7 @@ public:
 			loadPropData(false);
 			::ShowWindow(hWnd_, SW_SHOW);
 		} else {
-			doc_.Finalize();
+			doc_.finalize();
 			::DestroyWindow(hWnd_);
 		}
 	}
@@ -245,9 +245,9 @@ public:
 
 	void wmSize(int cwidth, int cheight) noexcept {
 		::SetRect(&listRect_, 0, 0, cwidth - cxScrollBar_, cheight);
-		scrollListLineNum_ = (cheight - doc_.GetNaviCount() * cyItem_) / cyItem_;
+		scrollListLineNum_ = (cheight - doc_.get_navi_count() * cyItem_) / cyItem_;
 
-		const ItemList& files = doc_.GetFiles();
+		const ItemList& files = doc_.get_files();
 
 		if (scrollListLineNum_ <= files.size() && scrollListTopIndex_ > files.size() - scrollListLineNum_) {
 			setScrollListTopIndex(files.size() - scrollListLineNum_);
@@ -265,7 +265,7 @@ public:
 	}
 
 	void wmEndSession() {
-		doc_.Finalize();
+		doc_.finalize();
 	}
 
 	void wmRequestUpdate() {
@@ -279,7 +279,7 @@ public:
 		const auto ok = ope_.rename(renamedPath, newFileName);
 		auto newPath = path::parent(renamedPath);
 		newPath.append(_T("\\")).append(newFileName);
-		if (ok && doc_.CurrentPath() == renamedPath) doc_.SetCurrentDirectory(newPath);
+		if (ok && doc_.current_path() == renamedPath) doc_.set_current_directory(newPath);
 		else doc_.Update();
 	}
 
@@ -326,8 +326,8 @@ public:
 			r.left   = 0;
 			r.right  = rc.right - cxScrollBar_;
 
-			const ItemList& navis = doc_.GetNavis();
-			const ItemList& files = doc_.GetFiles();
+			const ItemList& navis = doc_.get_navis();
+			const ItemList& files = doc_.get_files();
 
 			for (size_t i = begin; i <= gsl::narrow<size_t>(end); ++i) {
 				if (i < navis.size()) {
@@ -353,7 +353,7 @@ public:
 	// Draw a scroll bar
 	void drawScrollBar(HDC dc) noexcept {
 		RECT rc{};
-		const ItemList& files = doc_.GetFiles();
+		const ItemList& files = doc_.get_files();
 
 		::GetClientRect(hWnd_, &rc);
 		rc.left = rc.right - cxScrollBar_;
@@ -382,17 +382,17 @@ public:
 	// Draw a separator
 	void drawSeparator(HDC dc, RECT r, bool isHier) {
 		SIZE font{};
-		const ItemList& files = doc_.GetFiles();
+		const ItemList& files = doc_.get_files();
 
 		::FillRect(dc, &r, ::GetSysColorBrush(COLOR_MENU));
 		::SelectObject(dc, hItemFont_);  // Font selection (do here because we measure the size below)
 		if (isHier) {
 			wstring num;
-			if (doc_.SelectedCount()) {
-				if (doc_.SelectedCount() == files.size()) {
+			if (doc_.selected_count()) {
+				if (doc_.selected_count() == files.size()) {
 					num.assign(_T("ALL / "));
 				} else {
-					num.assign(std::to_wstring(doc_.SelectedCount())).append(_T(" / "));
+					num.assign(std::to_wstring(doc_.selected_count())).append(_T(" / "));
 				}
 			}
 			num.append(std::to_wstring(files.size()));
@@ -403,14 +403,14 @@ public:
 			r.right = nr.left - 1;
 
 			TCHAR str[2]{};
-			str[0] = doc_.GetOpt().get_sort_type_char();
+			str[0] = doc_.get_option().get_sort_type_char();
 
 			r.left += 3;
 			WindowUtils::DrawGrayText(dc, r, &str[0]);
 			::GetTextExtentPoint32(dc, &str[0], 1, &font);
 			r.left = font.cx + 2;
 		}
-		if (doc_.InHistory()) {
+		if (doc_.in_history()) {
 			r.left += 3;
 			WindowUtils::DrawGrayText(dc, r, _T("x"));
 			::GetTextExtentPoint32(dc, _T("x"), 1, &font);
@@ -490,7 +490,7 @@ public:
 			}
 			// Search delay processing
 			if (search_.IsReserved()) {
-				setCursorIndex(search_.FindFirst(listCursorIndex_, doc_.GetFiles()), Document::ListType::FILE);
+				setCursorIndex(search_.FindFirst(listCursorIndex_, doc_.get_files()), Document::ListType::FILE);
 			}
 			return;
 		}
@@ -559,7 +559,7 @@ public:
 		if (re_.IsActive()) return;  // Reject while renaming
 
 		if (mouseDownY_ != -1 && mouseDownArea_ == 1) {  // Scroller
-			const double t = mouseDownTopIndex_.value() - (static_cast<long long>(mouseDownY_) - y) * static_cast<double>(doc_.GetFileCount()) / listRect_.bottom;
+			const double t = mouseDownTopIndex_.value() - (static_cast<long long>(mouseDownY_) - y) * static_cast<double>(doc_.get_file_count()) / listRect_.bottom;
 			setScrollListTopIndex(std::lrint(max(0, t)));
 			return;
 		}
@@ -577,10 +577,10 @@ public:
 				if (lastArea == 2) itemAlignChange(x, y);
 				else if (::GetTickCount64() - lastTime < 400) {
 					if (lastArea == 0 && dir == 1 && ht_.canGoBack()) {
-						doc_.SetCurrentDirectory(ht_.goBack());
-					} else if (lastArea == 1 && dir == 0 && doc_.MovableToLower(type, listCursorIndex_.value())) {
-						ht_.goForward(scrollListTopIndex_, doc_.CurrentPath());
-						doc_.MoveToLower(type, listCursorIndex_.value());
+						doc_.set_current_directory(ht_.goBack());
+					} else if (lastArea == 1 && dir == 0 && doc_.is_movable_to_lower(type, listCursorIndex_.value())) {
+						ht_.goForward(scrollListTopIndex_, doc_.current_path());
+						doc_.move_to_lower(type, listCursorIndex_.value());
 					}
 				}
 			}
@@ -656,7 +656,7 @@ public:
 		if (
 			!cursor.has_value() ||
 			separatorClick(vkey, cursor.value(), x, type) ||
-			(type == Document::ListType::FILE && doc_.IsFileEmpty()) ||
+			(type == Document::ListType::FILE && doc_.is_file_empty()) ||
 			(!listCursorIndex_ || !mouseDownIndex_) ||
 			type != mouseDownListType_ ||
 			getItemArea(x) != 2
@@ -680,7 +680,7 @@ public:
 			if (type == Document::ListType::FILE && (listCursorIndex_ != mouseDownIndex_ || WindowUtils::CtrlPressed())) {
 				selectFile(mouseDownIndex_, listCursorIndex_);
 			} else {
-				action(COM_OPEN, type, listCursorIndex_);
+				action(CMD_OPEN, type, listCursorIndex_);
 			}
 		} else if (vkey == VK_RBUTTON) {
 			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_) {
@@ -692,7 +692,7 @@ public:
 				popupMenu(type, listCursorIndex_);
 			}
 		} else if (vkey == VK_MBUTTON) {
-			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_ && doc_.ArrangeFavorites(mouseDownIndex_, listCursorIndex_)) {
+			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_ && doc_.arrange_favorites(mouseDownIndex_, listCursorIndex_)) {
 				doc_.Update();
 			} else {
 				action(COM_FAVORITE, type, listCursorIndex_);
@@ -712,24 +712,24 @@ public:
 
 	// Click on the separator
 	bool separatorClick(int vkey, size_t index, int x, Document::ListType type) {
-		if ((doc_.GetItem(type, index)->data() & SEPA) == 0) return false;
+		if ((doc_.get_item(type, index)->data() & SEPA) == 0) return false;
 
-		if (doc_.InHistory()) {  // Click history separator
+		if (doc_.in_history()) {  // Click history separator
 			if (vkey == VK_LBUTTON) action(COM_CLEAR_HISTORY, type, index);
 			return true;
 		}
-		if (doc_.GetItem(type, index)->data() == (SEPA | HIER)) {  // Click the hierarchy separator
+		if (doc_.get_item(type, index)->data() == (SEPA | HIER)) {  // Click the hierarchy separator
 			if (listRect_.right * 2 / 3 < x) {  // If it is more than two thirds
-				selectFile(0, doc_.GetFileCount() - 1);
+				selectFile(0, doc_.get_file_count() - 1);
 			} else {
-				int sortBy = doc_.GetOpt().get_sort_type();
+				int sortBy = doc_.get_option().get_sort_type();
 				switch (vkey) {
 				case VK_LBUTTON:
 					if (++sortBy > 3) sortBy = 0;
-					doc_.GetOpt().set_sort_type(sortBy);
+					doc_.get_option().set_sort_type(sortBy);
 					break;
-				case VK_RBUTTON: doc_.GetOpt().set_sort_order(!doc_.GetOpt().get_sort_order()); break;
-				case VK_MBUTTON: doc_.GetOpt().set_show_hidden(!doc_.GetOpt().is_show_hidden()); break;
+				case VK_RBUTTON: doc_.get_option().set_sort_order(!doc_.get_option().get_sort_order()); break;
+				case VK_MBUTTON: doc_.get_option().set_show_hidden(!doc_.get_option().is_show_hidden()); break;
 				default: break;
 				}
 				ht_.setIndex(0U);
@@ -752,14 +752,14 @@ public:
 			} else {
 				switch (key) {
 				case VK_APPS:   popupMenu(listCursorSwitch_, listCursorIndex_); break;
-				case VK_DELETE: action(COM_DELETE, listCursorSwitch_, listCursorIndex_); break;
-				case VK_RETURN: action(COM_OPEN, listCursorSwitch_, listCursorIndex_); break;
+				case VK_DELETE: action(CMD_DELETE, listCursorSwitch_, listCursorIndex_); break;
+				case VK_RETURN: action(CMD_OPEN, listCursorSwitch_, listCursorIndex_); break;
 				default: break;
 				}
 			}
 		} else {
 			if (key == VK_F3) {
-				setCursorIndex(search_.FindNext(listCursorIndex_, doc_.GetFiles()), Document::ListType::FILE);
+				setCursorIndex(search_.FindNext(listCursorIndex_, doc_.get_files()), Document::ListType::FILE);
 				return;
 			}
 			keyCursor(key);  // Cursor movement by key operation
@@ -771,7 +771,7 @@ public:
 	// Cursor key input
 	void keyCursor(WPARAM key) {
 		std::optional<size_t> index = listCursorIndex_;
-		const ItemList& files = doc_.GetFiles();
+		const ItemList& files = doc_.get_files();
 
 		if (!index || listCursorSwitch_ == Document::ListType::HIER) {
 			setCursorIndex(scrollListTopIndex_, Document::ListType::FILE);
@@ -785,13 +785,13 @@ public:
 		case VK_DOWN:
 			i++;
 			if (i >= files.size()) i = 0;
-			if ((doc_.GetItem(Document::ListType::FILE, i)->data() & SEPA) != 0) i++;
+			if ((doc_.get_item(Document::ListType::FILE, i)->data() & SEPA) != 0) i++;
 			setCursorIndex(i, Document::ListType::FILE);
 			return;
 		case VK_UP:
 			if (i == 0) i = files.size() - 1;
 			else i--;
-			if ((doc_.GetItem(Document::ListType::FILE, i)->data() & SEPA) != 0) {
+			if ((doc_.get_item(Document::ListType::FILE, i)->data() & SEPA) != 0) {
 				if (i == 0) i = files.size() - 1;
 				else i--;
 			}
@@ -802,11 +802,11 @@ public:
 		if (key == VK_LEFT || key == VK_RIGHT) {
 			if (key == VK_LEFT) {
 				if (!ht_.canGoBack()) return;
-				doc_.SetCurrentDirectory(ht_.goBack());
+				doc_.set_current_directory(ht_.goBack());
 			} else {
-				if (!doc_.MovableToLower(Document::ListType::FILE, i)) return;
-				ht_.goForward(scrollListTopIndex_, doc_.CurrentPath());
-				doc_.MoveToLower(Document::ListType::FILE, i);
+				if (!doc_.is_movable_to_lower(Document::ListType::FILE, i)) return;
+				ht_.goForward(scrollListTopIndex_, doc_.current_path());
+				doc_.move_to_lower(Document::ListType::FILE, i);
 			}
 			setCursorIndex(scrollListTopIndex_, Document::ListType::FILE);
 		}
@@ -828,7 +828,7 @@ public:
 			r.bottom = r.top + cyItem_;
 			::InvalidateRect(hWnd_, &r, FALSE);
 		}
-		if (!index.has_value() || (doc_.GetItem(type, index.value())->data() & SEPA) != 0) {
+		if (!index.has_value() || (doc_.get_item(type, index.value())->data() & SEPA) != 0) {
 			listCursorIndex_.reset();
 			tt_.Inactivate();  // Hide tool tip
 			::UpdateWindow(hWnd_);
@@ -846,15 +846,15 @@ public:
 		::UpdateWindow(hWnd_);  // Update here as curSelIsLong_ is referred below
 		tt_.Inactivate();  // Hide tool tip
 		if (curSelIsLong_) {  // Show tool tip
-			tt_.Activate(doc_.GetItem(type, index.value())->name(), listRect_);
-		} else if (doc_.InBookmark() || doc_.InHistory()) {
-			tt_.Activate(doc_.GetItem(type, index.value())->path(), listRect_);
+			tt_.Activate(doc_.get_item(type, index.value())->name(), listRect_);
+		} else if (doc_.in_bookmark() || doc_.in_history()) {
+			tt_.Activate(doc_.get_item(type, index.value())->path(), listRect_);
 		}
 	}
 
 	// Specify the start index of the scroll list
 	void setScrollListTopIndex(size_t i, bool update = true) noexcept {
-		const ItemList& files = doc_.GetFiles();
+		const ItemList& files = doc_.get_files();
 
 		const size_t old = scrollListTopIndex_;
 		if (files.size() <= scrollListLineNum_) {
@@ -867,7 +867,7 @@ public:
 		RECT r;
 		GetClientRect(hWnd_, &r);
 		r.right -= cxScrollBar_;
-		r.top    = gsl::narrow<long>(cyItem_ * doc_.GetNaviCount());
+		r.top    = gsl::narrow<long>(cyItem_ * doc_.get_navi_count());
 		::ScrollWindow(hWnd_, 0, gsl::narrow_cast<long>((old - scrollListTopIndex_) * cyItem_), &r, &r);
 		GetClientRect(hWnd_, &r);
 		r.left = r.right - cxScrollBar_;
@@ -879,7 +879,7 @@ public:
 	void popupMenu(Document::ListType w, std::optional<size_t> index) {
 		if (!index) return;
 
-		doc_.SetOperator(index, w, ope_);
+		doc_.set_operator(index, w, ope_);
 		if (ope_.size() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 
 		auto ext = file_system::is_directory(ope_[0]) ? PATH_EXT_DIR : path::ext(ope_[0]);
@@ -898,7 +898,7 @@ public:
 
 	// Execution of command by accelerator
 	void accelerator(TCHAR accelerator, Document::ListType w, std::optional<size_t> index) {
-		doc_.SetOperator(index, w, ope_);
+		doc_.set_operator(index, w, ope_);
 		if (ope_.size() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto ext = file_system::is_directory(ope_[0]) ? PATH_EXT_DIR : path::ext(ope_[0]);
 		const int type = extensions_.get_id(ext) + 1;
@@ -909,7 +909,7 @@ public:
 
 	// Command execution
 	void action(const wstring& cmd, Document::ListType w, std::optional<size_t> index) {
-		doc_.SetOperator(index, w, ope_);
+		doc_.set_operator(index, w, ope_);
 		action(ope_, cmd, w, index);
 	}
 
@@ -919,8 +919,8 @@ public:
 
 		if (hasObj) {
 			oldCurrent.assign(file_system::current_directory_path());
-			::SetCurrentDirectory(path::parent(objs[0]).c_str());
-			doc_.SetHistory(objs[0]);
+			doc_.set_current_directory(path::parent(objs[0]).c_str());
+			doc_.set_history(objs[0]);
 		}
 		if (cmd.front() == _T('<')) {
 			if (index) {
@@ -931,19 +931,19 @@ public:
 			::ShowWindow(hWnd_, SW_HIDE);  // Hide in advance
 			ope_.open_by(cmd);
 		}
-		if (hasObj) ::SetCurrentDirectory(oldCurrent.c_str());
+		if (hasObj) doc_.set_current_directory(oldCurrent.c_str());
 	}
 
 	// System command execution
 	void systemCommand(const wstring& cmd, const Selection& objs, Document::ListType w, size_t index) {
-		if (cmd == COM_SELECT_ALL)    { selectFile(0, doc_.GetFileCount() - 1, true); return; }
+		if (cmd == COM_SELECT_ALL)    { selectFile(0, doc_.get_file_count() - 1, true); return; }
 		if (cmd == COM_RENAME)        {
 			re_.Open(objs[0], gsl::narrow<long>(indexToLine(index, w) * cyItem_), listRect_.right, cyItem_);
 			return;
 		}
 		if (cmd == COM_POPUP_INFO)    { popupInfo(objs, w, index); return; }
-		if (cmd == COM_CLEAR_HISTORY) { doc_.ClearHistory(); return; }
-		if (cmd == COM_FAVORITE)      { doc_.AddOrRemoveFavorite(objs[0], w, index); return; }  // Update here, so do nothing after return
+		if (cmd == COM_CLEAR_HISTORY) { doc_.clear_history(); return; }
+		if (cmd == COM_FAVORITE)      { doc_.add_or_remove_favorite(objs[0], w, index); return; }  // Update here, so do nothing after return
 		if (cmd == COM_START_DRAG)    { ::SetCursor(::LoadCursor(nullptr, IDC_NO)); ::ShowWindow(hWnd_, SW_HIDE); ope_.start_drag(); return; }
 		if (cmd == COM_SHELL_MENU)    {
 			UINT f;
@@ -956,22 +956,22 @@ public:
 
 	// Select file by range specification
 	void selectFile(std::optional<size_t> front_opt, std::optional<size_t> back_opt, bool all = false) {
-		if (!front_opt || !back_opt || doc_.InDrives()) return;
+		if (!front_opt || !back_opt || doc_.in_drives()) return;
 		size_t front = front_opt.value();
 		size_t back  = back_opt.value();
 		if (back < front) std::swap(front, back);
-		doc_.SelectFile(front, back, Document::ListType::FILE, all);
+		doc_.select_file(front, back, Document::ListType::FILE, all);
 
 		if (front < scrollListTopIndex_) front = scrollListTopIndex_;
 		if (back >= scrollListTopIndex_ + scrollListLineNum_) back = scrollListTopIndex_ + scrollListLineNum_ - 1;
 
 		RECT lr = listRect_;
-		lr.top    = gsl::narrow<long>(cyItem_ * (front - scrollListTopIndex_ + doc_.GetNaviCount()));
-		lr.bottom = gsl::narrow<long>(cyItem_ * (back  - scrollListTopIndex_ + doc_.GetNaviCount() + 1));
+		lr.top    = gsl::narrow<long>(cyItem_ * (front - scrollListTopIndex_ + doc_.get_navi_count()));
+		lr.bottom = gsl::narrow<long>(cyItem_ * (back  - scrollListTopIndex_ + doc_.get_navi_count() + 1));
 		::InvalidateRect(hWnd_, &lr, FALSE);
 
 		// Update selected file count display
-		lr.top    = gsl::narrow<long>(cyItem_ * (doc_.GetNaviCount() - 1));
+		lr.top    = gsl::narrow<long>(cyItem_ * (doc_.get_navi_count() - 1));
 		lr.bottom = lr.top + cyItem_;
 		::InvalidateRect(hWnd_, &lr, FALSE);
 		::UpdateWindow(hWnd_);
@@ -1019,18 +1019,18 @@ public:
 
 	// Return line from index and type
 	size_t indexToLine(size_t index, Document::ListType type) noexcept {
-		return index + (doc_.GetNaviCount() - scrollListTopIndex_) * static_cast<size_t>(type == Document::ListType::FILE);
+		return index + (doc_.get_navi_count() - scrollListTopIndex_) * static_cast<size_t>(type == Document::ListType::FILE);
 	}
 
 	// Return index and type from line
 	std::optional<size_t> lineToIndex(size_t line, Document::ListType &type) noexcept {
-		if (line < doc_.GetNaviCount()) {
+		if (line < doc_.get_navi_count()) {
 			type = Document::ListType::HIER;
 			return line;
 		}
 		type = Document::ListType::FILE;
-		const size_t i = line - doc_.GetNaviCount() + scrollListTopIndex_;
-		return (i < doc_.GetFileCount()) ? std::optional<size_t>{i} : std::nullopt;
+		const size_t i = line - doc_.get_navi_count() + scrollListTopIndex_;
+		return (i < doc_.get_file_count()) ? std::optional<size_t>{i} : std::nullopt;
 	}
 
 public:
@@ -1039,7 +1039,7 @@ public:
 	void updated() override {
 		setScrollListTopIndex(ht_.index());
 		setCursorIndex(std::nullopt, Document::ListType::FILE);
-		scrollListLineNum_ = (listRect_.bottom - doc_.GetNaviCount() * cyItem_) / cyItem_;
+		scrollListLineNum_ = (listRect_.bottom - doc_.get_navi_count() * cyItem_) / cyItem_;
 
 		tt_.Inactivate();
 		::InvalidateRect(hWnd_, nullptr, TRUE);

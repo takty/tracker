@@ -22,7 +22,7 @@ class Option {
 
 public:
 
-	enum {sbName, sbType, sbDate, sbSize};  // Sort type
+	enum { sbName, sbType, sbDate, sbSize };  // Sort type
 
 	void restore(Pref& pref) noexcept {
 		pref.set_current_section(SECTION_WINDOW);

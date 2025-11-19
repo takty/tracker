@@ -56,21 +56,21 @@ const std::wstring SECTION_HISTORY(L"History");
 // Command ---------------------------------------------------------------------
 //
 
-const std::wstring COM_CREATE_NEW(L"<CreateNew>");
-const std::wstring COM_NEW_FOLDER(L"<NewFolder>");
-const std::wstring COM_DELETE(L"<Delete>");
-const std::wstring COM_CLONE(L"<Clone>");
-const std::wstring COM_SHORTCUT(L"<Shortcut>");
-const std::wstring COM_COPY_TO_DESKTOP(L"<CopyToDesktop>");
-const std::wstring COM_MOVE_TO_DESKTOP(L"<MoveToDesktop>");
-const std::wstring COM_COPY_PATH(L"<CopyPath>");
-const std::wstring COM_COPY(L"<Copy>");
-const std::wstring COM_CUT(L"<Cut>");
-const std::wstring COM_PASTE(L"<Paste>");
-const std::wstring COM_PASTE_SHORTCUT(L"<PasteShortcut>");
-const std::wstring COM_PROPERTY(L"<Property>");
-const std::wstring COM_OPEN(L"<Open>");
-const std::wstring COM_OPEN_RESOLVE(L"<OpenResolve>");
+const std::wstring CMD_CREATE_NEW(L"<CreateNew>");
+const std::wstring CMD_NEW_FOLDER(L"<NewFolder>");
+const std::wstring CMD_DELETE(L"<Delete>");
+const std::wstring CMD_CLONE(L"<Clone>");
+const std::wstring CMD_SHORTCUT(L"<Shortcut>");
+const std::wstring CMD_COPY_TO_DESKTOP(L"<CopyToDesktop>");
+const std::wstring CMD_MOVE_TO_DESKTOP(L"<MoveToDesktop>");
+const std::wstring CMD_COPY_PATH(L"<CopyPath>");
+const std::wstring CMD_COPY(L"<Copy>");
+const std::wstring CMD_CUT(L"<Cut>");
+const std::wstring CMD_PASTE(L"<Paste>");
+const std::wstring CMD_PASTE_SHORTCUT(L"<PasteShortcut>");
+const std::wstring CMD_PROPERTY(L"<Property>");
+const std::wstring CMD_OPEN(L"<Open>");
+const std::wstring CMD_OPEN_RESOLVE(L"<OpenResolve>");
 const std::wstring COM_SELECT_ALL(L"<SelectAll>");
 const std::wstring COM_RENAME(L"<Rename>");
 const std::wstring COM_POPUP_INFO(L"<PopupInfo>");

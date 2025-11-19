@@ -21,13 +21,13 @@ class Drives {
 	inline static const int WAITING_TIME     = 200;
 
 	std::vector<std::wstring> paths_;
-	std::vector<bool> slowDrives_;
+	std::vector<bool> slow_drives_;
 
 public:
 
 	inline static const std::wstring PATH{ L":DRIVES" }, NAME{ L"Drives" };
 
-	Drives() noexcept : slowDrives_(LAST_LETTER - FIRST_LETTER + 1, false) {}
+	Drives() noexcept : slow_drives_(LAST_LETTER - FIRST_LETTER + 1, false) {}
 
 	size_t size() noexcept {
 		return paths_.size();
@@ -47,11 +47,11 @@ public:
 			const auto type = ::GetDriveType(path.c_str());
 			if (type == DRIVE_NO_ROOT_DIR) continue;
 			if (type == DRIVE_REMOVABLE) {
-				if (!slowDrives_.at(idx)) {
+				if (!slow_drives_.at(idx)) {
 					const auto startTime = ::GetTickCount64();
 					const bool can = (::GetDiskFreeSpace(path.c_str(), nullptr, nullptr, nullptr, nullptr) != 0);
 					if (::GetTickCount64() - startTime > WAITING_TIME) {  // If it takes time
-						slowDrives_.at(idx) = true;
+						slow_drives_.at(idx) = true;
 					} else {
 						if (!can) continue;
 					}

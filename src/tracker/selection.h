@@ -2,7 +2,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-14
+ * @version 2025-11-18
  */
 
 #pragma once
@@ -18,10 +18,10 @@
 
 class Selection {
 
-	HWND hWnd_ = nullptr;
+	HWND hwnd_ = nullptr;
 	std::vector<std::wstring> objects_;
-	std::wstring defaultOpener_;
-	ULONG idNotify_ = 0;
+	std::wstring default_opener_;
+	unsigned long id_notify_{};
 
 	const TypeTable& exts_;
 	const Pref& pref_;
@@ -35,75 +35,43 @@ class Selection {
 		bool ret = false;
 
 		if (exts_.get_command(pref_, ext, cmd)) {
-			ret = execute::open(hWnd_, objs, cmd);
+			ret = execute::open(hwnd_, objs, cmd);
 		} else {
 			// Normal file open behavior
-			ret = execute::open(hWnd_, obj);  // Try to open normally
-			if (!ret && !file_system::is_directory(obj) && !defaultOpener_.empty()) {
+			ret = execute::open(hwnd_, obj);  // Try to open normally
+			if (!ret && !file_system::is_directory(obj) && !default_opener_.empty()) {
 				// In the case of a file without association
-				ret = execute::open(hWnd_, objs, defaultOpener_);
+				ret = execute::open(hwnd_, objs, default_opener_);
 			}
 		}
 		return ret;
 	}
 
-	// Register Shell Notifications
-	void set_shell_notify(const std::wstring& path) {
-		LPSHELLFOLDER desktopFolder{};
-		LPITEMIDLIST currentFolder{};
-		SHChangeNotifyEntry scne{};
-
-		if (idNotify_) {
-			::SHChangeNotifyDeregister(idNotify_);
-			idNotify_ = 0;
-		}
-		HRESULT r{};
-		if (path.empty()) {
-			r = ::SHGetSpecialFolderLocation(nullptr, CSIDL_DRIVES, &currentFolder);
-		} else {
-			if (::SHGetDesktopFolder(&desktopFolder) != NOERROR) return;
-			if (!desktopFolder) return;
-			std::wstring displayName = path;
-			r = desktopFolder->ParseDisplayName(hWnd_, nullptr, displayName.data(), nullptr, &currentFolder, nullptr);
-			desktopFolder->Release();
-		}
-		if (r != S_OK) return;
-		scne.pidl = currentFolder;
-		scne.fRecursive = FALSE;
-		idNotify_ = ::SHChangeNotifyRegister(hWnd_, 0x0001 | 0x0002 | 0x1000 | 0x8000,
-			SHCNE_RENAMEITEM | SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR | SHCNE_UPDATEITEM | SHCNE_RENAMEFOLDER,
-			WM_REQUESTUPDATE, 1, &scne);
-		::CoTaskMemFree(currentFolder);
-	}
-
 	// Manually request an update
 	void request_update() const noexcept {
-		::SendMessage(hWnd_, WM_REQUESTUPDATE, 0, 0);
+		::SendMessage(hwnd_, WM_REQUESTUPDATE, 0, 0);
 	}
 
 public:
 
 	Selection(const TypeTable& exts, const Pref& pref) noexcept : exts_(exts), pref_(pref) {}
-
 	Selection(const Selection&) = delete;
 	Selection& operator=(const Selection&) = delete;
 	Selection(Selection&&) = delete;
 	Selection& operator=(Selection&&) = delete;
 
 	~Selection() {
-		if (idNotify_) {
-			::SHChangeNotifyDeregister(idNotify_);
-		}
+		shell::clear_shell_notify(id_notify_);
 	}
 
 	// Specify a window handle.
-	void set_window_handle(HWND hWnd) noexcept {
-		hWnd_ = hWnd;
+	void set_window_handle(HWND hwnd) noexcept {
+		hwnd_ = hwnd;
 	}
 
 	// Set default application path to open file without association
 	void set_default_opener(const std::wstring& path) {
-		defaultOpener_ = path;
+		default_opener_ = path;
 	}
 
 	// Add operation target file
@@ -142,7 +110,7 @@ public:
 
 	// Open in shell function based on command line
 	int open_by(const std::wstring& line) {
-		const bool ret = execute::open(hWnd_, objects_, line);
+		const bool ret = execute::open(hwnd_, objects_, line);
 		return ret;
 	}
 
@@ -153,8 +121,8 @@ public:
 
 	// Display shell menu
 	void popup_shell_menu(const POINT& pt, UINT f) {
-		set_shell_notify(path::parent(objects_.front()));
-		ContextMenu cm(hWnd_);
+		id_notify_ = shell::set_shell_notify(id_notify_, hwnd_, WM_REQUESTUPDATE, path::parent(objects_.front()));
+		ContextMenu cm(hwnd_);
 		cm.popup(objects_, TPM_RIGHTBUTTON | f, pt);
 	}
 
@@ -165,8 +133,8 @@ public:
 		auto fname = path::name(orig);
 		std::wstring npath{ objects_.front() };
 		npath.append(1, L'\\').append(fname);
-		auto newPath   = file_system::unique_name(npath);
-		auto new_fname = path::name(newPath);
+		auto new_path  = file_system::unique_name(npath);
+		auto new_fname = path::name(new_path);
 
 		const bool ret = operation::copy_one_file(orig, objects_.front(), new_fname);
 		if (ret) {
@@ -180,10 +148,10 @@ public:
 		if (!file_system::is_directory(objects_.front())) {
 			return false;  // Fail if not folder
 		}
-		auto npath = objects_.front() + L"\\NewFolder";
-		auto newPath = file_system::unique_name(npath);
+		auto npath    = objects_.front() + L"\\NewFolder";
+		auto new_path = file_system::unique_name(npath);
 
-		const bool ret = ::CreateDirectory(newPath.c_str(), nullptr) == TRUE;
+		const bool ret = ::CreateDirectory(new_path.c_str(), nullptr) == TRUE;
 		if (ret) {
 			request_update();
 		}
@@ -204,12 +172,12 @@ public:
 		bool ret = false;
 
 		for (const auto& o : objects_) {
-			auto clonePath = file_system::unique_name(o, L"_Clone");
-			if (clonePath.empty()) {
+			auto clone_path = file_system::unique_name(o, L"_Clone");
+			if (clone_path.empty()) {
 				ret = false;
 				break;
 			}
-			auto new_fname = path::name(clonePath);
+			auto new_fname = path::name(clone_path);
 			auto dest_path = path::parent(o);
 			if (operation::copy_one_file(o, dest_path, new_fname)) {
 				ret = true;
@@ -267,16 +235,16 @@ public:
 		return clipboard::copy_path(objects_);
 	}
 
-	void copy() {
+	void copy() const {
 		shell::copy(objects_);
 	}
 
-	void cut() {
+	void cut() const {
 		shell::cut(objects_);
 	}
 
 	void paste_in() {
-		set_shell_notify(objects_.front());
+		id_notify_ = shell::set_shell_notify(id_notify_, hwnd_, WM_REQUESTUPDATE, objects_.front());
 		shell::paste_in(objects_);
 	}
 
@@ -290,26 +258,26 @@ public:
 	}
 
 	// Display file properties
-	void popup_file_property() {
+	void popup_file_property() const {
 		shell::show_property(objects_);
 	}
 
 	// Change the file name
-	bool rename(const std::wstring& path, const std::wstring& newFileName) {
-		return operation::rename(path, newFileName);
+	bool rename(const std::wstring& path, const std::wstring& new_file_name) {
+		return operation::rename(path, new_file_name);
 	}
 
 	// Get file information string
 	void create_information_strings(std::vector<std::wstring>& items) {
 		if (path::is_root(objects_.front())) {  // When it is a drive
-			uint64_t dSize, dFree;
-			file_system::drive_size(objects_.front(), dSize, dFree);
-			auto sizeStr = info::file_size_to_str(dSize, true, L"");
-			auto usedStr = info::file_size_to_str(dSize - dFree, true, L"");
-			items.push_back(usedStr.append(1, L'/').append(sizeStr));
-			items.push_back(info::file_size_to_str(dFree, true, L"Free: "));
+			uint64_t dsize, dfree;
+			file_system::drive_size(objects_.front(), dsize, dfree);
+			auto size_str = info::file_size_to_str(dsize, true, L"");
+			auto used_str = info::file_size_to_str(dsize - dfree, true, L"");
+			items.push_back(used_str.append(1, L'/').append(size_str));
+			items.push_back(info::file_size_to_str(dfree, true, L"Free: "));
 		} else {  // When it is a normal file
-			std::wstring ctStr, mtStr;
+			std::wstring ct_str, mt_str;
 			uint64_t size;
 			const bool suc = file_system::calc_file_size(objects_, size, ::GetTickCount64() + 1000);
 			items.push_back(info::file_size_to_str(size, suc, L"Size:\t"));
@@ -320,37 +288,34 @@ public:
 				FILETIME ctime, mtime;
 				::GetFileTime(hf, &ctime, nullptr, &mtime);
 				::CloseHandle(hf);
-				items.push_back(info::file_time_to_str(ctime, L"Created:\t", ctStr));
-				items.push_back(info::file_time_to_str(mtime, L"Modified:\t", mtStr));
+				items.push_back(info::file_time_to_str(ctime, L"Created:\t", ct_str));
+				items.push_back(info::file_time_to_str(mtime, L"Modified:\t", mt_str));
 			}
 		}
 	}
 
 	// Perform processing after update notification
 	void done_request() noexcept {
-		if (idNotify_) {
-			::SHChangeNotifyDeregister(idNotify_);
-			idNotify_ = 0;
-		}
+		id_notify_ = shell::clear_shell_notify(id_notify_);
 	}
 
 	// Execute a string command
 	int command(const std::wstring& cmd) {
-		if (cmd.find(COM_CREATE_NEW) == 0) { create_new_file(cmd.substr(COM_CREATE_NEW.size())); return 1; }
-		if (cmd == COM_NEW_FOLDER)         { create_new_folder_in(); return 1; }
-		if (cmd == COM_DELETE)             { delete_file(); return 1; }
-		if (cmd == COM_CLONE)              { clone_here(); return 1; }
-		if (cmd == COM_SHORTCUT)           { create_shortcut_here(); return 1; }
-		if (cmd == COM_COPY_TO_DESKTOP)    { copy_to_desktop(); return 1; }
-		if (cmd == COM_MOVE_TO_DESKTOP)    { move_to_desktop(); return 1; }
-		if (cmd == COM_COPY_PATH)          { copy_path_in_clipboard(); return 1; }
-		if (cmd == COM_COPY)               { copy(); return 1; }
-		if (cmd == COM_CUT)                { cut(); return 1; }
-		if (cmd == COM_PASTE)              { paste_in(); return 1; }
-		if (cmd == COM_PASTE_SHORTCUT)     { paste_as_shortcut_in(); return 1; }
-		if (cmd == COM_PROPERTY)           { popup_file_property(); return 1; }
-		if (cmd == COM_OPEN)               { return open_with_association() ? -1 : 0; }
-		if (cmd == COM_OPEN_RESOLVE)       { return open_after_resolve() ? -1 : 0; }
+		if (cmd.find(CMD_CREATE_NEW) == 0) { create_new_file(cmd.substr(CMD_CREATE_NEW.size())); return 1; }
+		if (cmd == CMD_NEW_FOLDER)         { create_new_folder_in(); return 1; }
+		if (cmd == CMD_DELETE)             { delete_file(); return 1; }
+		if (cmd == CMD_CLONE)              { clone_here(); return 1; }
+		if (cmd == CMD_SHORTCUT)           { create_shortcut_here(); return 1; }
+		if (cmd == CMD_COPY_TO_DESKTOP)    { copy_to_desktop(); return 1; }
+		if (cmd == CMD_MOVE_TO_DESKTOP)    { move_to_desktop(); return 1; }
+		if (cmd == CMD_COPY_PATH)          { copy_path_in_clipboard(); return 1; }
+		if (cmd == CMD_COPY)               { copy(); return 1; }
+		if (cmd == CMD_CUT)                { cut(); return 1; }
+		if (cmd == CMD_PASTE)              { paste_in(); return 1; }
+		if (cmd == CMD_PASTE_SHORTCUT)     { paste_as_shortcut_in(); return 1; }
+		if (cmd == CMD_PROPERTY)           { popup_file_property(); return 1; }
+		if (cmd == CMD_OPEN)               { return open_with_association() ? -1 : 0; }
+		if (cmd == CMD_OPEN_RESOLVE)       { return open_after_resolve() ? -1 : 0; }
 		return 0;
 	}
 
