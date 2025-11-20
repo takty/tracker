@@ -2,7 +2,7 @@
  * File Informations
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2025-11-20
  */
 
 #pragma once
@@ -20,7 +20,7 @@ namespace info {
 	std::wstring fmt(long long l) {
 		std::wstring s;
 		for (int d = 0; l; d++, l /= 10) {
-			s = std::to_wstring(L'0' + (l % 10)) + (((!(d % 3) && d) ? L"," : L"") + s);
+			s = std::to_wstring(l % 10) + (((!(d % 3) && d) ? L"," : L"") + s);
 		}
 		return s;
 	}
