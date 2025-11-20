@@ -19,8 +19,8 @@
 
 class ToolTip {
 
-	HWND hwnd_      = nullptr;
-	HWND hhint_     = nullptr;
+	HWND wnd_       = nullptr;
+	HWND hint_      = nullptr;
 	bool is_active_ = false;
 
 public:
@@ -29,12 +29,12 @@ public:
 
 	void initialize(HWND hWnd) noexcept {
 		[[gsl::suppress(type.1)]]
-		auto hinst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+		auto inst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
 
-		hwnd_  = hWnd;
-		hhint_ = ::CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
+		wnd_  = hWnd;
+		hint_ = ::CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 			WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_NOANIMATE | TTS_NOFADE,
-			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT , CW_USEDEFAULT, hWnd, nullptr, hinst, nullptr);
+			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT , CW_USEDEFAULT, hWnd, nullptr, inst, nullptr);
 	}
 
 	//  Display Tool Tips
@@ -44,14 +44,14 @@ public:
 		TOOLINFO ti{};
 		ti.cbSize   = sizeof(TOOLINFO);
 		ti.uFlags   = TTF_SUBCLASS | TTF_TRANSPARENT;
-		ti.hwnd     = hwnd_;
+		ti.hwnd     = wnd_;
 		ti.uId      = 1;
 		ti.rect     = rect;
 		ti.hinst    = nullptr;
 		ti.lpszText = temp.data();
 
 		[[gsl::suppress(type.1)]]
-		::SendMessage(hhint_, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
+		::SendMessage(hint_, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 
 		is_active_ = true;
 	}
@@ -63,11 +63,11 @@ public:
 
 		TOOLINFO ti{};
 		ti.cbSize = sizeof(TOOLINFO);
-		ti.hwnd   = hwnd_;
+		ti.hwnd   = wnd_;
 		ti.uId    = 1;
 
 		[[gsl::suppress(type.1)]]
-		::SendMessage(hhint_, TTM_DELTOOL, 0, reinterpret_cast<LPARAM>(&ti));
+		::SendMessage(hint_, TTM_DELTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 	}
 
 };

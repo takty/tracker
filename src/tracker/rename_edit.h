@@ -21,7 +21,7 @@
 class RenameEdit {
 
 	int          msg_;
-	HWND         hwnd_     = nullptr;
+	HWND         wnd_     = nullptr;
 	HWND         hedit_    = nullptr;
 	WNDPROC      org_proc_ = nullptr;
 	std::wstring renamed_path_;
@@ -52,12 +52,12 @@ public:
 	RenameEdit(int msg) noexcept : msg_(msg) {
 	}
 
-	void initialize(HWND hwnd) noexcept {
-		hwnd_ = hwnd;
+	void initialize(HWND wnd) noexcept {
+		wnd_ = wnd;
 		[[gsl::suppress(type.1)]]
-		auto hinst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hwnd, GWLP_HINSTANCE));
+		auto inst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(wnd, GWLP_HINSTANCE));
 		hedit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
-			0, 0, 0, 0, hwnd, nullptr, hinst, nullptr);
+			0, 0, 0, 0, wnd, nullptr, inst, nullptr);
 		[[gsl::suppress(type.1)]]
 		org_proc_ = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hedit_, GWLP_WNDPROC));
 		[[gsl::suppress(type.1)]]
@@ -71,9 +71,9 @@ public:
 		::SetWindowLongPtr(hedit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(org_proc_));
 	}
 
-	void set_font(HFONT hfont) const noexcept {
+	void set_font(HFONT font) const noexcept {
 		[[gsl::suppress(type.1)]]
-		::SendMessage(hedit_, WM_SETFONT, reinterpret_cast<WPARAM>(hfont), 0);
+		::SendMessage(hedit_, WM_SETFONT, reinterpret_cast<WPARAM>(font), 0);
 	}
 
 	bool is_active() const noexcept {
@@ -116,7 +116,7 @@ public:
 		if (link::is_link(renamed_path_)) {
 			new_file_name_.append(_T(".lnk"));
 		}
-		::SendMessage(hwnd_, msg_, 0, 0);
+		::SendMessage(wnd_, msg_, 0, 0);
 	}
 
 	const std::wstring& get_rename_path() noexcept {

@@ -2,7 +2,7 @@
  * Shell Object Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-18
+ * @version 2025-11-20
  */
 
 #pragma once
@@ -184,7 +184,7 @@ namespace shell {
 
 	// ----
 
-	unsigned long set_shell_notify(unsigned long id_notify, HWND hwnd, UINT msg, const std::wstring& path) {
+	unsigned long set_shell_notify(unsigned long id_notify, HWND wnd, UINT msg, const std::wstring& path) {
 		LPSHELLFOLDER desktop_folder{};
 		LPITEMIDLIST current_folder{};
 		SHChangeNotifyEntry scne{};
@@ -200,13 +200,13 @@ namespace shell {
 			if (::SHGetDesktopFolder(&desktop_folder) != NOERROR) return 0;
 			if (!desktop_folder) return 0;
 			std::wstring display_name = path;
-			r = desktop_folder->ParseDisplayName(hwnd, nullptr, display_name.data(), nullptr, &current_folder, nullptr);
+			r = desktop_folder->ParseDisplayName(wnd, nullptr, display_name.data(), nullptr, &current_folder, nullptr);
 			desktop_folder->Release();
 		}
 		if (r != S_OK) return 0;
 		scne.pidl = current_folder;
 		scne.fRecursive = FALSE;
-		id_notify = ::SHChangeNotifyRegister(hwnd, 0x0001 | 0x0002 | 0x1000 | 0x8000,
+		id_notify = ::SHChangeNotifyRegister(wnd, 0x0001 | 0x0002 | 0x1000 | 0x8000,
 			SHCNE_RENAMEITEM | SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR | SHCNE_UPDATEITEM | SHCNE_RENAMEFOLDER,
 			msg, 1, &scne);
 		::CoTaskMemFree(current_folder);

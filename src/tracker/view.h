@@ -11,7 +11,6 @@
 #include <vector>
 #include <string>
 #include <optional>
-#include <cmath>
 #include <locale>
 
 #include "gsl/gsl"
@@ -33,8 +32,8 @@ using namespace std;
 
 constexpr auto IDHK = 1;
 
-BOOL init_application(HINSTANCE hinst, const wchar_t* class_name) noexcept;
-LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
+BOOL init_application(HINSTANCE inst, const wchar_t* class_name) noexcept;
+LRESULT CALLBACK wnd_proc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);
 
 class View : public Observer {
 
@@ -46,38 +45,38 @@ class View : public Observer {
 	static constexpr auto SEL   = 32;
 	static constexpr auto EMPTY = 64;
 
-	int mouseDownY_ = -1;
-	int mouseDownArea_ = -1;
-	std::optional<size_t> mouseDownIndex_;
-	std::optional<size_t> mouseDownTopIndex_;
-	Document::ListType mouseDownListType_ = Document::ListType::FILE;
+	int mouse_down_y_ = -1;
+	int mouse_down_area_ = -1;
+	std::optional<size_t> mouse_down_idx_;
+	std::optional<size_t> mouse_down_top_idx_;
+	Document::ListType mouse_down_list_type_ = Document::ListType::FILE;
 
-	size_t scrollListTopIndex_ = 0;
-	std::optional<size_t> listCursorIndex_ = 0;
-	Document::ListType listCursorSwitch_ = Document::ListType::FILE;
+	size_t scroll_list_top_idx_ = 0;
+	std::optional<size_t> list_cursor_idx_ = 0;
+	Document::ListType list_cursor_switch_ = Document::ListType::FILE;
 
-	int cxSide_{};
-	int cyItem_{};
-	int cxScrollBar_{};
-	HFONT hMarkFont_{};
-	HFONT hItemFont_{};
-	size_t scrollListLineNum_{};
-	RECT listRect_{};
+	int cx_side_{};
+	int cy_item_{};
+	int cx_scroll_bar_{};
+	HFONT font_mark_{};
+	HFONT font_item_{};
+	size_t scroll_list_line_num_{};
+	RECT list_rect_{};
 
 	Pref pref_;
-	int popupPos_{};
-	bool fullScreenCheck_{};
+	int popup_pos_{};
+	bool full_screen_check_{};
 
-	static int& menuTop_() noexcept {
-		static int menuTop_;
-		return menuTop_;
+	static int& menu_top_() noexcept {
+		static int menu_top_;
+		return menu_top_;
 	}
-	bool curSelIsLong_{};
-	bool suppressPopup_{};
-	UINT cursorAlign_{};
-	const HWND hWnd_{};
-	double dpiFactX_{ 1.0 };
-	double dpiFactY_{ 1.0 };
+	bool is_cur_sel_long_{};
+	bool suppress_popup_{};
+	UINT cursor_align_{};
+	const HWND wnd_{};
+	double dpi_fact_x_{ 1.0 };
+	double dpi_fact_y_{ 1.0 };
 
 	HierTransition ht_;
 	Document doc_;
@@ -89,15 +88,15 @@ class View : public Observer {
 
 public:
 
-	static LRESULT CALLBACK menu_proc(HWND hMenu, UINT msg, WPARAM wp, LPARAM lp) noexcept {
+	static LRESULT CALLBACK menu_proc(HWND menu, UINT msg, WPARAM wp, LPARAM lp) noexcept {
 		switch (msg) {
 		case WM_WINDOWPOSCHANGING:
 			{
 				[[gsl::suppress(type.1)]]
 				auto pos = reinterpret_cast<LPWINDOWPOS>(lp);
-				if ((pos->flags & SWP_NOSIZE) && pos->y < menuTop_()) {
+				if ((pos->flags & SWP_NOSIZE) && pos->y < menu_top_()) {
 					RECT r;
-					::GetWindowRect(hMenu, &r);
+					::GetWindowRect(menu, &r);
 					const int h = ::GetSystemMetrics(SM_CYSCREEN);
 					pos->y = h - (r.bottom - r.top);
 				}
@@ -106,12 +105,11 @@ public:
 		default: break;
 		}
 		[[gsl::suppress(type.1)]]
-		auto proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hMenu, GWLP_USERDATA));
-		return ::CallWindowProc(proc, hMenu, msg, wp, lp);
+		auto proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(menu, GWLP_USERDATA));
+		return ::CallWindowProc(proc, menu, msg, wp, lp);
 	}
 
-	View(const HWND hWnd) : hWnd_(hWnd), doc_(extensions_, pref_, SEPA, (SEPA | HIER)), ope_(extensions_, pref_), re_(WM_RENAMEEDITCLOSED) {}
-
+	View(const HWND wnd) : wnd_(wnd), doc_(extensions_, pref_, SEPA, (SEPA | HIER)), ope_(extensions_, pref_), re_(WM_RENAMEEDITCLOSED) {}
 	View(const View&) = delete;
 	virtual View& operator=(const View&) = delete;
 	View(View&&) = delete;
@@ -121,62 +119,62 @@ public:
 	void initialize() {
 		doc_.set_observer(this);
 
-		ope_.set_window_handle(hWnd_);
-		re_.initialize(hWnd_);
-		tt_.initialize(hWnd_);
+		ope_.set_window_handle(wnd_);
+		re_.initialize(wnd_);
+		tt_.initialize(wnd_);
 
-		const int dpi = ::GetDpiForWindow(hWnd_);
-		dpiFactX_ = dpi / 96.0;
-		dpiFactY_ = dpi / 96.0;
+		const int dpi = ::GetDpiForWindow(wnd_);
+		dpi_fact_x_ = dpi / 96.0;
+		dpi_fact_y_ = dpi / 96.0;
 
 		// Whether to make multi-user (call first)
 		if (pref_.item_int(SECTION_WINDOW, KEY_MULTI_USER, VAL_MULTI_USER)) pref_.set_multi_user_mode();
 		load_pref_data(true);  // Read and set from Ini file
 
-		::SetTimer(hWnd_, 1, 300, nullptr);
+		::SetTimer(wnd_, 1, 300, nullptr);
 	}
 
 	// Read INI file
-	void load_pref_data(const bool firstTime) {
+	void load_pref_data(const bool is_first_time) {
 		pref_.set_current_section(SECTION_WINDOW);
 
-		cxSide_      = std::lrint(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpiFactX_);
-		cyItem_      = std::lrint(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpiFactY_);
-		cxScrollBar_ = std::lrint(6 * dpiFactX_);
+		cx_side_      = std::lrint(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpi_fact_x_);
+		cy_item_      = std::lrint(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpi_fact_y_);
+		cx_scroll_bar_ = std::lrint(6 * dpi_fact_x_);
 
-		popupPos_        = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
-		fullScreenCheck_ = pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
+		popup_pos_        = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
+		full_screen_check_ = pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
 
-		const int width  = std::lrint(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpiFactX_);
-		const int height = std::lrint(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpiFactY_);
+		const int width  = std::lrint(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpi_fact_x_);
+		const int height = std::lrint(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpi_fact_y_);
 
 		const wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
 		const wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
 
 		const wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
-		const int     fontSize = std::lrint(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpiFactX_);
+		const int     fontSize = std::lrint(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpi_fact_x_);
 
 		const bool useMigemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
 
-		::MoveWindow(hWnd_, 0, 0, width, height, FALSE);
-		::ShowWindow(hWnd_, SW_SHOW);  // Once display, and calculate the size etc.
-		::ShowWindow(hWnd_, SW_HIDE);  // Hide immediately
+		::MoveWindow(wnd_, 0, 0, width, height, FALSE);
+		::ShowWindow(wnd_, SW_SHOW);  // Once display, and calculate the size etc.
+		::ShowWindow(wnd_, SW_HIDE);  // Hide immediately
 
 		ope_.set_default_opener(defOpener);
 		set_hot_key(hotKey, IDHK);
 
-		::DeleteObject(hItemFont_);
-		hItemFont_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
-		if (fontName.empty() || !hItemFont_) {
-			hItemFont_ = window_utils::get_ui_message_font(hWnd_);
+		::DeleteObject(font_item_);
+		font_item_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
+		if (fontName.empty() || !font_item_) {
+			font_item_ = window_utils::get_ui_message_font(wnd_);
 		}
-		hMarkFont_ = ::CreateFont(std::lrint(14 * dpiFactX_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
-		re_.set_font(hItemFont_);
+		font_mark_ = ::CreateFont(std::lrint(14 * dpi_fact_x_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
+		re_.set_font(font_item_);
 
 		search_.initialize(useMigemo);
 		extensions_.restore(pref_);  // Load extension color
 
-		doc_.initialize(firstTime);
+		doc_.initialize(is_first_time);
 	}
 
 	void set_hot_key(const wstring& key, int id) const {
@@ -186,48 +184,48 @@ public:
 		if (key.at(1) == _T('1')) flag |= MOD_CONTROL;
 		if (key.at(2) == _T('1')) flag |= MOD_SHIFT;
 		if (key.at(3) == _T('1')) flag |= MOD_WIN;
-		if (flag) RegisterHotKey(hWnd_, id, flag, key.at(4));
+		if (flag) RegisterHotKey(wnd_, id, flag, key.at(4));
 	}
 
 	void finalize() {
 		re_.finalize();
 
 		RECT rw;
-		GetWindowRect(hWnd_, &rw);
+		GetWindowRect(wnd_, &rw);
 		pref_.set_current_section(SECTION_WINDOW);
-		pref_.set_item_int(KEY_WIDTH, static_cast<int>((static_cast<__int64>(rw.right) - rw.left) / dpiFactX_));
-		pref_.set_item_int(KEY_HEIGHT, static_cast<int>((static_cast<__int64>(rw.bottom) - rw.top) / dpiFactY_));
+		pref_.set_item_int(KEY_WIDTH, static_cast<int>((static_cast<__int64>(rw.right) - rw.left) / dpi_fact_x_));
+		pref_.set_item_int(KEY_HEIGHT, static_cast<int>((static_cast<__int64>(rw.bottom) - rw.top) / dpi_fact_y_));
 
 		doc_.finalize();
-		::UnregisterHotKey(hWnd_, IDHK);  // Cancel hot key
-		::DeleteObject(hMarkFont_);
-		::DeleteObject(hItemFont_);
+		::UnregisterHotKey(wnd_, IDHK);  // Cancel hot key
+		::DeleteObject(font_mark_);
+		::DeleteObject(font_item_);
 
 		::PostQuitMessage(0);
 	}
 
 	void wmClose() {
 		if (window_utils::ctrl_pressed()) {
-			::ShowWindow(hWnd_, SW_HIDE);
+			::ShowWindow(wnd_, SW_HIDE);
 			load_pref_data(false);
-			::ShowWindow(hWnd_, SW_SHOW);
+			::ShowWindow(wnd_, SW_SHOW);
 		} else {
 			doc_.finalize();
-			::DestroyWindow(hWnd_);
+			::DestroyWindow(wnd_);
 		}
 	}
 
-	void wmDpiChanged(int dpiX, int dpiY) {
-		dpiFactX_ = dpiX / 96.0;
-		dpiFactY_ = dpiY / 96.0;
+	void wmDpiChanged(int dpi_x, int dpi_y) {
+		dpi_fact_x_ = dpi_x / 96.0;
+		dpi_fact_y_ = dpi_y / 96.0;
 
-		const auto visible = ::IsWindowVisible(hWnd_);
+		const auto visible = ::IsWindowVisible(wnd_);
 		if (visible) {
-			::ShowWindow(hWnd_, SW_HIDE);
+			::ShowWindow(wnd_, SW_HIDE);
 		}
 		load_pref_data(false);
 		if (visible) {
-			::ShowWindow(hWnd_, SW_SHOW);
+			::ShowWindow(wnd_, SW_SHOW);
 		}
 	}
 
@@ -238,29 +236,29 @@ public:
 		const int edge = ::GetSystemMetrics(SM_CYSIZEFRAME);
 		const int upNC = ::GetSystemMetrics(SM_CYSMCAPTION) + edge;
 
-		wpos->cy = (wpos->cy + cyItem_ / 2 - edge - upNC) / cyItem_ * cyItem_ + edge + upNC;
-		if (wpos->cy - edge - upNC < cyItem_ * 8) wpos->cy = cyItem_ * 8 + edge + upNC;
+		wpos->cy = (wpos->cy + cy_item_ / 2 - edge - upNC) / cy_item_ * cy_item_ + edge + upNC;
+		if (wpos->cy - edge - upNC < cy_item_ * 8) wpos->cy = cy_item_ * 8 + edge + upNC;
 		if (wpos->cx < 96) wpos->cx = 96;
 	}
 
 	void wmSize(int cwidth, int cheight) noexcept {
-		::SetRect(&listRect_, 0, 0, cwidth - cxScrollBar_, cheight);
-		scrollListLineNum_ = (cheight - doc_.get_navi_count() * cyItem_) / cyItem_;
+		::SetRect(&list_rect_, 0, 0, cwidth - cx_scroll_bar_, cheight);
+		scroll_list_line_num_ = (cheight - doc_.get_navi_count() * cy_item_) / cy_item_;
 
 		const ItemList& files = doc_.get_files();
 
-		if (scrollListLineNum_ <= files.size() && scrollListTopIndex_ > files.size() - scrollListLineNum_) {
-			set_scroll_list_top_index(files.size() - scrollListLineNum_);
+		if (scroll_list_line_num_ <= files.size() && scroll_list_top_idx_ > files.size() - scroll_list_line_num_) {
+			set_scroll_list_top_index(files.size() - scroll_list_line_num_);
 		}
 	}
 
 	void wmHotKey(WPARAM id) noexcept {
-		if (hWnd_ == nullptr) {
+		if (wnd_ == nullptr) {
 			return;
 		}
 		if (id == IDHK) {
-			if (::IsWindowVisible(hWnd_)) suppressPopup_ = true;
-			::ShowWindow(hWnd_, ::IsWindowVisible(hWnd_) ? SW_HIDE : SW_SHOW);
+			if (::IsWindowVisible(wnd_)) suppress_popup_ = true;
+			::ShowWindow(wnd_, ::IsWindowVisible(wnd_) ? SW_HIDE : SW_SHOW);
 		}
 	}
 
@@ -300,10 +298,10 @@ public:
 	void wmMouseWheel(int delta) noexcept {
 		if (re_.is_active()) return;  // Rejected while renaming
 		if (delta > 0) {
-			set_scroll_list_top_index(3 <= scrollListTopIndex_ ? scrollListTopIndex_ - 3 : 0);
+			set_scroll_list_top_index(3 <= scroll_list_top_idx_ ? scroll_list_top_idx_ - 3 : 0);
 		}
 		else {
-			set_scroll_list_top_index(scrollListTopIndex_ + 3);
+			set_scroll_list_top_index(scroll_list_top_idx_ + 3);
 		}
 	}
 
@@ -313,18 +311,18 @@ public:
 		RECT rc{};
 		PAINTSTRUCT ps{};
 
-		::GetClientRect(hWnd_, &rc);
-		auto dc = ::BeginPaint(hWnd_, &ps);
+		::GetClientRect(wnd_, &rc);
+		auto dc = ::BeginPaint(wnd_, &ps);
 
-		if (ps.rcPaint.right > rc.right - cxScrollBar_) draw_scroll_bar(dc);
-		if (ps.rcPaint.left < rc.right - cxScrollBar_) {
-			const long begin = ps.rcPaint.top / cyItem_;
-			const long end   = ps.rcPaint.bottom / cyItem_;
+		if (ps.rcPaint.right > rc.right - cx_scroll_bar_) draw_scroll_bar(dc);
+		if (ps.rcPaint.left < rc.right - cx_scroll_bar_) {
+			const long begin = ps.rcPaint.top / cy_item_;
+			const long end   = ps.rcPaint.bottom / cy_item_;
 			RECT r{};
-			r.top    = begin * cyItem_;
-			r.bottom = r.top + cyItem_;
+			r.top    = begin * cy_item_;
+			r.bottom = r.top + cy_item_;
 			r.left   = 0;
-			r.right  = rc.right - cxScrollBar_;
+			r.right  = rc.right - cx_scroll_bar_;
 
 			const ItemList& navis = doc_.get_navis();
 			const ItemList& files = doc_.get_files();
@@ -336,18 +334,18 @@ public:
 					if ((it->data() & SEPA) != 0) {
 						draw_separator(dc, r, (it->data() == (SEPA | HIER)));
 					} else {
-						draw_item(dc, r, it.get(), listCursorSwitch_ == Document::ListType::HIER && i == listCursorIndex_);
+						draw_item(dc, r, it.get(), list_cursor_switch_ == Document::ListType::HIER && i == list_cursor_idx_);
 					}
-				} else if (i - navis.size() + scrollListTopIndex_ < files.size()) {
-					const size_t t = i - navis.size() + scrollListTopIndex_;
-					draw_item(dc, r, files.at(t).get(), listCursorSwitch_ == Document::ListType::FILE && t == listCursorIndex_);
+				} else if (i - navis.size() + scroll_list_top_idx_ < files.size()) {
+					const size_t t = i - navis.size() + scroll_list_top_idx_;
+					draw_item(dc, r, files.at(t).get(), list_cursor_switch_ == Document::ListType::FILE && t == list_cursor_idx_);
 				} else {
 					::FillRect(dc, &r, ::GetSysColorBrush(COLOR_MENU));
 				}
-				r.top += cyItem_, r.bottom += cyItem_;
+				r.top += cy_item_, r.bottom += cy_item_;
 			}
 		}
-		::EndPaint(hWnd_, &ps);
+		::EndPaint(wnd_, &ps);
 	}
 
 	// Draw a scroll bar
@@ -355,19 +353,19 @@ public:
 		RECT rc{};
 		const ItemList& files = doc_.get_files();
 
-		::GetClientRect(hWnd_, &rc);
-		rc.left = rc.right - cxScrollBar_;
-		if (files.size() <= scrollListLineNum_) {
+		::GetClientRect(wnd_, &rc);
+		rc.left = rc.right - cx_scroll_bar_;
+		if (files.size() <= scroll_list_line_num_) {
 			::FillRect(dc, &rc, ::GetSysColorBrush(COLOR_MENU));
 			return;
 		}
 		const double d = static_cast<double>(rc.bottom) / files.size();
 		RECT t = rc;
-		t.bottom = static_cast<LONG>(d * scrollListTopIndex_);
+		t.bottom = static_cast<LONG>(d * scroll_list_top_idx_);
 		::FillRect(dc, &t, ::GetSysColorBrush(COLOR_BTNSHADOW));
-		if (scrollListLineNum_ + scrollListTopIndex_ < files.size()) {
+		if (scroll_list_line_num_ + scroll_list_top_idx_ < files.size()) {
 			t.top     = t.bottom;
-			t.bottom += static_cast<LONG>(d * scrollListLineNum_);
+			t.bottom += static_cast<LONG>(d * scroll_list_line_num_);
 			::FillRect(dc, &t, ::GetSysColorBrush(COLOR_MENU));
 			t.top    = t.bottom;
 			t.bottom = rc.bottom;
@@ -385,7 +383,7 @@ public:
 		const ItemList& files = doc_.get_files();
 
 		::FillRect(dc, &r, ::GetSysColorBrush(COLOR_MENU));
-		::SelectObject(dc, hItemFont_);  // Font selection (do here because we measure the size below)
+		::SelectObject(dc, font_item_);  // Font selection (do here because we measure the size below)
 		if (isHier) {
 			wstring num;
 			if (doc_.selected_count()) {
@@ -416,7 +414,7 @@ public:
 			::GetTextExtentPoint32(dc, _T("x"), 1, &font);
 			r.left = font.cx + 2;
 		}
-		::InflateRect(&r, -3, cyItem_ / -2);
+		::InflateRect(&r, -3, cy_item_ / -2);
 		::DrawEdge(dc, &r, EDGE_ETCHED, BF_TOP);
 	}
 
@@ -427,9 +425,9 @@ public:
 		if (fd->is_empty()) {
 			::SetTextColor(dc, GetSysColor(COLOR_GRAYTEXT));
 			::SetBkMode(dc, TRANSPARENT);
-			::SelectObject(dc, hItemFont_);
-			r.left = cxSide_;
-			curSelIsLong_ = false;
+			::SelectObject(dc, font_item_);
+			r.left = cx_side_;
+			is_cur_sel_long_ = false;
 			::DrawText(dc, _T("empty"), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 			return;
 		}
@@ -448,15 +446,15 @@ public:
 		else color = (cur ? COLOR_HIGHLIGHTTEXT : COLOR_MENUTEXT);
 		::SetTextColor(dc, GetSysColor(color));
 		::SetBkMode(dc, TRANSPARENT);
-		::SelectObject(dc, hItemFont_);
-		r.left = cxSide_;
-		if (fd->is_dir()) r.right -= cxSide_;
+		::SelectObject(dc, font_item_);
+		r.left = cx_side_;
+		if (fd->is_dir()) r.right -= cx_side_;
 		SIZE font{};
 		if (cur) {
 			::GetTextExtentPoint32(dc, fd->name().c_str(), gsl::narrow<int>(fd->name().size()), &font);
-			curSelIsLong_ = font.cx > r.right - r.left;  // File name at cursor position is out
+			is_cur_sel_long_ = font.cx > r.right - r.left;  // File name at cursor position is out
 		}
-		::DrawText(dc, fd->name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | ((curSelIsLong_ && cur) ? cursorAlign_ : 0));
+		::DrawText(dc, fd->name().c_str(), -1, &r, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | ((is_cur_sel_long_ && cur) ? cursor_align_ : 0));
 	}
 
 	// Draw a mark
@@ -464,9 +462,9 @@ public:
 		TCHAR c[2]{};
 		RECT rl = r, rr = r;
 
-		rl.right = cxSide_, rr.left = r.right - cxSide_;
+		rl.right = cx_side_, rr.left = r.right - cx_side_;
 		::SetBkMode(dc, TRANSPARENT);
-		::SelectObject(dc, hMarkFont_);  // Select font for symbols
+		::SelectObject(dc, font_mark_);  // Select font for symbols
 		if (type == IconType::SQUARE)       c[0] = _T('g');
 		else if (type == IconType::CIRCLE)  c[0] = _T('n');
 		else if (type == IconType::SCIRCLE) c[0] = _T('i');
@@ -481,16 +479,16 @@ public:
 	}
 
 	void wmTimer() {
-		if (::IsWindowVisible(hWnd_)) {
-			if (hWnd_ != ::GetForegroundWindow()) {  // If the window is displayed but somehow it is not the front
+		if (::IsWindowVisible(wnd_)) {
+			if (wnd_ != ::GetForegroundWindow()) {  // If the window is displayed but somehow it is not the front
 				DWORD id, fid;
-				::GetWindowThreadProcessId(hWnd_, &id);
+				::GetWindowThreadProcessId(wnd_, &id);
 				::GetWindowThreadProcessId(::GetForegroundWindow(), &fid);
-				if (id != fid) window_utils::foreground_window(hWnd_);  // Bring the window to the front
+				if (id != fid) window_utils::foreground_window(wnd_);  // Bring the window to the front
 			}
 			// Search delay processing
 			if (search_.is_reserved()) {
-				set_cursor_index(search_.find_first(listCursorIndex_, doc_.get_files()), Document::ListType::FILE);
+				set_cursor_index(search_.find_first(list_cursor_idx_, doc_.get_files()), Document::ListType::FILE);
 			}
 			return;
 		}
@@ -500,25 +498,25 @@ public:
 		POINT pt;
 		::GetCursorPos(&pt);
 		if (!(
-			(popupPos_ == 0 && pt.x <= 1 && pt.y <= 1) || (popupPos_ == 1 && pt.x == r && pt.y == 0) ||
-			(popupPos_ == 2 && pt.x == r && pt.y == b) || (popupPos_ == 3 && pt.x == 0 && pt.y == b)
+			(popup_pos_ == 0 && pt.x <= 1 && pt.y <= 1) || (popup_pos_ == 1 && pt.x == r && pt.y == 0) ||
+			(popup_pos_ == 2 && pt.x == r && pt.y == b) || (popup_pos_ == 3 && pt.x == 0 && pt.y == b)
 			)) {
-			suppressPopup_ = false;
+			suppress_popup_ = false;
 			return;
 		}
-		if (suppressPopup_) return;
+		if (suppress_popup_) return;
 		// Does not pop up while dragging
 		if (::GetAsyncKeyState(VK_LBUTTON) < 0 || ::GetAsyncKeyState(VK_RBUTTON) < 0) return;
 		// Does not pop up if the current frontmost window is full screen
-		if (fullScreenCheck_ && window_utils::is_foreground_window_full_screen()) return;
-		::ShowWindow(hWnd_, SW_SHOW);
+		if (full_screen_check_ && window_utils::is_foreground_window_full_screen()) return;
+		::ShowWindow(wnd_, SW_SHOW);
 	}
 
 	void wmShowWindow(bool show) {
 		if (show) {
 			doc_.Update();
-			window_utils::move_window_to_corner(hWnd_, popupPos_);
-			window_utils::foreground_window(hWnd_);  // Bring the window to the front
+			window_utils::move_window_to_corner(wnd_, popup_pos_);
+			window_utils::foreground_window(wnd_);  // Bring the window to the front
 		} else {
 			ht_.clear_indexes();
 			re_.close();
@@ -529,16 +527,16 @@ public:
 	void wmButtonDown(int vkey, int x, int y) {
 		if (re_.is_active()) return;  // Reject while renaming
 
-		mouseDownY_        = y;
-		mouseDownArea_     = get_item_area(x);
-		mouseDownIndex_    = lineToIndex(y / cyItem_, mouseDownListType_);
-		mouseDownTopIndex_ = scrollListTopIndex_;
+		mouse_down_y_        = y;
+		mouse_down_area_     = get_item_area(x);
+		mouse_down_idx_    = lineToIndex(y / cy_item_, mouse_down_list_type_);
+		mouse_down_top_idx_ = scroll_list_top_idx_;
 
-		if (mouseDownArea_ == 1) {  // Scroller
-			SetCapture(hWnd_);
+		if (mouse_down_area_ == 1) {  // Scroller
+			SetCapture(wnd_);
 			return;
 		}
-		if (!mouseDownIndex_) return;
+		if (!mouse_down_idx_) return;
 
 		// Check button long press
 		POINT pt{}, gp{};
@@ -549,38 +547,38 @@ public:
 			if (abs(pt.x - gp.x) > 2 || abs(pt.y - gp.y) > 2) return;
 			if (!(::GetAsyncKeyState(vkey) < 0)) return;
 		}
-		if (vkey == VK_LBUTTON || vkey == VK_RBUTTON) action(CMD_START_DRAG, mouseDownListType_, mouseDownIndex_);
-		mouseDownY_ = mouseDownArea_ = -1;
-		mouseDownIndex_.reset();
-		mouseDownTopIndex_.reset();
+		if (vkey == VK_LBUTTON || vkey == VK_RBUTTON) action(CMD_START_DRAG, mouse_down_list_type_, mouse_down_idx_);
+		mouse_down_y_ = mouse_down_area_ = -1;
+		mouse_down_idx_.reset();
+		mouse_down_top_idx_.reset();
 	}
 
 	void wmMouseMove(WPARAM mkey, int x, int y) {
 		if (re_.is_active()) return;  // Reject while renaming
 
-		if (mouseDownY_ != -1 && mouseDownArea_ == 1) {  // Scroller
-			const double t = mouseDownTopIndex_.value() - (static_cast<long long>(mouseDownY_) - y) * static_cast<double>(doc_.get_file_count()) / listRect_.bottom;
+		if (mouse_down_y_ != -1 && mouse_down_area_ == 1) {  // Scroller
+			const double t = mouse_down_top_idx_.value() - (static_cast<long long>(mouse_down_y_) - y) * static_cast<double>(doc_.get_file_count()) / list_rect_.bottom;
 			set_scroll_list_top_index(std::lrint(max(0, t)));
 			return;
 		}
 		Document::ListType type;
-		const std::optional<size_t> cursor = lineToIndex(y / cyItem_, type);
+		const std::optional<size_t> cursor = lineToIndex(y / cy_item_, type);
 		const int dir    = pointer_moving_dir(x, y);
 		const int area   = get_item_area(x);
 		static int lastArea = 2;
 		static ULONGLONG lastTime;
 
 		if (area == 2) {  // The mouse moved on the item
-			if (cursor != listCursorIndex_) {
+			if (cursor != list_cursor_idx_) {
 				set_cursor_index(cursor, type);
 			} else {
 				if (lastArea == 2) change_item_align(x, y);
 				else if (::GetTickCount64() - lastTime < 400) {
 					if (lastArea == 0 && dir == 1 && ht_.can_go_back()) {
 						doc_.set_current_directory(ht_.go_back());
-					} else if (lastArea == 1 && dir == 0 && doc_.is_movable_to_lower(type, listCursorIndex_.value())) {
-						ht_.go_forward(scrollListTopIndex_, doc_.current_path());
-						doc_.move_to_lower(type, listCursorIndex_.value());
+					} else if (lastArea == 1 && dir == 0 && doc_.is_movable_to_lower(type, list_cursor_idx_.value())) {
+						ht_.go_forward(scroll_list_top_idx_, doc_.current_path());
+						doc_.move_to_lower(type, list_cursor_idx_.value());
 					}
 				}
 			}
@@ -592,16 +590,16 @@ public:
 			if (lastArea == 2) {
 				lastTime = ::GetTickCount64();
 				if (area == 0 && dir == 0) lastArea = 0;  // Can return even if the cursor is not active
-				else if (area == 1 && dir == 1 && listCursorIndex_) lastArea = 1;
+				else if (area == 1 && dir == 1 && list_cursor_idx_) lastArea = 1;
 			}
 		} else if (!(mkey & MK_MBUTTON)) {  // L or R button
-			if (dir == 2 || dir == 3 || !listCursorIndex_) return;
-			if (type == Document::ListType::FILE && mouseDownIndex_ != listCursorIndex_ && type == mouseDownListType_) {
-				select_file(mouseDownIndex_, listCursorIndex_);
+			if (dir == 2 || dir == 3 || !list_cursor_idx_) return;
+			if (type == Document::ListType::FILE && mouse_down_idx_ != list_cursor_idx_ && type == mouse_down_list_type_) {
+				select_file(mouse_down_idx_, list_cursor_idx_);
 			}
-			if (mkey & MK_LBUTTON) action(CMD_POPUP_INFO, type, listCursorIndex_);
-			else if (window_utils::ctrl_pressed()) action(CMD_SHELL_MENU, type, listCursorIndex_);
-			else popup_menu(type, listCursorIndex_);
+			if (mkey & MK_LBUTTON) action(CMD_POPUP_INFO, type, list_cursor_idx_);
+			else if (window_utils::ctrl_pressed()) action(CMD_SHELL_MENU, type, list_cursor_idx_);
+			else popup_menu(type, list_cursor_idx_);
 			lastArea = -1;
 		}
 	}
@@ -625,16 +623,16 @@ public:
 
 	// Right justify file name by cursor position
 	void change_item_align(int x, int y) noexcept {
-		if (!curSelIsLong_) return;
-		RECT r = listRect_;
+		if (!is_cur_sel_long_) return;
+		RECT r = list_rect_;
 		UINT align = 0;
 		if (r.right / 4 * 3 < x) align = DT_RIGHT;
-		if (align != cursorAlign_) {  // Redraw
-			cursorAlign_ = align;
-			r.top = y / cyItem_ * cyItem_;
-			r.bottom = r.top + cyItem_;
-			::InvalidateRect(hWnd_, &r, FALSE);
-			::UpdateWindow(hWnd_);
+		if (align != cursor_align_) {  // Redraw
+			cursor_align_ = align;
+			r.top = y / cy_item_ * cy_item_;
+			r.bottom = r.top + cy_item_;
+			::InvalidateRect(wnd_, &r, FALSE);
+			::UpdateWindow(wnd_);
 		}
 	}
 
@@ -644,27 +642,27 @@ public:
 			re_.close();
 			return;  // Reject while renaming
 		}
-		if (mouseDownArea_ == 1) {  // Scroller
+		if (mouse_down_area_ == 1) {  // Scroller
 			ReleaseCapture();
-			mouseDownY_ = mouseDownArea_ = -1;
-			mouseDownIndex_.reset();
-			mouseDownTopIndex_.reset();
+			mouse_down_y_ = mouse_down_area_ = -1;
+			mouse_down_idx_.reset();
+			mouse_down_top_idx_.reset();
 			return;
 		}
 		Document::ListType type;
-		const std::optional<size_t> cursor = lineToIndex(y / cyItem_, type);
+		const std::optional<size_t> cursor = lineToIndex(y / cy_item_, type);
 		if (
 			!cursor.has_value() ||
 			on_separator_click(vkey, cursor.value(), x, type) ||
 			(type == Document::ListType::FILE && doc_.is_file_empty()) ||
-			(!listCursorIndex_ || !mouseDownIndex_) ||
-			type != mouseDownListType_ ||
+			(!list_cursor_idx_ || !mouse_down_idx_) ||
+			type != mouse_down_list_type_ ||
 			get_item_area(x) != 2
 		) {
-			mouseDownY_    = -1;
-			mouseDownArea_ = -1;
-			mouseDownIndex_.reset();
-			mouseDownTopIndex_.reset();
+			mouse_down_y_    = -1;
+			mouse_down_area_ = -1;
+			mouse_down_idx_.reset();
+			mouse_down_top_idx_.reset();
 			return;
 		}
 
@@ -672,41 +670,41 @@ public:
 		const bool rbtn = (mkey & MK_RBUTTON) != 0;
 
 		if ((vkey == VK_RBUTTON && lbtn) || (vkey == VK_LBUTTON && rbtn)) {
-			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_) {
-				select_file(mouseDownIndex_, listCursorIndex_);
+			if (type == Document::ListType::FILE && list_cursor_idx_ != mouse_down_idx_) {
+				select_file(mouse_down_idx_, list_cursor_idx_);
 			}
-			action(CMD_SHELL_MENU, type, listCursorIndex_);
+			action(CMD_SHELL_MENU, type, list_cursor_idx_);
 		} else if (vkey == VK_LBUTTON) {
-			if (type == Document::ListType::FILE && (listCursorIndex_ != mouseDownIndex_ || window_utils::ctrl_pressed())) {
-				select_file(mouseDownIndex_, listCursorIndex_);
+			if (type == Document::ListType::FILE && (list_cursor_idx_ != mouse_down_idx_ || window_utils::ctrl_pressed())) {
+				select_file(mouse_down_idx_, list_cursor_idx_);
 			} else {
-				action(CMD_OPEN, type, listCursorIndex_);
+				action(CMD_OPEN, type, list_cursor_idx_);
 			}
 		} else if (vkey == VK_RBUTTON) {
-			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_) {
-				select_file(mouseDownIndex_, listCursorIndex_);
+			if (type == Document::ListType::FILE && list_cursor_idx_ != mouse_down_idx_) {
+				select_file(mouse_down_idx_, list_cursor_idx_);
 			}
 			if (window_utils::ctrl_pressed()) {
-				action(CMD_SHELL_MENU, type, listCursorIndex_);
+				action(CMD_SHELL_MENU, type, list_cursor_idx_);
 			} else {
-				popup_menu(type, listCursorIndex_);
+				popup_menu(type, list_cursor_idx_);
 			}
 		} else if (vkey == VK_MBUTTON) {
-			if (type == Document::ListType::FILE && listCursorIndex_ != mouseDownIndex_ && doc_.arrange_favorites(mouseDownIndex_, listCursorIndex_)) {
+			if (type == Document::ListType::FILE && list_cursor_idx_ != mouse_down_idx_ && doc_.arrange_favorites(mouse_down_idx_, list_cursor_idx_)) {
 				doc_.Update();
 			} else {
-				action(CMD_FAVORITE, type, listCursorIndex_);
+				action(CMD_FAVORITE, type, list_cursor_idx_);
 			}
 		}
-		mouseDownY_ = mouseDownArea_ = -1;
-		mouseDownIndex_.reset();
-		mouseDownTopIndex_.reset();
+		mouse_down_y_ = mouse_down_area_ = -1;
+		mouse_down_idx_.reset();
+		mouse_down_top_idx_.reset();
 	}
 
 	// Check the position of the pointer
 	int get_item_area(int x) const noexcept {
-		if (x < cxSide_) return 0;
-		if (x >= listRect_.right - cxSide_) return 1;
+		if (x < cx_side_) return 0;
+		if (x >= list_rect_.right - cx_side_) return 1;
 		return 2;
 	}
 
@@ -719,7 +717,7 @@ public:
 			return true;
 		}
 		if (doc_.get_item(type, index)->data() == (SEPA | HIER)) {  // Click the hierarchy separator
-			if (listRect_.right * 2 / 3 < x) {  // If it is more than two thirds
+			if (list_rect_.right * 2 / 3 < x) {  // If it is more than two thirds
 				select_file(0, doc_.get_file_count() - 1);
 			} else {
 				int sortBy = doc_.get_option().get_sort_type();
@@ -742,24 +740,24 @@ public:
 	void wmKeyDown(WPARAM key) {
 		const bool ctrl = window_utils::ctrl_pressed();
 		if (ctrl || key == VK_APPS || key == VK_DELETE || key == VK_RETURN) {
-			if (!listCursorIndex_) return;
+			if (!list_cursor_idx_) return;
 			if (ctrl) {
 				if (key == VK_APPS) {
-					action(CMD_SHELL_MENU, listCursorSwitch_, listCursorIndex_);
+					action(CMD_SHELL_MENU, list_cursor_switch_, list_cursor_idx_);
 				}  else if (_T('A') <= key && key <= _T('Z')) {
-					accelerator(gsl::narrow<TCHAR>(key), listCursorSwitch_, listCursorIndex_);
+					accelerator(gsl::narrow<TCHAR>(key), list_cursor_switch_, list_cursor_idx_);
 				}
 			} else {
 				switch (key) {
-				case VK_APPS:   popup_menu(listCursorSwitch_, listCursorIndex_); break;
-				case VK_DELETE: action(CMD_DELETE, listCursorSwitch_, listCursorIndex_); break;
-				case VK_RETURN: action(CMD_OPEN, listCursorSwitch_, listCursorIndex_); break;
+				case VK_APPS:   popup_menu(list_cursor_switch_, list_cursor_idx_); break;
+				case VK_DELETE: action(CMD_DELETE, list_cursor_switch_, list_cursor_idx_); break;
+				case VK_RETURN: action(CMD_OPEN, list_cursor_switch_, list_cursor_idx_); break;
 				default: break;
 				}
 			}
 		} else {
 			if (key == VK_F3) {
-				set_cursor_index(search_.find_next(listCursorIndex_, doc_.get_files()), Document::ListType::FILE);
+				set_cursor_index(search_.find_next(list_cursor_idx_, doc_.get_files()), Document::ListType::FILE);
 				return;
 			}
 			key_cursor(key);  // Cursor movement by key operation
@@ -770,11 +768,11 @@ public:
 	// TODO Allow cursor movement to the navigation pane
 	// Cursor key input
 	void key_cursor(WPARAM key) {
-		std::optional<size_t> index = listCursorIndex_;
+		std::optional<size_t> index = list_cursor_idx_;
 		const ItemList& files = doc_.get_files();
 
-		if (!index || listCursorSwitch_ == Document::ListType::HIER) {
-			set_cursor_index(scrollListTopIndex_, Document::ListType::FILE);
+		if (!index || list_cursor_switch_ == Document::ListType::HIER) {
+			set_cursor_index(scroll_list_top_idx_, Document::ListType::FILE);
 			return;
 		}
 		size_t i = index.value();
@@ -805,50 +803,50 @@ public:
 				doc_.set_current_directory(ht_.go_back());
 			} else {
 				if (!doc_.is_movable_to_lower(Document::ListType::FILE, i)) return;
-				ht_.go_forward(scrollListTopIndex_, doc_.current_path());
+				ht_.go_forward(scroll_list_top_idx_, doc_.current_path());
 				doc_.move_to_lower(Document::ListType::FILE, i);
 			}
-			set_cursor_index(scrollListTopIndex_, Document::ListType::FILE);
+			set_cursor_index(scroll_list_top_idx_, Document::ListType::FILE);
 		}
 	}
 
 	// Specify cursor position
 	void set_cursor_index(std::optional<size_t> index, Document::ListType type) {
 		if (index.has_value() && type == Document::ListType::FILE) {
-			if (index.value() < scrollListTopIndex_) {
+			if (index.value() < scroll_list_top_idx_) {
 				set_scroll_list_top_index(index.value(), false);
 			}
-			else if (scrollListTopIndex_ + scrollListLineNum_ <= index.value()) {
-				set_scroll_list_top_index(index.value() - scrollListLineNum_ + 1, false);
+			else if (scroll_list_top_idx_ + scroll_list_line_num_ <= index.value()) {
+				set_scroll_list_top_index(index.value() - scroll_list_line_num_ + 1, false);
 			}
 		}
-		if (listCursorIndex_ && (listCursorSwitch_ != type || (!index.has_value() || listCursorIndex_ != index.value()))) {
-			RECT r = listRect_;
-			r.top    = gsl::narrow_cast<long>(index_to_line(listCursorIndex_.value(), listCursorSwitch_) * cyItem_);
-			r.bottom = r.top + cyItem_;
-			::InvalidateRect(hWnd_, &r, FALSE);
+		if (list_cursor_idx_ && (list_cursor_switch_ != type || (!index.has_value() || list_cursor_idx_ != index.value()))) {
+			RECT r = list_rect_;
+			r.top    = gsl::narrow_cast<long>(index_to_line(list_cursor_idx_.value(), list_cursor_switch_) * cy_item_);
+			r.bottom = r.top + cy_item_;
+			::InvalidateRect(wnd_, &r, FALSE);
 		}
 		if (!index.has_value() || (doc_.get_item(type, index.value())->data() & SEPA) != 0) {
-			listCursorIndex_.reset();
+			list_cursor_idx_.reset();
 			tt_.inactivate();  // Hide tool tip
-			::UpdateWindow(hWnd_);
+			::UpdateWindow(wnd_);
 			return;
 		}
-		if (listCursorSwitch_ != type || listCursorIndex_ != index) {
-			listCursorIndex_ = index.value();
-			listCursorSwitch_ = type;
-			RECT r = listRect_;
-			r.top    = gsl::narrow<long>(index_to_line(index.value(), type) * cyItem_);
-			r.bottom = r.top + cyItem_;
-			::InvalidateRect(hWnd_, &r, FALSE);
+		if (list_cursor_switch_ != type || list_cursor_idx_ != index) {
+			list_cursor_idx_ = index.value();
+			list_cursor_switch_ = type;
+			RECT r = list_rect_;
+			r.top    = gsl::narrow<long>(index_to_line(index.value(), type) * cy_item_);
+			r.bottom = r.top + cy_item_;
+			::InvalidateRect(wnd_, &r, FALSE);
 		}
-		if (listCursorSwitch_ != type) mouseDownIndex_.reset();
-		::UpdateWindow(hWnd_);  // Update here as curSelIsLong_ is referred below
+		if (list_cursor_switch_ != type) mouse_down_idx_.reset();
+		::UpdateWindow(wnd_);  // Update here as curSelIsLong_ is referred below
 		tt_.inactivate();  // Hide tool tip
-		if (curSelIsLong_) {  // Show tool tip
-			tt_.activate(doc_.get_item(type, index.value())->name(), listRect_);
+		if (is_cur_sel_long_) {  // Show tool tip
+			tt_.activate(doc_.get_item(type, index.value())->name(), list_rect_);
 		} else if (doc_.in_bookmark() || doc_.in_history()) {
-			tt_.activate(doc_.get_item(type, index.value())->path(), listRect_);
+			tt_.activate(doc_.get_item(type, index.value())->path(), list_rect_);
 		}
 	}
 
@@ -856,23 +854,23 @@ public:
 	void set_scroll_list_top_index(size_t i, bool update = true) noexcept {
 		const ItemList& files = doc_.get_files();
 
-		const size_t old = scrollListTopIndex_;
-		if (files.size() <= scrollListLineNum_) {
-			scrollListTopIndex_ = 0;
-		} else if (files.size() < scrollListLineNum_ + i) {
-			scrollListTopIndex_ = files.size() - scrollListLineNum_;
+		const size_t old = scroll_list_top_idx_;
+		if (files.size() <= scroll_list_line_num_) {
+			scroll_list_top_idx_ = 0;
+		} else if (files.size() < scroll_list_line_num_ + i) {
+			scroll_list_top_idx_ = files.size() - scroll_list_line_num_;
 		} else {
-			scrollListTopIndex_ = i;
+			scroll_list_top_idx_ = i;
 		}
 		RECT r;
-		GetClientRect(hWnd_, &r);
-		r.right -= cxScrollBar_;
-		r.top    = gsl::narrow<long>(cyItem_ * doc_.get_navi_count());
-		::ScrollWindow(hWnd_, 0, gsl::narrow_cast<long>((old - scrollListTopIndex_) * cyItem_), &r, &r);
-		GetClientRect(hWnd_, &r);
-		r.left = r.right - cxScrollBar_;
-		::InvalidateRect(hWnd_, &r, FALSE);
-		if (update) ::UpdateWindow(hWnd_);
+		GetClientRect(wnd_, &r);
+		r.right -= cx_scroll_bar_;
+		r.top    = gsl::narrow<long>(cy_item_ * doc_.get_navi_count());
+		::ScrollWindow(wnd_, 0, gsl::narrow_cast<long>((old - scroll_list_top_idx_) * cy_item_), &r, &r);
+		GetClientRect(wnd_, &r);
+		r.left = r.right - cx_scroll_bar_;
+		::InvalidateRect(wnd_, &r, FALSE);
+		if (update) ::UpdateWindow(wnd_);
 	}
 
 	// Display pop-up menu and execute command
@@ -887,7 +885,7 @@ public:
 
 		UINT f;
 		const POINT pt = get_popup_pt(w, index.value(), f);
-		PopupMenu pm(hWnd_, &pref_);
+		PopupMenu pm(wnd_, &pref_);
 		wstring cmd;
 		std::vector<wstring> items;
 
@@ -903,7 +901,7 @@ public:
 		auto ext = file_system::is_directory(ope_[0]) ? PATH_EXT_DIR : path::ext(ope_[0]);
 		const int type = extensions_.get_id(ext) + 1;
 		wstring cmd;
-		PopupMenu pm(hWnd_, &pref_);
+		PopupMenu pm(wnd_, &pref_);
 		if (pm.get_accel_command(type, accelerator, cmd)) action(ope_, cmd, w, index);
 	}
 
@@ -928,7 +926,7 @@ public:
 			}
 		} else {
 			if (!hasObj) return;
-			::ShowWindow(hWnd_, SW_HIDE);  // Hide in advance
+			::ShowWindow(wnd_, SW_HIDE);  // Hide in advance
 			ope_.open_by(cmd);
 		}
 		if (hasObj) doc_.set_current_directory(oldCurrent.c_str());
@@ -938,20 +936,20 @@ public:
 	void system_command(const wstring& cmd, const Selection& objs, Document::ListType w, size_t index) {
 		if (cmd == CMD_SELECT_ALL)    { select_file(0, doc_.get_file_count() - 1, true); return; }
 		if (cmd == CMD_RENAME)        {
-			re_.open(objs[0], gsl::narrow<long>(index_to_line(index, w) * cyItem_), listRect_.right, cyItem_);
+			re_.open(objs[0], gsl::narrow<long>(index_to_line(index, w) * cy_item_), list_rect_.right, cy_item_);
 			return;
 		}
 		if (cmd == CMD_POPUP_INFO)    { popup_info(objs, w, index); return; }
 		if (cmd == CMD_CLEAR_HISTORY) { doc_.clear_history(); return; }
 		if (cmd == CMD_FAVORITE)      { doc_.add_or_remove_favorite(objs[0], w, index); return; }  // Update here, so do nothing after return
-		if (cmd == CMD_START_DRAG)    { ::SetCursor(::LoadCursor(nullptr, IDC_NO)); ::ShowWindow(hWnd_, SW_HIDE); ope_.start_drag(); return; }
+		if (cmd == CMD_START_DRAG)    { ::SetCursor(::LoadCursor(nullptr, IDC_NO)); ::ShowWindow(wnd_, SW_HIDE); ope_.start_drag(); return; }
 		if (cmd == CMD_SHELL_MENU)    {
 			UINT f;
 			const POINT pt = get_popup_pt(w, index, f);
 			ope_.popup_shell_menu(pt, f);
 			return;
 		}
-		if (ope_.command(cmd) == -1) ::ShowWindow(hWnd_, SW_HIDE);
+		if (ope_.command(cmd) == -1) ::ShowWindow(wnd_, SW_HIDE);
 	}
 
 	// Select file by range specification
@@ -962,19 +960,19 @@ public:
 		if (back < front) std::swap(front, back);
 		doc_.select_file(front, back, Document::ListType::FILE, all);
 
-		if (front < scrollListTopIndex_) front = scrollListTopIndex_;
-		if (back >= scrollListTopIndex_ + scrollListLineNum_) back = scrollListTopIndex_ + scrollListLineNum_ - 1;
+		if (front < scroll_list_top_idx_) front = scroll_list_top_idx_;
+		if (back >= scroll_list_top_idx_ + scroll_list_line_num_) back = scroll_list_top_idx_ + scroll_list_line_num_ - 1;
 
-		RECT lr = listRect_;
-		lr.top    = gsl::narrow<long>(cyItem_ * (front - scrollListTopIndex_ + doc_.get_navi_count()));
-		lr.bottom = gsl::narrow<long>(cyItem_ * (back  - scrollListTopIndex_ + doc_.get_navi_count() + 1));
-		::InvalidateRect(hWnd_, &lr, FALSE);
+		RECT lr = list_rect_;
+		lr.top    = gsl::narrow<long>(cy_item_ * (front - scroll_list_top_idx_ + doc_.get_navi_count()));
+		lr.bottom = gsl::narrow<long>(cy_item_ * (back  - scroll_list_top_idx_ + doc_.get_navi_count() + 1));
+		::InvalidateRect(wnd_, &lr, FALSE);
 
 		// Update selected file count display
-		lr.top    = gsl::narrow<long>(cyItem_ * (doc_.get_navi_count() - 1));
-		lr.bottom = lr.top + cyItem_;
-		::InvalidateRect(hWnd_, &lr, FALSE);
-		::UpdateWindow(hWnd_);
+		lr.top    = gsl::narrow<long>(cy_item_ * (doc_.get_navi_count() - 1));
+		lr.bottom = lr.top + cy_item_;
+		::InvalidateRect(wnd_, &lr, FALSE);
+		::UpdateWindow(wnd_);
 	}
 
 	// Display file information
@@ -991,7 +989,7 @@ public:
 			::AppendMenu(hmenu, MF_STRING, i, items.at(i).c_str());
 		}
 		const POINT pt = get_popup_pt(w, index, f);
-		const int ret  = ::TrackPopupMenu(hmenu, TPM_RETURNCMD | TPM_LEFTBUTTON | f, pt.x, pt.y, 0, hWnd_, nullptr);
+		const int ret  = ::TrackPopupMenu(hmenu, TPM_RETURNCMD | TPM_LEFTBUTTON | f, pt.x, pt.y, 0, wnd_, nullptr);
 		::DestroyMenu(hmenu);
 		if (gsl::narrow<size_t>(ret) == items.size() - 1) {
 			ope_.popup_file_property();
@@ -1002,13 +1000,13 @@ public:
 	POINT get_popup_pt(Document::ListType w, size_t index, UINT &f) noexcept {
 		f = TPM_RETURNCMD;
 		RECT r{};
-		::GetWindowRect(hWnd_, &r);
+		::GetWindowRect(wnd_, &r);
 
 		const size_t l = index_to_line(index, w);
-		POINT pt = { 0, gsl::narrow<long>(l * cyItem_) };
-		::ClientToScreen(hWnd_, &pt);
-		menuTop_() = pt.y;
-		if (popupPos_ == 0 || popupPos_ == 3) {
+		POINT pt = { 0, gsl::narrow<long>(l * cy_item_) };
+		::ClientToScreen(wnd_, &pt);
+		menu_top_() = pt.y;
+		if (popup_pos_ == 0 || popup_pos_ == 3) {
 			pt.x = r.right - 6 - ::GetSystemMetrics(SM_CXFIXEDFRAME);
 		} else {
 			f |= TPM_RIGHTALIGN;
@@ -1019,7 +1017,7 @@ public:
 
 	// Return line from index and type
 	size_t index_to_line(size_t index, Document::ListType type) noexcept {
-		return index + (doc_.get_navi_count() - scrollListTopIndex_) * static_cast<size_t>(type == Document::ListType::FILE);
+		return index + (doc_.get_navi_count() - scroll_list_top_idx_) * static_cast<size_t>(type == Document::ListType::FILE);
 	}
 
 	// Return index and type from line
@@ -1029,7 +1027,7 @@ public:
 			return line;
 		}
 		type = Document::ListType::FILE;
-		const size_t i = line - doc_.get_navi_count() + scrollListTopIndex_;
+		const size_t i = line - doc_.get_navi_count() + scroll_list_top_idx_;
 		return (i < doc_.get_file_count()) ? std::optional<size_t>{i} : std::nullopt;
 	}
 
@@ -1039,11 +1037,11 @@ public:
 	void updated() override {
 		set_scroll_list_top_index(ht_.index());
 		set_cursor_index(std::nullopt, Document::ListType::FILE);
-		scrollListLineNum_ = (listRect_.bottom - doc_.get_navi_count() * cyItem_) / cyItem_;
+		scroll_list_line_num_ = (list_rect_.bottom - doc_.get_navi_count() * cy_item_) / cy_item_;
 
 		tt_.inactivate();
-		::InvalidateRect(hWnd_, nullptr, TRUE);
-		::UpdateWindow(hWnd_);
+		::InvalidateRect(wnd_, nullptr, TRUE);
+		::UpdateWindow(wnd_);
 	}
 
 };

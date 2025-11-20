@@ -2,7 +2,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-18
+ * @version 2025-11-20
  */
 
 #pragma once
@@ -18,7 +18,7 @@
 
 class Selection {
 
-	HWND hwnd_ = nullptr;
+	HWND wnd_ = nullptr;
 	std::vector<std::wstring> objects_;
 	std::wstring default_opener_;
 	unsigned long id_notify_{};
@@ -35,13 +35,13 @@ class Selection {
 		bool ret = false;
 
 		if (exts_.get_command(pref_, ext, cmd)) {
-			ret = execute::open(hwnd_, objs, cmd);
+			ret = execute::open(wnd_, objs, cmd);
 		} else {
 			// Normal file open behavior
-			ret = execute::open(hwnd_, obj);  // Try to open normally
+			ret = execute::open(wnd_, obj);  // Try to open normally
 			if (!ret && !file_system::is_directory(obj) && !default_opener_.empty()) {
 				// In the case of a file without association
-				ret = execute::open(hwnd_, objs, default_opener_);
+				ret = execute::open(wnd_, objs, default_opener_);
 			}
 		}
 		return ret;
@@ -49,7 +49,7 @@ class Selection {
 
 	// Manually request an update
 	void request_update() const noexcept {
-		::SendMessage(hwnd_, WM_REQUESTUPDATE, 0, 0);
+		::SendMessage(wnd_, WM_REQUESTUPDATE, 0, 0);
 	}
 
 public:
@@ -65,8 +65,8 @@ public:
 	}
 
 	// Specify a window handle.
-	void set_window_handle(HWND hwnd) noexcept {
-		hwnd_ = hwnd;
+	void set_window_handle(HWND wnd) noexcept {
+		wnd_ = wnd;
 	}
 
 	// Set default application path to open file without association
@@ -110,7 +110,7 @@ public:
 
 	// Open in shell function based on command line
 	int open_by(const std::wstring& line) {
-		const bool ret = execute::open(hwnd_, objects_, line);
+		const bool ret = execute::open(wnd_, objects_, line);
 		return ret;
 	}
 
@@ -121,8 +121,8 @@ public:
 
 	// Display shell menu
 	void popup_shell_menu(const POINT& pt, UINT f) {
-		id_notify_ = shell::set_shell_notify(id_notify_, hwnd_, WM_REQUESTUPDATE, path::parent(objects_.front()));
-		ContextMenu cm(hwnd_);
+		id_notify_ = shell::set_shell_notify(id_notify_, wnd_, WM_REQUESTUPDATE, path::parent(objects_.front()));
+		ContextMenu cm(wnd_);
 		cm.popup(objects_, TPM_RIGHTBUTTON | f, pt);
 	}
 
@@ -244,7 +244,7 @@ public:
 	}
 
 	void paste_in() {
-		id_notify_ = shell::set_shell_notify(id_notify_, hwnd_, WM_REQUESTUPDATE, objects_.front());
+		id_notify_ = shell::set_shell_notify(id_notify_, wnd_, WM_REQUESTUPDATE, objects_.front());
 		shell::paste_in(objects_);
 	}
 

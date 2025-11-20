@@ -17,7 +17,7 @@ const wchar_t WINDOW_NAME[] = _T("Tracker");
 
 std::unique_ptr<View> view{};
 
-int WINAPI wWinMain(_In_ HINSTANCE hinst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
+int WINAPI wWinMain(_In_ HINSTANCE inst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int) {
 	::CreateMutex(nullptr, FALSE, &MUTEX[0]);
 	if (::GetLastError() == ERROR_ALREADY_EXISTS) {
 		::MessageBeep(MB_ICONHAND);
@@ -34,14 +34,14 @@ int WINAPI wWinMain(_In_ HINSTANCE hinst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 	iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
 	::InitCommonControlsEx(&iccex);
 
-	if (!init_application(hinst, &CLASS_NAME[0])) {
+	if (!init_application(inst, &CLASS_NAME[0])) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
 	// Create main window
 	[[gsl::suppress(con.4)]]
-	const HWND hWnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, &CLASS_NAME[0], &WINDOW_NAME[0], WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, hinst, nullptr);
-	if (!hWnd) {
+	const HWND wnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, &CLASS_NAME[0], &WINDOW_NAME[0], WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, inst, nullptr);
+	if (!wnd) {
 		::MessageBeep(MB_ICONHAND);
 		return 0;
 	}
@@ -55,13 +55,13 @@ int WINAPI wWinMain(_In_ HINSTANCE hinst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ 
 	return gsl::narrow<int>(msg.wParam);
 }
 
-BOOL init_application(HINSTANCE hinst, const wchar_t* class_name) noexcept {
+BOOL init_application(HINSTANCE inst, const wchar_t* class_name) noexcept {
 	WNDCLASS wc{};
 	wc.style         = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc   = (WNDPROC)wnd_proc;
 	wc.cbClsExtra    = 0;
 	wc.cbWndExtra    = 0;
-	wc.hInstance     = hinst;
+	wc.hInstance     = inst;
 	wc.hIcon         = nullptr;
 	wc.hCursor       = ::LoadCursor(nullptr, IDC_ARROW);  // Mouse cursor (standard arrow)
 	wc.hbrBackground = nullptr;
@@ -70,10 +70,10 @@ BOOL init_application(HINSTANCE hinst, const wchar_t* class_name) noexcept {
 	return ::RegisterClass(&wc);
 }
 
-LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT CALLBACK wnd_proc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) {
 	switch (msg) {
 	case WM_CREATE:
-		view = std::make_unique<View>(hwnd);
+		view = std::make_unique<View>(wnd);
 		view->initialize();
 		break;
 	case WM_DESTROY:           view->finalize(); break;
@@ -84,7 +84,7 @@ LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 		break;
 	case WM_SIZE:              view->wmSize(LOWORD(lp), HIWORD(lp)); break;
 	case WM_PAINT:             view->wmPaint(); break;
-	case WM_ACTIVATEAPP:       if (!wp && ::GetCapture() != hwnd) ::ShowWindow(hwnd, SW_HIDE);  break;
+	case WM_ACTIVATEAPP:       if (!wp && ::GetCapture() != wnd) ::ShowWindow(wnd, SW_HIDE);  break;
 	case WM_TIMER:             view->wmTimer(); break;
 	case WM_HOTKEY:            view->wmHotKey(wp); break;
 	case WM_SHOWWINDOW:        view->wmShowWindow(wp == TRUE); break;
@@ -108,7 +108,7 @@ LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_RBUTTONDBLCLK:
 	case WM_MBUTTONDBLCLK:
 	case WM_NCRBUTTONDOWN:     break;
-	default:                   return DefWindowProc(hwnd, msg, wp, lp);
+	default:                   return DefWindowProc(wnd, msg, wp, lp);
 	}
 	return 0;
 }

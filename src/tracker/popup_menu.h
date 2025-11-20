@@ -2,7 +2,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2025-11-20
  */
 
 #pragma once
@@ -17,8 +17,8 @@
 
 class PopupMenu {
 
-	HWND hwnd_ = nullptr;
-	std::vector<HMENU> hmenus_;
+	HWND wnd_ = nullptr;
+	std::vector<HMENU> menus_;
 
 	const Pref &pref_;
 
@@ -42,14 +42,14 @@ class PopupMenu {
 				::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 			} else if (path == _T(">")) {  // Sub-menu
 				HMENU hsub_menu = ::CreateMenu();
-				hmenus_.push_back(hsub_menu);
+				menus_.push_back(hsub_menu);
 				add_type_menu(sec.substr(1), items, hsub_menu);
 
 				[[gsl::suppress(type.1)]]
 				::AppendMenu(hmenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hsub_menu), name.c_str());
 			} else if (path == _T("<New>")) {  // New file menu
 				HMENU hsub_menu = ::CreateMenu();
-				hmenus_.push_back(hsub_menu);
+				menus_.push_back(hsub_menu);
 				add_new_file_menu(hsub_menu, items);
 
 				[[gsl::suppress(type.1)]]
@@ -81,7 +81,7 @@ class PopupMenu {
 	// Whether you can paste files
 	void can_paste(bool &can_paste, bool &can_paste_shortcut) const noexcept {
 		can_paste = can_paste_shortcut = false;
-		if (!::OpenClipboard(hwnd_)) return;
+		if (!::OpenClipboard(wnd_)) return;
 		can_paste = (::GetClipboardData(CF_HDROP) != nullptr);
 		if (can_paste) {
 			const UINT CF_DROPEFFECT = ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT);
@@ -118,7 +118,7 @@ class PopupMenu {
 
 public:
 
-	PopupMenu(HWND hWnd, const Pref* pref) noexcept : hwnd_(hWnd), pref_(*pref) {}
+	PopupMenu(HWND hWnd, const Pref* pref) noexcept : wnd_(hWnd), pref_(*pref) {}
 
 	// Display pop-up menu and get command
 	bool popup(int type, const POINT &pt, UINT f, std::wstring& cmd, const std::vector<std::wstring> &additional) {
@@ -128,7 +128,7 @@ public:
 		if (hmenu == nullptr) {
 			return false;
 		}
-		hmenus_.push_back(hmenu);
+		menus_.push_back(hmenu);
 
 		if (type) {  // When a menu number is specified
 			add_type_menu(std::format(L"Menu{}", type), items, hmenu);
@@ -143,7 +143,7 @@ public:
 		}
 
 		if (items.size()) {
-			const int id = ::TrackPopupMenuEx(hmenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, hwnd_, nullptr);
+			const int id = ::TrackPopupMenuEx(hmenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | f, pt.x, pt.y, wnd_, nullptr);
 			ret = (0 < id);  // -1, 0 if not selected
 			if (0 < id) {
 				const auto idx = gsl::narrow<size_t>(id);
@@ -152,7 +152,7 @@ public:
 				}
 			}
 		}
-		for (const auto& m : hmenus_) {
+		for (const auto& m : menus_) {
 			::DestroyMenu(m);
 		}
 		return ret;

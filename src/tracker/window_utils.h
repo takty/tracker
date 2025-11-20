@@ -2,7 +2,7 @@
  * Window Utilities
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2025-11-20
  */
 
 #pragma once
@@ -30,12 +30,12 @@ namespace window_utils {
 	}
 
 	// Move the window to the corner of the screen (Win10 compatible)
-	void move_window_to_corner(HWND hwnd, int popupPos) noexcept {
+	void move_window_to_corner(HWND wnd, int popup_pos) noexcept {
 		const int sw = ::GetSystemMetrics(SM_CXSCREEN);
 		const int sh = ::GetSystemMetrics(SM_CYSCREEN);
 		RECT out{}, in{};
-		::GetWindowRect(hwnd, &out);
-		::DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &in, sizeof(RECT));
+		::GetWindowRect(wnd, &out);
+		::DwmGetWindowAttribute(wnd, DWMWA_EXTENDED_FRAME_BOUNDS, &in, sizeof(RECT));
 
 		const int w     = out.right  - out.left;
 		const int h     = out.bottom - out.top;
@@ -44,21 +44,21 @@ namespace window_utils {
 		const int off_r = out.right  - in.right;
 		const int off_b = out.bottom - in.bottom;
 
-		const int x = (popupPos == 0 || popupPos == 3) ? (0 - off_l) /* Left Edge */ : (sw - w + off_r);  // Right Edge
-		const int y = (popupPos == 0 || popupPos == 1) ? (0 - off_t) /* Top Edge */  : (sh - h + off_b);  // Bottom Edge
-		::MoveWindow(hwnd, x, y, w, h, FALSE);
+		const int x = (popup_pos == 0 || popup_pos == 3) ? (0 - off_l) /* Left Edge */ : (sw - w + off_r);  // Right Edge
+		const int y = (popup_pos == 0 || popup_pos == 1) ? (0 - off_t) /* Top Edge */  : (sh - h + off_b);  // Bottom Edge
+		::MoveWindow(wnd, x, y, w, h, FALSE);
 	}
 
 	// Bring the window completely to the front
-	void foreground_window(HWND hWnd) noexcept {
+	void foreground_window(HWND wnd) noexcept {
 		DWORD t{};
 		const DWORD for_id = ::GetWindowThreadProcessId(::GetForegroundWindow(), nullptr);
-		const DWORD tar_id = ::GetWindowThreadProcessId(hWnd, nullptr);
+		const DWORD tar_id = ::GetWindowThreadProcessId(wnd, nullptr);
 
 		::AttachThreadInput(tar_id, for_id, TRUE);
 		::SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &t, 0);
 		::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, nullptr, 0);
-		::SetForegroundWindow(hWnd);
+		::SetForegroundWindow(wnd);
 		::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, t, nullptr, 0);
 		::AttachThreadInput(tar_id, for_id, FALSE);
 	}
@@ -67,10 +67,10 @@ namespace window_utils {
 		return (::GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
 	}
 
-	HFONT get_ui_message_font(HWND hwnd) noexcept {
+	HFONT get_ui_message_font(HWND wnd) noexcept {
 		NONCLIENTMETRICSW ncm{};
 		ncm.cbSize = sizeof(ncm);
-		const int dpi = ::GetDpiForWindow(hwnd);
+		const int dpi = ::GetDpiForWindow(wnd);
 		if (!::SystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0, dpi)) {
 			return nullptr;
 		}
