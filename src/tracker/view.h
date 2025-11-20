@@ -138,40 +138,40 @@ public:
 	void load_pref_data(const bool is_first_time) {
 		pref_.set_current_section(SECTION_WINDOW);
 
-		cx_side_      = std::lrint(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpi_fact_x_);
-		cy_item_      = std::lrint(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpi_fact_y_);
+		cx_side_       = std::lrint(pref_.item_int(KEY_SIDE_AREA_WIDTH, VAL_SIDE_AREA_WIDTH) * dpi_fact_x_);
+		cy_item_       = std::lrint(pref_.item_int(KEY_LINE_HEIGHT,     VAL_LINE_HEIGHT)     * dpi_fact_y_);
 		cx_scroll_bar_ = std::lrint(6 * dpi_fact_x_);
 
-		popup_pos_        = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
+		popup_pos_         = pref_.item_int(KEY_POPUP_POSITION, VAL_POPUP_POSITION);
 		full_screen_check_ = pref_.item_int(KEY_FULL_SCREEN_CHECK, VAL_FULL_SCREEN_CHECK) != 0;
 
 		const int width  = std::lrint(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpi_fact_x_);
 		const int height = std::lrint(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpi_fact_y_);
 
-		const wstring defOpener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
-		const wstring hotKey    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
+		const wstring def_opener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
+		const wstring hot_key    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
 
-		const wstring fontName = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
-		const int     fontSize = std::lrint(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpi_fact_x_);
+		const wstring font_name = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
+		const int     font_size = std::lrint(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpi_fact_x_);
 
-		const bool useMigemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
+		const bool use_migemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
 
 		::MoveWindow(wnd_, 0, 0, width, height, FALSE);
 		::ShowWindow(wnd_, SW_SHOW);  // Once display, and calculate the size etc.
 		::ShowWindow(wnd_, SW_HIDE);  // Hide immediately
 
-		ope_.set_default_opener(defOpener);
-		set_hot_key(hotKey, IDHK);
+		ope_.set_default_opener(def_opener);
+		set_hot_key(hot_key, IDHK);
 
 		::DeleteObject(font_item_);
-		font_item_ = ::CreateFont(fontSize, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
-		if (fontName.empty() || !font_item_) {
+		font_item_ = ::CreateFont(font_size, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, font_name.c_str());
+		if (font_name.empty() || !font_item_) {
 			font_item_ = window_utils::get_ui_message_font(wnd_);
 		}
 		font_mark_ = ::CreateFont(std::lrint(14 * dpi_fact_x_), 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE, SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Marlett"));
 		re_.set_font(font_item_);
 
-		search_.initialize(useMigemo);
+		search_.initialize(use_migemo);
 		extensions_.restore(pref_);  // Load extension color
 
 		doc_.initialize(is_first_time);
@@ -257,7 +257,9 @@ public:
 			return;
 		}
 		if (id == IDHK) {
-			if (::IsWindowVisible(wnd_)) suppress_popup_ = true;
+			if (::IsWindowVisible(wnd_)) {
+				suppress_popup_ = true;
+			}
 			::ShowWindow(wnd_, ::IsWindowVisible(wnd_) ? SW_HIDE : SW_SHOW);
 		}
 	}
@@ -274,24 +276,28 @@ public:
 	void wm_rename_edit_closed() {
 		auto& renamedPath = re_.get_rename_path();
 		auto& newFileName = re_.get_new_file_name();
-		const auto ok = ope_.rename(renamedPath, newFileName);
-		auto newPath = path::parent(renamedPath);
+		const auto ok     = ope_.rename(renamedPath, newFileName);
+		auto newPath      = path::parent(renamedPath);
 		newPath.append(_T("\\")).append(newFileName);
-		if (ok && doc_.current_path() == renamedPath) doc_.set_current_directory(newPath);
-		else doc_.Update();
+
+		if (ok && doc_.current_path() == renamedPath) {
+			doc_.set_current_directory(newPath);
+		} else {
+			doc_.Update();
+		}
 	}
 
 	// Event handler of WM_*MENULOOP
 	void wm_menu_loop(bool enter) noexcept {
-		auto hMenu = ::FindWindow(TEXT("#32768"), nullptr);
+		auto menu = ::FindWindow(TEXT("#32768"), nullptr);
 
-		if (!::IsWindow(hMenu)) return;
+		if (!::IsWindow(menu)) return;
 		if (enter) {
-			::SetWindowLongPtr(hMenu, GWLP_USERDATA, ::GetWindowLongPtr(hMenu, GWLP_WNDPROC));
+			::SetWindowLongPtr(menu, GWLP_USERDATA, ::GetWindowLongPtr(menu, GWLP_WNDPROC));
 			[[gsl::suppress(type.1)]]
-			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(View::menu_proc));
+			::SetWindowLongPtr(menu, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(View::menu_proc));
 		} else {
-			::SetWindowLongPtr(hMenu, GWLP_WNDPROC, ::GetWindowLongPtr(hMenu, GWLP_USERDATA));
+			::SetWindowLongPtr(menu, GWLP_WNDPROC, ::GetWindowLongPtr(menu, GWLP_USERDATA));
 		}
 	}
 
@@ -316,10 +322,10 @@ public:
 
 		if (ps.rcPaint.right > rc.right - cx_scroll_bar_) draw_scroll_bar(dc);
 		if (ps.rcPaint.left < rc.right - cx_scroll_bar_) {
-			const long begin = ps.rcPaint.top / cy_item_;
-			const long end   = ps.rcPaint.bottom / cy_item_;
+			const long bgn = ps.rcPaint.top    / cy_item_;
+			const long end = ps.rcPaint.bottom / cy_item_;
 			RECT r{};
-			r.top    = begin * cy_item_;
+			r.top    = bgn * cy_item_;
 			r.bottom = r.top + cy_item_;
 			r.left   = 0;
 			r.right  = rc.right - cx_scroll_bar_;
@@ -327,7 +333,7 @@ public:
 			const ItemList& navis = doc_.get_navis();
 			const ItemList& files = doc_.get_files();
 
-			for (size_t i = begin; i <= gsl::narrow<size_t>(end); ++i) {
+			for (size_t i = bgn; i <= gsl::narrow<size_t>(end); ++i) {
 				if (i < navis.size()) {
 					const auto it = navis.at(i);
 					if (!it) continue;
@@ -462,9 +468,12 @@ public:
 		TCHAR c[2]{};
 		RECT rl = r, rr = r;
 
-		rl.right = cx_side_, rr.left = r.right - cx_side_;
+		rl.right = cx_side_;
+		rr.left  = r.right - cx_side_;
+
 		::SetBkMode(dc, TRANSPARENT);
 		::SelectObject(dc, font_mark_);  // Select font for symbols
+
 		if (type == IconType::SQUARE)       c[0] = _T('g');
 		else if (type == IconType::CIRCLE)  c[0] = _T('n');
 		else if (type == IconType::SCIRCLE) c[0] = _T('i');
@@ -527,22 +536,22 @@ public:
 	void wm_button_down(int vkey, int x, int y) {
 		if (re_.is_active()) return;  // Reject while renaming
 
-		mouse_down_y_        = y;
-		mouse_down_area_     = get_item_area(x);
-		mouse_down_idx_    = lineToIndex(y / cy_item_, mouse_down_list_type_);
+		mouse_down_y_       = y;
+		mouse_down_area_    = get_item_area(x);
+		mouse_down_idx_     = line_to_index(y / cy_item_, mouse_down_list_type_);
 		mouse_down_top_idx_ = scroll_list_top_idx_;
 
 		if (mouse_down_area_ == 1) {  // Scroller
-			SetCapture(wnd_);
+			::SetCapture(wnd_);
 			return;
 		}
 		if (!mouse_down_idx_) return;
 
 		// Check button long press
 		POINT pt{}, gp{};
-		const auto timeOut = ::GetTickCount64() + 500;
+		const auto time_out = ::GetTickCount64() + 500;
 		::GetCursorPos(&gp);
-		while (timeOut > ::GetTickCount64()) {
+		while (time_out > ::GetTickCount64()) {
 			::GetCursorPos(&pt);
 			if (abs(pt.x - gp.x) > 2 || abs(pt.y - gp.y) > 2) return;
 			if (!(::GetAsyncKeyState(vkey) < 0)) return;
@@ -562,35 +571,35 @@ public:
 			return;
 		}
 		Document::ListType type;
-		const std::optional<size_t> cursor = lineToIndex(y / cy_item_, type);
+		const std::optional<size_t> cursor = line_to_index(y / cy_item_, type);
 		const int dir    = pointer_moving_dir(x, y);
 		const int area   = get_item_area(x);
-		static int lastArea = 2;
-		static ULONGLONG lastTime;
+		static int last_area = 2;
+		static ULONGLONG last_time;
 
 		if (area == 2) {  // The mouse moved on the item
 			if (cursor != list_cursor_idx_) {
 				set_cursor_index(cursor, type);
 			} else {
-				if (lastArea == 2) change_item_align(x, y);
-				else if (::GetTickCount64() - lastTime < 400) {
-					if (lastArea == 0 && dir == 1 && ht_.can_go_back()) {
+				if (last_area == 2) change_item_align(x, y);
+				else if (::GetTickCount64() - last_time < 400) {
+					if (last_area == 0 && dir == 1 && ht_.can_go_back()) {
 						doc_.set_current_directory(ht_.go_back());
-					} else if (lastArea == 1 && dir == 0 && doc_.is_movable_to_lower(type, list_cursor_idx_.value())) {
+					} else if (last_area == 1 && dir == 0 && doc_.is_movable_to_lower(type, list_cursor_idx_.value())) {
 						ht_.go_forward(scroll_list_top_idx_, doc_.current_path());
 						doc_.move_to_lower(type, list_cursor_idx_.value());
 					}
 				}
 			}
-			lastArea = 2;
+			last_area = 2;
 			return;
 		}
 		// Sidebar processing
 		if (mkey == 0) {  // The button is not pressed
-			if (lastArea == 2) {
-				lastTime = ::GetTickCount64();
-				if (area == 0 && dir == 0) lastArea = 0;  // Can return even if the cursor is not active
-				else if (area == 1 && dir == 1 && list_cursor_idx_) lastArea = 1;
+			if (last_area == 2) {
+				last_time = ::GetTickCount64();
+				if (area == 0 && dir == 0) last_area = 0;  // Can return even if the cursor is not active
+				else if (area == 1 && dir == 1 && list_cursor_idx_) last_area = 1;
 			}
 		} else if (!(mkey & MK_MBUTTON)) {  // L or R button
 			if (dir == 2 || dir == 3 || !list_cursor_idx_) return;
@@ -600,24 +609,24 @@ public:
 			if (mkey & MK_LBUTTON) action(CMD_POPUP_INFO, type, list_cursor_idx_);
 			else if (window_utils::ctrl_pressed()) action(CMD_SHELL_MENU, type, list_cursor_idx_);
 			else popup_menu(type, list_cursor_idx_);
-			lastArea = -1;
+			last_area = -1;
 		}
 	}
 
 	// Sense the direction the pointer is moving
 	int pointer_moving_dir(int x, int y) noexcept {
-		static int lastX, lastY;
+		static int last_x, last_y;
 		int dir{};
 
-		const int w = abs(x - lastX);
-		const int h = abs(y - lastY);
+		const int w = abs(x - last_x);
+		const int h = abs(y - last_y);
 
-		if (w > h)      dir = (x - lastX < 0) ? 0 : 1;
-		else if (w < h) dir = (y - lastY < 0) ? 2 : 3;
+		if (w > h)      dir = (x - last_x < 0) ? 0 : 1;
+		else if (w < h) dir = (y - last_y < 0) ? 2 : 3;
 		else            dir = -1;
 
-		lastX = x;
-		lastY = y;
+		last_x = x;
+		last_y = y;
 		return dir;
 	}
 
@@ -643,14 +652,14 @@ public:
 			return;  // Reject while renaming
 		}
 		if (mouse_down_area_ == 1) {  // Scroller
-			ReleaseCapture();
+			::ReleaseCapture();
 			mouse_down_y_ = mouse_down_area_ = -1;
 			mouse_down_idx_.reset();
 			mouse_down_top_idx_.reset();
 			return;
 		}
 		Document::ListType type;
-		const std::optional<size_t> cursor = lineToIndex(y / cy_item_, type);
+		const std::optional<size_t> cursor = line_to_index(y / cy_item_, type);
 		if (
 			!cursor.has_value() ||
 			on_separator_click(vkey, cursor.value(), x, type) ||
@@ -1023,7 +1032,7 @@ public:
 	}
 
 	// Return index and type from line
-	std::optional<size_t> lineToIndex(size_t line, Document::ListType &type) noexcept {
+	std::optional<size_t> line_to_index(size_t line, Document::ListType &type) noexcept {
 		if (line < doc_.get_navi_count()) {
 			type = Document::ListType::HIER;
 			return line;
