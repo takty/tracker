@@ -21,8 +21,8 @@
 class RenameEdit {
 
 	int          msg_;
-	HWND         wnd_     = nullptr;
-	HWND         hedit_    = nullptr;
+	HWND         wnd_      = nullptr;
+	HWND         edit_     = nullptr;
 	WNDPROC      org_proc_ = nullptr;
 	std::wstring renamed_path_;
 	std::wstring new_file_name_;
@@ -56,28 +56,28 @@ public:
 		wnd_ = wnd;
 		[[gsl::suppress(type.1)]]
 		auto inst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(wnd, GWLP_HINSTANCE));
-		hedit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
+		edit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
 			0, 0, 0, 0, wnd, nullptr, inst, nullptr);
 		[[gsl::suppress(type.1)]]
-		org_proc_ = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hedit_, GWLP_WNDPROC));
+		org_proc_ = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(edit_, GWLP_WNDPROC));
 		[[gsl::suppress(type.1)]]
-		::SetWindowLongPtr(hedit_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+		::SetWindowLongPtr(edit_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 		[[gsl::suppress(type.1)]]
-		::SetWindowLongPtr(hedit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(RenameEdit::edit_proc));
+		::SetWindowLongPtr(edit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(RenameEdit::edit_proc));
 	}
 
 	void finalize() const noexcept {
 		[[gsl::suppress(type.1)]]
-		::SetWindowLongPtr(hedit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(org_proc_));
+		::SetWindowLongPtr(edit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(org_proc_));
 	}
 
 	void set_font(HFONT font) const noexcept {
 		[[gsl::suppress(type.1)]]
-		::SendMessage(hedit_, WM_SETFONT, reinterpret_cast<WPARAM>(font), 0);
+		::SendMessage(edit_, WM_SETFONT, reinterpret_cast<WPARAM>(font), 0);
 	}
 
 	bool is_active() const noexcept {
-		return ::IsWindowVisible(hedit_) == TRUE;
+		return ::IsWindowVisible(edit_) == TRUE;
 	}
 
 	void open(const std::wstring path, int y, int width, int height) {
@@ -93,25 +93,25 @@ public:
 			auto exe = path::ext(fname);
 			if (!exe.empty()) len -= exe.size() + 1;
 		}
-		::SetWindowText(hedit_, fname.c_str());
-		::SendMessage(hedit_, EM_SETSEL, 0, len);
+		::SetWindowText(edit_, fname.c_str());
+		::SendMessage(edit_, EM_SETSEL, 0, len);
 
-		::MoveWindow(hedit_, 0, y, width, height, TRUE);
-		::ShowWindow(hedit_, SW_SHOWNORMAL);
-		::SetFocus(hedit_);
+		::MoveWindow(edit_, 0, y, width, height, TRUE);
+		::ShowWindow(edit_, SW_SHOWNORMAL);
+		::SetFocus(edit_);
 	}
 
 	// Close name change
 	void close() {
-		if (!::IsWindowVisible(hedit_)) return;
+		if (!::IsWindowVisible(edit_)) return;
 
-		::ShowWindow(hedit_, SW_HIDE);
-		if (!::SendMessage(hedit_, EM_GETMODIFY, 0, 0) || renamed_path_.empty()) {
+		::ShowWindow(edit_, SW_HIDE);
+		if (!::SendMessage(edit_, EM_GETMODIFY, 0, 0) || renamed_path_.empty()) {
 			return;
 		}
-		const auto len = ::GetWindowTextLength(hedit_);  // Not including terminal NULL
+		const auto len = ::GetWindowTextLength(edit_);  // Not including terminal NULL
 		auto fname = std::vector<wchar_t>(gsl::narrow<size_t>(len) + 1);  // Add terminal NULL
-		::GetWindowText(hedit_, fname.data(), len + 1);  // Add terminal NULL
+		::GetWindowText(edit_, fname.data(), len + 1);  // Add terminal NULL
 		new_file_name_.assign(fname.data());
 		if (link::is_link(renamed_path_)) {
 			new_file_name_.append(_T(".lnk"));
