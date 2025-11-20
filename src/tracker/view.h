@@ -568,12 +568,12 @@ public:
 			set_scroll_list_top_index(std::lrint(max(0, t)));
 			return;
 		}
-		Document::ListType type;
-		const std::optional<size_t> cursor = line_to_index(y / cy_item_, type);
-		const int dir    = pointer_moving_dir(x, y);
-		const int area   = get_item_area(x);
-		static int last_area = 2;
-		static ULONGLONG last_time;
+		Document::ListType          type;
+		const std::optional<size_t> cursor    = line_to_index(y / cy_item_, type);
+		const int                   dir       = pointer_moving_dir(x, y);
+		const int                   area      = get_item_area(x);
+		static int                  last_area = 2;
+		static ULONGLONG            last_time;
 
 		if (area == 2) {  // The mouse moved on the item
 			if (cursor != list_cursor_idx_) {
@@ -774,49 +774,78 @@ public:
 		}
 	}
 
-	// TODO Allow cursor movement to the navigation pane
 	// Cursor key input
 	void key_cursor(WPARAM key) {
-		std::optional<size_t> index = list_cursor_idx_;
-		const ItemList& files = doc_.get_files();
-
-		if (!index || list_cursor_switch_ == Document::ListType::HIER) {
+		std::optional<size_t> idx = list_cursor_idx_;
+		if (!idx) {
 			set_cursor_index(scroll_list_top_idx_, Document::ListType::FILE);
 			return;
 		}
-		size_t i = index.value();
+		size_t i = idx.value();
+		const ItemList& ns = doc_.get_navis();
+		const ItemList& fs = doc_.get_files();
+		OutputDebugString(list_cursor_switch_ == Document::ListType::FILE ? L"FILE\n" : L"NAVI\n");
+		OutputDebugString(std::to_wstring(i).append(L"\n").c_str());
+
 		switch (key) {
 		case VK_SPACE:  // It's not a cursor but it looks like it
-			select_file(index, index);
+			if (list_cursor_switch_ == Document::ListType::FILE) {
+				select_file(idx, idx);
+			}
 			[[fallthrough]];
 		case VK_DOWN:
-			i++;
-			if (i >= files.size()) i = 0;
-			if ((doc_.get_item(Document::ListType::FILE, i)->data() & SEPA) != 0) i++;
-			set_cursor_index(i, Document::ListType::FILE);
+			++i;
+			if (list_cursor_switch_ == Document::ListType::HIER) {
+				if (i < ns.size() && (doc_.get_item(Document::ListType::HIER, i)->data() & SEPA) != 0) ++i;
+				if (i < ns.size()) {
+					set_cursor_index(i, Document::ListType::HIER);
+				} else {
+					set_cursor_index(0, Document::ListType::FILE);
+				}
+			} else {
+				if (i < fs.size()) {
+					set_cursor_index(i, Document::ListType::FILE);
+				} else {
+					set_cursor_index(0, Document::ListType::HIER);
+				}
+			}
 			return;
 		case VK_UP:
-			if (i == 0) i = files.size() - 1;
-			else i--;
-			if ((doc_.get_item(Document::ListType::FILE, i)->data() & SEPA) != 0) {
-				if (i == 0) i = files.size() - 1;
-				else i--;
+			if (i == 0) {
+				if (list_cursor_switch_ == Document::ListType::HIER) {
+					set_cursor_index(fs.size() - 1, Document::ListType::FILE);
+				} else {
+					i = ns.size() - 1;
+					if ((doc_.get_item(Document::ListType::HIER, i)->data() & SEPA) != 0) --i;
+					set_cursor_index(i, Document::ListType::HIER);
+				}
+			} else {
+				--i;
+				if (list_cursor_switch_ == Document::ListType::HIER) {
+					if ((doc_.get_item(Document::ListType::HIER, i)->data() & SEPA) != 0) --i;
+					set_cursor_index(i, Document::ListType::HIER);
+				} else {
+					set_cursor_index(i, Document::ListType::FILE);
+				}
 			}
-			set_cursor_index(i, Document::ListType::FILE);
 			return;
 		default: break;
 		}
 		if (key == VK_LEFT || key == VK_RIGHT) {
-			if (key == VK_LEFT) {
-				if (!ht_.can_go_back()) return;
-				doc_.set_current_directory(ht_.go_back());
-			} else {
-				if (!doc_.is_movable_to_lower(Document::ListType::FILE, i)) return;
-				ht_.go_forward(scroll_list_top_idx_, doc_.current_path());
-				doc_.move_to_lower(Document::ListType::FILE, i);
-			}
-			set_cursor_index(scroll_list_top_idx_, Document::ListType::FILE);
+			key_cursor_horizontal(key, i);
 		}
+	}
+
+	void key_cursor_horizontal(WPARAM key, size_t i) {
+		if (key == VK_LEFT) {
+			if (!ht_.can_go_back()) return;
+			doc_.set_current_directory(ht_.go_back());
+		} else {
+			if (!doc_.is_movable_to_lower(list_cursor_switch_, i)) return;
+			ht_.go_forward(scroll_list_top_idx_, doc_.current_path());
+			doc_.move_to_lower(list_cursor_switch_, i);
+		}
+		set_cursor_index(scroll_list_top_idx_, Document::ListType::FILE);
 	}
 
 	// Specify cursor position
@@ -842,7 +871,7 @@ public:
 			return;
 		}
 		if (list_cursor_switch_ != type || list_cursor_idx_ != index) {
-			list_cursor_idx_ = index.value();
+			list_cursor_idx_    = index.value();
 			list_cursor_switch_ = type;
 			RECT r = list_rect_;
 			r.top    = gsl::narrow<long>(index_to_line(index.value(), type) * cy_item_);
