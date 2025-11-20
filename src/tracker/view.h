@@ -948,7 +948,7 @@ public:
 			re_.open(objs[0], gsl::narrow<long>(index_to_line(index, w) * cy_item_), list_rect_.right, cy_item_);
 			return;
 		}
-		if (cmd == CMD_POPUP_INFO)    { popup_info(objs, w, index); return; }
+		if (cmd == CMD_POPUP_INFO)    { popup_info(w, index); return; }
 		if (cmd == CMD_CLEAR_HISTORY) { doc_.clear_history(); return; }
 		if (cmd == CMD_FAVORITE)      { doc_.add_or_remove_favorite(objs[0], w, index); return; }  // Update here, so do nothing after return
 		if (cmd == CMD_START_DRAG)    { ::SetCursor(::LoadCursor(nullptr, IDC_NO)); ::ShowWindow(wnd_, SW_HIDE); ope_.start_drag(); return; }
@@ -985,22 +985,22 @@ public:
 	}
 
 	// Display file information
-	void popup_info(const Selection&, Document::ListType w, size_t index) {
-		std::vector<std::wstring> items;
-		ope_.create_information_strings(items);
-		items.push_back(_T("...more"));
+	void popup_info(Document::ListType w, size_t index) {
+		std::vector<std::wstring> strs;
+		ope_.create_information_strings(strs);
+		strs.push_back(_T("...more"));
 		UINT f{};
 
 		HMENU hmenu = ::CreatePopupMenu();
 		if (hmenu == nullptr) return;
 
-		for (size_t i = 0; i < items.size(); ++i) {
-			::AppendMenu(hmenu, MF_STRING, i, items.at(i).c_str());
+		for (size_t i = 0; i < strs.size(); ++i) {
+			::AppendMenu(hmenu, MF_STRING, i, strs.at(i).c_str());
 		}
 		const POINT pt = get_popup_pt(w, index, f);
 		const int ret  = ::TrackPopupMenu(hmenu, TPM_RETURNCMD | TPM_LEFTBUTTON | f, pt.x, pt.y, 0, wnd_, nullptr);
 		::DestroyMenu(hmenu);
-		if (gsl::narrow<size_t>(ret) == items.size() - 1) {
+		if (gsl::narrow<size_t>(ret) == strs.size() - 1) {
 			ope_.popup_file_property();
 		}
 	}
