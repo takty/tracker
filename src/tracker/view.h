@@ -28,8 +28,6 @@
 #include "search.h"
 #include "tool_tip.h"
 
-using namespace std;
-
 constexpr auto IDHK = 1;
 
 BOOL init_application(HINSTANCE inst, const wchar_t* class_name) noexcept;
@@ -148,11 +146,11 @@ public:
 		const int width  = std::lrint(pref_.item_int(KEY_WIDTH,  VAL_WIDTH)  * dpi_fact_x_);
 		const int height = std::lrint(pref_.item_int(KEY_HEIGHT, VAL_HEIGHT) * dpi_fact_y_);
 
-		const wstring def_opener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
-		const wstring hot_key    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
+		const std::wstring def_opener = pref_.item(KEY_NO_LINKED, VAL_NO_LINKED);
+		const std::wstring hot_key    = pref_.item(KEY_POPUP_HOT_KEY, VAL_POPUP_HOT_KEY);
 
-		const wstring font_name = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
-		const int     font_size = std::lrint(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpi_fact_x_);
+		const std::wstring font_name = pref_.item(KEY_FONT_NAME, VAL_FONT_NAME);
+		const int          font_size = std::lrint(pref_.item_int(KEY_FONT_SIZE, VAL_FONT_SIZE) * dpi_fact_x_);
 
 		const bool use_migemo = pref_.item_int(KEY_USE_MIGEMO, VAL_USE_MIGEMO) != 0;
 
@@ -177,7 +175,7 @@ public:
 		doc_.initialize(is_first_time);
 	}
 
-	void set_hot_key(const wstring& key, int id) const {
+	void set_hot_key(const std::wstring& key, int id) const {
 		UINT flag = 0;
 		if (key.size() < 5) return;
 		if (key.at(0) == _T('1')) flag |= MOD_ALT;
@@ -193,8 +191,8 @@ public:
 		RECT rw{};
 		::GetWindowRect(wnd_, &rw);
 		pref_.set_current_section(SECTION_WINDOW);
-		pref_.set_item_int(KEY_WIDTH, static_cast<int>((static_cast<__int64>(rw.right) - rw.left) / dpi_fact_x_));
-		pref_.set_item_int(KEY_HEIGHT, static_cast<int>((static_cast<__int64>(rw.bottom) - rw.top) / dpi_fact_y_));
+		pref_.set_item_int(KEY_WIDTH,  static_cast<int>((static_cast<__int64>(rw.right)  - rw.left) / dpi_fact_x_));
+		pref_.set_item_int(KEY_HEIGHT, static_cast<int>((static_cast<__int64>(rw.bottom) - rw.top)  / dpi_fact_y_));
 
 		doc_.finalize();
 		::UnregisterHotKey(wnd_, IDHK);  // Cancel hot key
@@ -233,11 +231,11 @@ public:
 		if (wpos == nullptr) {
 			return;
 		}
-		const int edge = ::GetSystemMetrics(SM_CYSIZEFRAME);
-		const int upNC = ::GetSystemMetrics(SM_CYSMCAPTION) + edge;
+		const int edge  = ::GetSystemMetrics(SM_CYSIZEFRAME);
+		const int up_nc = ::GetSystemMetrics(SM_CYSMCAPTION) + edge;
 
-		wpos->cy = (wpos->cy + cy_item_ / 2 - edge - upNC) / cy_item_ * cy_item_ + edge + upNC;
-		if (wpos->cy - edge - upNC < cy_item_ * 8) wpos->cy = cy_item_ * 8 + edge + upNC;
+		wpos->cy = (wpos->cy + cy_item_ / 2 - edge - up_nc) / cy_item_ * cy_item_ + edge + up_nc;
+		if (wpos->cy - edge - up_nc < cy_item_ * 8) wpos->cy = cy_item_ * 8 + edge + up_nc;
 		if (wpos->cx < 96) wpos->cx = 96;
 	}
 
@@ -391,7 +389,7 @@ public:
 		::FillRect(dc, &r, ::GetSysColorBrush(COLOR_MENU));
 		::SelectObject(dc, font_item_);  // Font selection (do here because we measure the size below)
 		if (isHier) {
-			wstring num;
+			std::wstring num;
 			if (doc_.selected_count()) {
 				if (doc_.selected_count() == files.size()) {
 					num.assign(_T("ALL / "));
@@ -897,8 +895,8 @@ public:
 		UINT f;
 		const POINT pt = get_popup_pt(w, index.value(), f);
 		PopupMenu pm(wnd_, &pref_);
-		wstring cmd;
-		std::vector<wstring> items;
+		std::wstring cmd;
+		std::vector<std::wstring> items;
 
 		if (pm.popup(type, pt, f, cmd, items)) {
 			action(ope_, cmd, w, index);
@@ -911,23 +909,23 @@ public:
 		if (ope_.size() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
 		auto ext = file_system::is_directory(ope_[0]) ? PATH_EXT_DIR : path::ext(ope_[0]);
 		const int type = extensions_.get_id(ext) + 1;
-		wstring cmd;
+		std::wstring cmd;
 		PopupMenu pm(wnd_, &pref_);
 		if (pm.get_accel_command(type, accelerator, cmd)) action(ope_, cmd, w, index);
 	}
 
 	// Command execution
-	void action(const wstring& cmd, Document::ListType w, std::optional<size_t> index) {
+	void action(const std::wstring& cmd, Document::ListType w, std::optional<size_t> index) {
 		doc_.set_operator(index, w, ope_);
 		action(ope_, cmd, w, index);
 	}
 
-	void action(const Selection &objs, const wstring& cmd, Document::ListType w, std::optional<size_t> index) {
-		const bool hasObj = objs.size() != 0 && !objs[0].empty();
-		wstring oldCurrent;
+	void action(const Selection &objs, const std::wstring& cmd, Document::ListType w, std::optional<size_t> index) {
+		const bool has_obj = objs.size() != 0 && !objs[0].empty();
+		std::wstring old_current;
 
-		if (hasObj) {
-			oldCurrent.assign(file_system::current_directory_path());
+		if (has_obj) {
+			old_current.assign(file_system::current_directory_path());
 			doc_.set_current_directory(path::parent(objs[0]).c_str());
 			doc_.set_history(objs[0]);
 		}
@@ -936,15 +934,15 @@ public:
 				system_command(cmd, objs, w, index.value());
 			}
 		} else {
-			if (!hasObj) return;
+			if (!has_obj) return;
 			::ShowWindow(wnd_, SW_HIDE);  // Hide in advance
 			ope_.open_by(cmd);
 		}
-		if (hasObj) doc_.set_current_directory(oldCurrent.c_str());
+		if (has_obj) doc_.set_current_directory(old_current.c_str());
 	}
 
 	// System command execution
-	void system_command(const wstring& cmd, const Selection& objs, Document::ListType w, size_t index) {
+	void system_command(const std::wstring& cmd, const Selection& objs, Document::ListType w, size_t index) {
 		if (cmd == CMD_SELECT_ALL)    { select_file(0, doc_.get_file_count() - 1, true); return; }
 		if (cmd == CMD_RENAME)        {
 			re_.open(objs[0], gsl::narrow<long>(index_to_line(index, w) * cy_item_), list_rect_.right, cy_item_);
@@ -988,7 +986,7 @@ public:
 
 	// Display file information
 	void popup_info(const Selection&, Document::ListType w, size_t index) {
-		vector<wstring> items;
+		std::vector<std::wstring> items;
 		ope_.create_information_strings(items);
 		items.push_back(_T("...more"));
 		UINT f{};
