@@ -2,7 +2,7 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2025-11-20
  */
 
 #pragma once
@@ -55,9 +55,9 @@ public:
 	void initialize(HWND hwnd) noexcept {
 		hwnd_ = hwnd;
 		[[gsl::suppress(type.1)]]
-		auto hInst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hwnd, GWLP_HINSTANCE));
+		auto hinst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hwnd, GWLP_HINSTANCE));
 		hedit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
-			0, 0, 0, 0, hwnd, nullptr, hInst, nullptr);
+			0, 0, 0, 0, hwnd, nullptr, hinst, nullptr);
 		[[gsl::suppress(type.1)]]
 		org_proc_ = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(hedit_, GWLP_WNDPROC));
 		[[gsl::suppress(type.1)]]

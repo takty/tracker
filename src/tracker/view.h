@@ -2,7 +2,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2025-11-20
  */
 
 #pragma once
@@ -33,17 +33,17 @@ using namespace std;
 
 constexpr auto IDHK = 1;
 
-BOOL init_application(HINSTANCE hInst, const wchar_t* className) noexcept;
+BOOL init_application(HINSTANCE hinst, const wchar_t* class_name) noexcept;
 LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 class View : public Observer {
 
-	static constexpr auto SEPA = 1;
-	static constexpr auto DIR = 2;
-	static constexpr auto HIDE = 4;
-	static constexpr auto LINK = 8;
-	static constexpr auto HIER = 16;
-	static constexpr auto SEL = 32;
+	static constexpr auto SEPA  = 1;
+	static constexpr auto DIR   = 2;
+	static constexpr auto HIDE  = 4;
+	static constexpr auto LINK  = 8;
+	static constexpr auto HIER  = 16;
+	static constexpr auto SEL   = 32;
 	static constexpr auto EMPTY = 64;
 
 	int mouseDownY_ = -1;
@@ -982,7 +982,7 @@ public:
 		vector<wstring> items;
 		ope_.create_information_strings(items);
 		items.push_back(_T("...more"));
-		UINT f;
+		UINT f{};
 
 		HMENU hmenu = ::CreatePopupMenu();
 		if (hmenu == nullptr) return;

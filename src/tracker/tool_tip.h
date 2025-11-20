@@ -2,7 +2,7 @@
  * Tool Tip
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2025-11-20
  *
  * Need to add to stdafx.h
  * #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -29,12 +29,12 @@ public:
 
 	void initialize(HWND hWnd) noexcept {
 		[[gsl::suppress(type.1)]]
-		auto hInst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
+		auto hinst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
 
 		hwnd_  = hWnd;
 		hhint_ = ::CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 			WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP | TTS_NOANIMATE | TTS_NOFADE,
-			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT , CW_USEDEFAULT, hWnd, nullptr, hInst, nullptr);
+			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT , CW_USEDEFAULT, hWnd, nullptr, hinst, nullptr);
 	}
 
 	//  Display Tool Tips
