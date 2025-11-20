@@ -926,7 +926,7 @@ public:
 
 		if (has_obj) {
 			old_current.assign(file_system::current_directory_path());
-			doc_.set_current_directory(path::parent(objs[0]).c_str());
+			::SetCurrentDirectory(path::parent(objs[0]).c_str());
 			doc_.set_history(objs[0]);
 		}
 		if (cmd.front() == _T('<')) {
@@ -938,7 +938,7 @@ public:
 			::ShowWindow(wnd_, SW_HIDE);  // Hide in advance
 			ope_.open_by(cmd);
 		}
-		if (has_obj) doc_.set_current_directory(old_current.c_str());
+		if (has_obj) ::SetCurrentDirectory(old_current.c_str());
 	}
 
 	// System command execution
