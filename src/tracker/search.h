@@ -2,57 +2,75 @@
  * Search Functions
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2025-11-20
  */
 
 #pragma once
 
-#include <windows.h>
 #include <vector>
 #include <string>
-#include <cwctype>
 #include <algorithm>
 #include <optional>
 #include <regex>
+#include <chrono>
 
 #include "gsl/gsl"
-
 #include "item_list.h"
 #include "migemo_wrapper.h"
 #include "pref.hpp"
 
 class Search {
 
-	Migemo       migemo_;
-	ULONGLONG    last_key_search_time_ = 0;
-	bool         use_migemo_           = false;
-	bool         reserve_find_         = false;
-	std::wstring search_word_;
-	std::wstring migemo_pattern_;
+	static unsigned long long get_elapsed_time_ms() noexcept {
+		const auto now = std::chrono::steady_clock::now();
+		auto dur = now.time_since_epoch();
+		auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+		return gsl::narrow<unsigned long long>(ms);
+	}
+
+	static std::wstring escape_regex_special_chars(const std::wstring& s) {
+		std::wstring res;
+		const std::wstring scs = L"\\^$.|?*+()[]{}/";
+
+		for (const wchar_t c : s) {
+			if (scs.find(c) != std::wstring::npos) {
+				res += L'\\';
+			}
+			res += c;
+		}
+		return res;
+	}
+
+	Migemo             migemo_;
+	unsigned long long last_key_search_time_ = 0;
+	bool               use_migemo_           = false;
+	bool               reserve_find_         = false;
+	std::wstring       search_word_;
+	std::wstring       migemo_pattern_;
 
 public:
 
 	Search() noexcept = default;
 
-	bool initialize(bool useMigemo) {
-		use_migemo_ = (useMigemo && migemo_.load_library());
+	bool initialize(bool use_migemo) {
+		use_migemo_ = (use_migemo && migemo_.load_library());
 		return use_migemo_;
 	}
 
 	// Key input search
-	void key_search(WPARAM key) {
-		const auto time = GetTickCount64();
+	void key_search(wchar_t key) {
+		const auto time = get_elapsed_time_ms();
 		if (time - last_key_search_time_ > 1000) {
 			search_word_.clear();
 		}
-		search_word_.append(1, std::towlower(gsl::narrow<wint_t>(key)));
+		search_word_.append(1, key);
 		last_key_search_time_ = time;
-		reserve_find_       = true;  // Flag the call to findFirst using a timer
+		reserve_find_         = true;  // Flag the call to findFirst using a timer
 	}
 
 	bool is_reserved() const noexcept {
 		if (reserve_find_) {
-			const auto time = GetTickCount64();
+			const auto time = get_elapsed_time_ms();
 			if (time - last_key_search_time_ > 500) return true;
 		}
 		return false;
@@ -73,35 +91,22 @@ public:
 		size_t start_idx = (!cursor_idx) ? 0 : cursor_idx.value() + 1;
 		if (start_idx == items.size()) start_idx = 0;
 
+		std::wregex pat;
 		if (use_migemo_) {
-			std::wregex pat(migemo_pattern_, std::regex_constants::ECMAScript | std::regex_constants::icase);
-
-			for (size_t i = start_idx; ; ++i) {
-				if (i >= items.size()) {
-					i = 0;
-					restart = true;
-				}
-				if (restart && i == start_idx) break;
-
-				if (std::regex_search(items.at(i)->name(), pat)) {
-					jump_to = i;
-					break;
-				}
-			}
+			pat.assign(migemo_pattern_, std::regex_constants::ECMAScript | std::regex_constants::icase);
 		} else {
-			for (size_t i = start_idx; ; ++i) {
-				if (i >= items.size()) {
-					i = 0;
-					restart = true;
-				}
-				if (restart && i == start_idx) break;
+			pat.assign(escape_regex_special_chars(search_word_), std::regex_constants::ECMAScript | std::regex_constants::icase);
+		}
+		for (size_t i = start_idx; ; ++i) {
+			if (i >= items.size()) {
+				i = 0;
+				restart = true;
+			}
+			if (restart && i == start_idx) break;
 
-				std::wstring name(items.at(i)->name());
-				transform(name.begin(), name.end(), name.begin(), std::towlower);  // Lower case
-				if (name.find(search_word_) != std::wstring::npos) {
-					jump_to = i;
-					break;
-				}
+			if (std::regex_search(items.at(i)->name(), pat)) {
+				jump_to = i;
+				break;
 			}
 		}
 		return jump_to;

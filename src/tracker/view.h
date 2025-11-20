@@ -761,7 +761,9 @@ public:
 				return;
 			}
 			key_cursor(key);  // Cursor movement by key operation
-			if (_T('A') <= key && key <= _T('Z')) search_.key_search(key);  // Key input search
+			if (_T('A') <= key && key <= _T('Z')) {
+				search_.key_search(gsl::narrow<wchar_t>(key));  // Key input search
+			}
 		}
 	}
 
