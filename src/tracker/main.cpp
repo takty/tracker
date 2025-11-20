@@ -9,7 +9,7 @@
 
 #include "gsl/gsl"
 #include "stdafx.h"
-#include "View.h"
+#include "view.h"
 
 const wchar_t MUTEX[]       = _T("TRACKER510_20251123");
 const wchar_t CLASS_NAME[]  = _T("Tracker");
@@ -77,38 +77,38 @@ LRESULT CALLBACK wnd_proc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) {
 		view->initialize();
 		break;
 	case WM_DESTROY:           view->finalize(); break;
-	case WM_DPICHANGED:        view->wmDpiChanged(LOWORD(wp), HIWORD(wp)); break;
+	case WM_DPICHANGED:        view->wm_dpi_changed(LOWORD(wp), HIWORD(wp)); break;
 	case WM_WINDOWPOSCHANGING:
 		[[gsl::suppress(type.1)]]
-		if (view) view->wmWindowPosChanging(reinterpret_cast<LPWINDOWPOS>(lp));
+		if (view) view->wm_window_pos_changing(reinterpret_cast<LPWINDOWPOS>(lp));
 		break;
-	case WM_SIZE:              view->wmSize(LOWORD(lp), HIWORD(lp)); break;
-	case WM_PAINT:             view->wmPaint(); break;
-	case WM_ACTIVATEAPP:       if (!wp && ::GetCapture() != wnd) ::ShowWindow(wnd, SW_HIDE);  break;
-	case WM_TIMER:             view->wmTimer(); break;
-	case WM_HOTKEY:            view->wmHotKey(wp); break;
-	case WM_SHOWWINDOW:        view->wmShowWindow(wp == TRUE); break;
-	case WM_LBUTTONDOWN:       view->wmButtonDown(VK_LBUTTON, LOWORD(lp), HIWORD(lp)); break;
-	case WM_RBUTTONDOWN:       view->wmButtonDown(VK_RBUTTON, LOWORD(lp), HIWORD(lp)); break;
-	case WM_MBUTTONDOWN:       view->wmButtonDown(VK_MBUTTON, LOWORD(lp), HIWORD(lp)); break;
-	case WM_MOUSEMOVE:         view->wmMouseMove(wp, LOWORD(lp), HIWORD(lp)); break;
-	case WM_LBUTTONUP:         view->wmButtonUp(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_RBUTTONUP:         view->wmButtonUp(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_MBUTTONUP:         view->wmButtonUp(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
-	case WM_MOUSEWHEEL:        view->wmMouseWheel(GET_WHEEL_DELTA_WPARAM(wp)); break;
-	case WM_VSCROLL:           view->wmMouseWheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
-	case WM_ENDSESSION:        view->wmEndSession(); break;
-	case WM_REQUESTUPDATE:     view->wmRequestUpdate(); break;
-	case WM_RENAMEEDITCLOSED:  view->wmRenameEditClosed(); break;
-	case WM_KEYDOWN:           view->wmKeyDown(wp); break;
-	case WM_ENTERMENULOOP:     view->wmMenuLoop(true); break;
-	case WM_EXITMENULOOP:      view->wmMenuLoop(false); break;
-	case WM_CLOSE:             view->wmClose(); break;
+	case WM_SIZE:              view->wm_size(LOWORD(lp), HIWORD(lp)); break;
+	case WM_PAINT:             view->wm_paint(); break;
+	case WM_ACTIVATEAPP:       if (!wp && ::GetCapture() != wnd) ::ShowWindow(wnd, SW_HIDE); break;
+	case WM_TIMER:             view->wm_timer(); break;
+	case WM_HOTKEY:            view->wm_hot_key(wp); break;
+	case WM_SHOWWINDOW:        view->wm_show_window(wp == TRUE); break;
+	case WM_LBUTTONDOWN:       view->wm_button_down(VK_LBUTTON, LOWORD(lp), HIWORD(lp)); break;
+	case WM_RBUTTONDOWN:       view->wm_button_down(VK_RBUTTON, LOWORD(lp), HIWORD(lp)); break;
+	case WM_MBUTTONDOWN:       view->wm_button_down(VK_MBUTTON, LOWORD(lp), HIWORD(lp)); break;
+	case WM_MOUSEMOVE:         view->wm_mouse_move(wp, LOWORD(lp), HIWORD(lp)); break;
+	case WM_LBUTTONUP:         view->wm_button_up(VK_LBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
+	case WM_RBUTTONUP:         view->wm_button_up(VK_RBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
+	case WM_MBUTTONUP:         view->wm_button_up(VK_MBUTTON, LOWORD(lp), HIWORD(lp), wp); break;
+	case WM_MOUSEWHEEL:        view->wm_mouse_wheel(GET_WHEEL_DELTA_WPARAM(wp)); break;
+	case WM_VSCROLL:           view->wm_mouse_wheel((wp == SB_LINEUP) ? 1 : -1); break;  // Temporary
+	case WM_ENDSESSION:        view->wm_end_session(); break;
+	case WM_REQUESTUPDATE:     view->wm_request_update(); break;
+	case WM_RENAMEEDITCLOSED:  view->wm_rename_edit_closed(); break;
+	case WM_KEYDOWN:           view->wm_key_down(wp); break;
+	case WM_ENTERMENULOOP:     view->wm_menu_loop(true); break;
+	case WM_EXITMENULOOP:      view->wm_menu_loop(false); break;
+	case WM_CLOSE:             view->wm_close(); break;
 	case WM_LBUTTONDBLCLK:
 	case WM_RBUTTONDBLCLK:
 	case WM_MBUTTONDBLCLK:
 	case WM_NCRBUTTONDOWN:     break;
-	default:                   return DefWindowProc(wnd, msg, wp, lp);
+	default:                   return ::DefWindowProc(wnd, msg, wp, lp);
 	}
 	return 0;
 }

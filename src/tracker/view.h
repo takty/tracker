@@ -190,8 +190,8 @@ public:
 	void finalize() {
 		re_.finalize();
 
-		RECT rw;
-		GetWindowRect(wnd_, &rw);
+		RECT rw{};
+		::GetWindowRect(wnd_, &rw);
 		pref_.set_current_section(SECTION_WINDOW);
 		pref_.set_item_int(KEY_WIDTH, static_cast<int>((static_cast<__int64>(rw.right) - rw.left) / dpi_fact_x_));
 		pref_.set_item_int(KEY_HEIGHT, static_cast<int>((static_cast<__int64>(rw.bottom) - rw.top) / dpi_fact_y_));
@@ -204,7 +204,7 @@ public:
 		::PostQuitMessage(0);
 	}
 
-	void wmClose() {
+	void wm_close() {
 		if (window_utils::ctrl_pressed()) {
 			::ShowWindow(wnd_, SW_HIDE);
 			load_pref_data(false);
@@ -215,7 +215,7 @@ public:
 		}
 	}
 
-	void wmDpiChanged(int dpi_x, int dpi_y) {
+	void wm_dpi_changed(int dpi_x, int dpi_y) {
 		dpi_fact_x_ = dpi_x / 96.0;
 		dpi_fact_y_ = dpi_y / 96.0;
 
@@ -229,7 +229,7 @@ public:
 		}
 	}
 
-	void wmWindowPosChanging(WINDOWPOS *wpos) const noexcept {
+	void wm_window_pos_changing(WINDOWPOS *wpos) const noexcept {
 		if (wpos == nullptr) {
 			return;
 		}
@@ -241,7 +241,7 @@ public:
 		if (wpos->cx < 96) wpos->cx = 96;
 	}
 
-	void wmSize(int cwidth, int cheight) noexcept {
+	void wm_size(int cwidth, int cheight) noexcept {
 		::SetRect(&list_rect_, 0, 0, cwidth - cx_scroll_bar_, cheight);
 		scroll_list_line_num_ = (cheight - doc_.get_navi_count() * cy_item_) / cy_item_;
 
@@ -252,7 +252,7 @@ public:
 		}
 	}
 
-	void wmHotKey(WPARAM id) noexcept {
+	void wm_hot_key(WPARAM id) noexcept {
 		if (wnd_ == nullptr) {
 			return;
 		}
@@ -262,16 +262,16 @@ public:
 		}
 	}
 
-	void wmEndSession() {
+	void wm_end_session() {
 		doc_.finalize();
 	}
 
-	void wmRequestUpdate() {
+	void wm_request_update() {
 		ope_.done_request();
 		doc_.Update();
 	}
 
-	void wmRenameEditClosed() {
+	void wm_rename_edit_closed() {
 		auto& renamedPath = re_.get_rename_path();
 		auto& newFileName = re_.get_new_file_name();
 		const auto ok = ope_.rename(renamedPath, newFileName);
@@ -282,7 +282,7 @@ public:
 	}
 
 	// Event handler of WM_*MENULOOP
-	void wmMenuLoop(bool enter) noexcept {
+	void wm_menu_loop(bool enter) noexcept {
 		auto hMenu = ::FindWindow(TEXT("#32768"), nullptr);
 
 		if (!::IsWindow(hMenu)) return;
@@ -295,7 +295,7 @@ public:
 		}
 	}
 
-	void wmMouseWheel(int delta) noexcept {
+	void wm_mouse_wheel(int delta) noexcept {
 		if (re_.is_active()) return;  // Rejected while renaming
 		if (delta > 0) {
 			set_scroll_list_top_index(3 <= scroll_list_top_idx_ ? scroll_list_top_idx_ - 3 : 0);
@@ -307,7 +307,7 @@ public:
 
 	enum class IconType { NONE = 0, SQUARE = 1, CIRCLE = 2, SCIRCLE = 3 };
 
-	void wmPaint() {
+	void wm_paint() {
 		RECT rc{};
 		PAINTSTRUCT ps{};
 
@@ -478,7 +478,7 @@ public:
 		if (dir) ::DrawText(dc, _T("4"), 1, &rr, 0x0025);
 	}
 
-	void wmTimer() {
+	void wm_timer() {
 		if (::IsWindowVisible(wnd_)) {
 			if (wnd_ != ::GetForegroundWindow()) {  // If the window is displayed but somehow it is not the front
 				DWORD id, fid;
@@ -512,7 +512,7 @@ public:
 		::ShowWindow(wnd_, SW_SHOW);
 	}
 
-	void wmShowWindow(bool show) {
+	void wm_show_window(bool show) {
 		if (show) {
 			doc_.Update();
 			window_utils::move_window_to_corner(wnd_, popup_pos_);
@@ -524,7 +524,7 @@ public:
 	}
 
 	// Event Handler of WM_*BUTTONDOWN
-	void wmButtonDown(int vkey, int x, int y) {
+	void wm_button_down(int vkey, int x, int y) {
 		if (re_.is_active()) return;  // Reject while renaming
 
 		mouse_down_y_        = y;
@@ -553,7 +553,7 @@ public:
 		mouse_down_top_idx_.reset();
 	}
 
-	void wmMouseMove(WPARAM mkey, int x, int y) {
+	void wm_mouse_move(WPARAM mkey, int x, int y) {
 		if (re_.is_active()) return;  // Reject while renaming
 
 		if (mouse_down_y_ != -1 && mouse_down_area_ == 1) {  // Scroller
@@ -637,7 +637,7 @@ public:
 	}
 
 	// Event Handler of WM_*BUTTONUP
-	void wmButtonUp(int vkey, int x, int y, WPARAM mkey) {
+	void wm_button_up(int vkey, int x, int y, WPARAM mkey) {
 		if (re_.is_active()) {
 			re_.close();
 			return;  // Reject while renaming
@@ -737,7 +737,7 @@ public:
 		return true;
 	}
 
-	void wmKeyDown(WPARAM key) {
+	void wm_key_down(WPARAM key) {
 		const bool ctrl = window_utils::ctrl_pressed();
 		if (ctrl || key == VK_APPS || key == VK_DELETE || key == VK_RETURN) {
 			if (!list_cursor_idx_) return;
