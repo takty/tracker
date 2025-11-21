@@ -2,12 +2,12 @@
  * Window Utilities
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2025-11-21
  */
 
 #pragma once
 
-#include "Windows.h"
+#include <windows.h>
 
 namespace window_utils {
 
