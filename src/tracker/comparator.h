@@ -2,115 +2,95 @@
  * Comparator of File Items
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-04-29
  */
 
 #pragma once
 
 #include <memory>
 
+#include <shlwapi.h>
+
 #include "item.h"
 
-// Function Object for Comparing By Names
-class CompByName {
+template <typename Derived> class CompBase {
 
 	bool rev_;
 
 public:
 
-	CompByName(bool rev) noexcept : rev_(rev) {}
+	CompBase(bool rev) noexcept : rev_(rev) {}
 
 	bool operator()(const Item* it1, const Item* it2) const noexcept {
 		if (!it1 || !it2) {
 			return false;
 		}
-		bool ret = false;
-		if ((it1->is_dir()) ^ (it2->is_dir())) {
-			if ((it1->is_dir()) > (it2->is_dir())) ret = true;
-		} else {
-			if (::lstrcmp(it1->name().c_str(), it2->name().c_str()) < 0) ret = true;
-		}
+		#pragma warning(suppress: 26491)
+		const bool ret = (it1->is_dir() != it2->is_dir())
+			? it1->is_dir() > it2->is_dir()
+			: static_cast<const Derived*>(this)->cmp(*it1, *it2);
 		return rev_ ? !ret : ret;
+	}
+
+};
+
+// Function Object for Comparing By Names
+class CompByName : public CompBase<CompByName> {
+
+public:
+
+	using CompBase::CompBase;
+
+	bool cmp(const Item& it1, const Item& it2) const noexcept {
+		return ::StrCmpLogicalW(it1.name().c_str(), it2.name().c_str()) < 0;
 	}
 
 };
 
 // Function Object for Comparing By Types
-class CompByType {
-
-	bool rev_;
+class CompByType : public CompBase<CompByType> {
 
 public:
 
-	CompByType(bool rev) noexcept : rev_(rev) {}
+	using CompBase::CompBase;
 
-	bool operator()(const Item* it1, const Item* it2) const noexcept {
-		if (!it1 || !it2) {
-			return false;
+	bool cmp(const Item& it1, const Item& it2) const noexcept {
+		auto ext1 = path::ext(it1.path());
+		auto ext2 = path::ext(it2.path());
+		int res = ::lstrcmp(ext1.c_str(), ext2.c_str());
+		if (res == 0) {
+			res = ::StrCmpLogicalW(it1.name().c_str(), it2.name().c_str());
 		}
-		bool ret = false;
-		if ((it1->is_dir()) ^ (it2->is_dir())) {
-			if (it1->is_dir() > it2->is_dir()) ret = true;
-		} else {
-			auto ext1 = path::ext(it1->path());
-			auto ext2 = path::ext(it2->path());
-			int res = ::lstrcmp(ext1.c_str(), ext2.c_str());
-			if (res == 0) res = ::lstrcmp(it1->name().c_str(), it2->name().c_str());
-			if (res < 0) ret = true;
-		}
-		return rev_ ? !ret : ret;
+		return res < 0;
 	}
 
 };
 
 // Function Object for Comparing By Dates
-class CompByDate {
-
-	bool rev_;
+class CompByDate : public CompBase<CompByDate> {
 
 public:
 
-	CompByDate(bool rev) noexcept : rev_(rev) {}
+	using CompBase::CompBase;
 
-	bool operator()(const Item* it1, const Item* it2) const noexcept {
-		if (!it1 || !it2) {
-			return false;
-		}
-		bool ret = false;
-		if ((it1->is_dir()) ^ (it2->is_dir())) {
-			if ((it1->is_dir()) > (it2->is_dir())) ret = true;
-		} else {
-			ret = ::CompareFileTime(&(it1->time()), &(it2->time())) == 1;
-		}
-		return rev_ ? !ret : ret;
+	bool cmp(const Item& it1, const Item& it2) const noexcept {
+		return ::CompareFileTime(&(it1.time()), &(it2.time())) == 1;
 	}
 
 };
 
 // Function Object for Comparing By Sizes
-class CompBySize {
-
-	bool rev_;
+class CompBySize : public CompBase<CompBySize> {
 
 public:
 
-	CompBySize(bool rev) noexcept : rev_(rev) {}
+	using CompBase::CompBase;
 
-	bool operator()(const Item* it1, const Item* it2) const noexcept {
-		if (!it1 || !it2) {
-			return false;
+	bool cmp(const Item& it1, const Item& it2) const noexcept {
+		if (it1.size() == it2.size()) {
+			return ::StrCmpLogicalW(it1.name().c_str(), it2.name().c_str()) < 0;
 		}
-		bool ret = false;
-		if ((it1->is_dir()) ^ (it2->is_dir())) {
-			if ((it1->is_dir()) > (it2->is_dir())) ret = true;
-		} else {
-			if (it1->size() == it1->size()) {
-				if (::lstrcmp(it1->name().c_str(), it2->name().c_str()) < 0) ret = true;
-			} else {
-				if (it1->size() < it2->size()) ret = true;
-			}
-		}
-		return rev_ ? !ret : ret;
+		return it1.size() < it2.size();
 	}
 
 };
