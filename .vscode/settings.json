@@ -56,6 +56,7 @@
     "cSpell.words": [
         "HINSTANCE",
         "HMENU",
+        "lstrcmp",
         "migemo",
         "WNDPROC"
     ]
