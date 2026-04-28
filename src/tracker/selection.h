@@ -2,7 +2,7 @@
  * File Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2026-04-29
  */
 
 #pragma once
@@ -50,6 +50,11 @@ class Selection {
 	// Manually request an update
 	void request_update() const noexcept {
 		::SendMessage(wnd_, WM_REQUESTUPDATE, 0, 0);
+	}
+
+	bool do_with_update(bool ret) noexcept {
+		if (ret) request_update();
+		return ret;
 	}
 
 public:
@@ -110,8 +115,7 @@ public:
 
 	// Open in shell function based on command line
 	int open_by(const std::wstring& line) {
-		const bool ret = execute::open(wnd_, objects_, line);
-		return ret;
+		return execute::open(wnd_, objects_, line);
 	}
 
 	// Start dragging
@@ -130,17 +134,9 @@ public:
 	bool create_new_file(const std::wstring& orig) {
 		if (!file_system::is_directory(objects_.front())) return false;  // Fail if not folder
 
-		auto fname = path::name(orig);
-		std::wstring npath{ objects_.front() };
-		npath.append(1, L'\\').append(fname);
-		auto new_path  = file_system::unique_name(npath);
-		auto new_fname = path::name(new_path);
-
-		const bool ret = operation::copy_one_file(orig, objects_.front(), new_fname);
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		auto npath    = objects_.front() + L'\\' + path::name(orig);
+		auto new_path = file_system::unique_name(npath);
+		return do_with_update(operation::copy_one_file(orig, objects_.front(), path::name(new_path)));
 	}
 
 	// Create a new folder
@@ -148,23 +144,13 @@ public:
 		if (!file_system::is_directory(objects_.front())) {
 			return false;  // Fail if not folder
 		}
-		auto npath    = objects_.front() + L"\\NewFolder";
-		auto new_path = file_system::unique_name(npath);
-
-		const bool ret = ::CreateDirectory(new_path.c_str(), nullptr) == TRUE;
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		auto new_path = file_system::unique_name(objects_.front() + L"\\NewFolder");
+		return do_with_update(::CreateDirectory(new_path.c_str(), nullptr) == TRUE);
 	}
 
 	// Delete
 	bool delete_file() {
-		const bool ret = operation::delete_files(objects_);
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		return do_with_update(operation::delete_files(objects_));
 	}
 
 	// Make a duplicate
@@ -177,57 +163,36 @@ public:
 				ret = false;
 				break;
 			}
-			auto new_fname = path::name(clone_path);
-			auto dest_path = path::parent(o);
-			if (operation::copy_one_file(o, dest_path, new_fname)) {
+			if (operation::copy_one_file(o, path::parent(o), path::name(clone_path))) {
 				ret = true;
 			}
 		}
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		return do_with_update(ret);
 	}
 
 	// Make a shortcut
 	bool create_shortcut_here() {
 		bool ret = false;
-		std::wstring path, target;
 
 		for (auto& obj : objects_) {
-			if (link::is_link(obj)) {  // When it is a link
-				target = link::resolve(obj);
-				path.assign(obj);
-			} else {
-				target.assign(obj);
-				path = obj + L".lnk";
-			}
+			auto [target, path] = link::is_link(obj)
+				? std::pair{ link::resolve(obj), obj }
+				: std::pair{ obj, obj + L".lnk" };
 			if (link::create(file_system::unique_name(path), target)) {
 				ret = true;
 			}
 		}
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		return do_with_update(ret);
 	}
 
 	// Copy to desktop
 	bool copy_to_desktop() {
-		const bool ret = operation::copy_files(objects_, file_system::desktop_path());
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		return do_with_update(operation::copy_files(objects_, file_system::desktop_path()));
 	}
 
 	// Move to desktop
 	bool move_to_desktop() {
-		const bool ret = operation::move_files(objects_, file_system::desktop_path());
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		return do_with_update(operation::move_files(objects_, file_system::desktop_path()));
 	}
 
 	// Copy path to clipboard
@@ -250,11 +215,7 @@ public:
 
 	// Paste as a shortcut
 	bool paste_as_shortcut_in() {
-		const bool ret = clipboard::paste_as_link_in(objects_.front());
-		if (ret) {
-			request_update();
-		}
-		return ret;
+		return do_with_update(clipboard::paste_as_link_in(objects_.front()));
 	}
 
 	// Display file properties
