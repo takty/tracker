@@ -2,7 +2,7 @@
  * Bookmarks
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -37,7 +37,7 @@ public:
 		text_reader_writer::write(path_, paths_);
 	}
 
-	size_t size() noexcept {
+	size_t size() const noexcept {
 		return paths_.size();
 	}
 
@@ -46,16 +46,15 @@ public:
 	}
 
 	bool arrange(size_t drag, size_t drop) {
-		if (paths_.size() <= drag) return false;
-		if (paths_.size() <= drop) return false;
-		std::wstring path(paths_.at(drag));
+		if (paths_.size() <= drag || paths_.size() <= drop) return false;
+		auto path = std::move(paths_.at(drag));
 		paths_.erase(paths_.begin() + drag);
-		paths_.insert(paths_.begin() + drop, path);
+		paths_.insert(paths_.begin() + drop, std::move(path));
 		return true;
 	}
 
 	void add(const std::wstring& path) {
-		paths_.push_back(path);
+		paths_.emplace_back(path);
 	}
 
 	void remove(size_t index) noexcept {

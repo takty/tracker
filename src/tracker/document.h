@@ -2,7 +2,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2025-11-18
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -23,8 +23,6 @@
 #include "history.h"
 #include "drives.h"
 #include "option.h"
-
-class Item;
 
 class Document {
 
@@ -48,6 +46,15 @@ private:
 
 	int special_sep_opt_data_;
 	int hierarchy_sep_opt_data_;
+
+	void append_drives_to_files() {
+		dri_.clean_up();
+		for (size_t i = 0; i < dri_.size(); ++i) {
+			const auto it = Item::create();
+			it->set_file(dri_[i], exts_);
+			files_.add(it);
+		}
+	}
 
 	// Make a file list of ordinary folders
 	void set_normal_folder(const std::wstring& path) {
@@ -113,12 +120,7 @@ private:
 			}
 			opt_.sort_history(files_);
 		} else if (cur_path_ == dri_.PATH) {
-			dri_.clean_up();
-			for (size_t i = 0; i < dri_.size(); ++i) {
-				const auto it = Item::create();
-				it->set_file(dri_[i], exts_);
-				files_.add(it);
-			}
+			append_drives_to_files();
 		} else {
 			while (!cur_path_.empty()) {  // Go back to the folder where the file exists
 				if (file_system::is_existing(cur_path_)) break;
@@ -126,12 +128,7 @@ private:
 			}
 			if (!cur_path_.empty()) set_normal_folder(cur_path_);  // Folder found
 			else {
-				dri_.clean_up();
-				for (size_t i = 0; i < dri_.size(); ++i) {
-					const auto it = Item::create();
-					it->set_file(dri_[i], exts_);
-					files_.add(it);
-				}
+				append_drives_to_files();
 			}
 		}
 		if (files_.size() == 0) {
@@ -143,11 +140,9 @@ private:
 
 public:
 
-	Document(const TypeTable& exts, Pref& pref, int special_sep_opt_data, int hierarchy_sep_opt_data) : exts_(exts), pref_(pref), opt_(), observer_(), fav_(pref.path()), his_(pref.path()) {
-		special_sep_opt_data_   = special_sep_opt_data;
-		hierarchy_sep_opt_data_ = hierarchy_sep_opt_data;
-		cur_path_               = dri_.PATH;
-	}
+	Document(const TypeTable& exts, Pref& pref, int special_sep_opt_data, int hierarchy_sep_opt_data)
+		: observer_(nullptr), exts_(exts), pref_(pref), opt_(), fav_(pref.path()), his_(pref.path()),
+		  cur_path_(dri_.PATH), special_sep_opt_data_(special_sep_opt_data), hierarchy_sep_opt_data_(hierarchy_sep_opt_data) {}
 
 	void set_observer(Observer* o) noexcept {
 		observer_ = o;
@@ -190,14 +185,8 @@ public:
 		if (it->is_empty()) return false;
 
 		if (it->is_dir()) {
-			std::wstring path;
-			if (it->path().front() == L':') {
-				path.assign(it->path());
-			} else if (it->is_link()) {  // Save current folder if folder shortcut
-				path = link::resolve(it->path());
-			} else {
-				path.assign(it->path());
-			}
+			const auto& p = it->path();
+			const auto path = (p.front() == L':') ? p : (it->is_link() ? link::resolve(p) : p);
 			set_current_directory(path);
 			return true;
 		}
@@ -221,21 +210,17 @@ public:
 
 		if (it == nullptr) return false;
 		if (it->is_empty()) return false;
-
-		if (it->is_dir()) return true;
-		if (link::is_link(it->path())) return true;
-		if (in_bookmark() || in_history()) return true;
-
-		return false;
+		return it->is_dir() || link::is_link(it->path()) || in_bookmark() || in_history();
 	}
 
 	// Set operators for multiple selected files
 	Selection& set_operator(std::optional<size_t> index, ListType type, Selection& ope) {
 		ope.clear();
 		if (!index) return ope;
+		const auto idx = index.value();
 
 		const auto& vec = (type == ListType::FILE) ? files_ : navis_;
-		const auto& it  = vec.at(index.value());
+		const auto& it  = vec.at(idx);
 		if (!it) return ope;
 
 		if (it->is_empty()) return ope;
@@ -247,8 +232,8 @@ public:
 		}
 		// Copy selected file name
 		ope.add(it->path());  // Copy the file specified by index to the beginning
-		for (size_t i = 0; i < vec.size(); i++) {
-			if (vec.at(i)->is_sel() && i != index.value()) {
+		for (size_t i = 0; i < vec.size(); ++i) {
+			if (vec.at(i)->is_sel() && i != idx) {
 				ope.add(vec.at(i)->path());
 			}
 		}
@@ -339,15 +324,15 @@ public:
 		return files_;
 	}
 
-	const size_t get_navi_count() const noexcept {
+	size_t get_navi_count() const noexcept {
 		return navis_.size();
 	}
 
-	const size_t get_file_count() const noexcept {
+	size_t get_file_count() const noexcept {
 		return files_.size();
 	}
 
-	const bool is_file_empty() const {
+	bool is_file_empty() const {
 		return files_.size() && files_.at(0)->is_empty();
 	}
 

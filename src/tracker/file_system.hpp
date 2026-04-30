@@ -2,7 +2,7 @@
  * File System Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -41,14 +41,10 @@ namespace file_system {
 
 		find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				if (!calc_file_size_internally(parent + std::wstring{ &wfd.cFileName[0] }, size, limitTime)) {
-					success = false;
-					return false;  // break
-				}
-			} else {
-				size += (static_cast<uint64_t>(wfd.nFileSizeHigh) << 32) + wfd.nFileSizeLow;
+				return success = calc_file_size_internally(parent + std::wstring{ &wfd.cFileName[0] }, size, limitTime);
 			}
-			return true;  // continue
+			size += (static_cast<uint64_t>(wfd.nFileSizeHigh) << 32) + wfd.nFileSizeLow;
+			return true;
 		});
 		return success;
 	}
@@ -101,52 +97,47 @@ namespace file_system {
 	// Get the exe file path
 	std::wstring module_file_path() noexcept {
 		std::vector<wchar_t> buf(MAX_PATH);
-		DWORD nSize{ MAX_PATH };
-
-		while (true) {
+		for (DWORD nSize = MAX_PATH;; nSize *= 2) {
+			buf.resize(nSize);
 			const auto len = ::GetModuleFileName(nullptr, buf.data(), nSize);
 			if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
 				return std::wstring(buf.data(), len);
 			}
-			nSize *= 2;
-			buf.resize(nSize);
 		}
 	}
 
 	// Get the current directory path
 	std::wstring current_directory_path() {
 		std::vector<wchar_t> buf(MAX_PATH);
-		DWORD nSize{ MAX_PATH };
-
-		while (true) {
-			nSize = ::GetCurrentDirectory(nSize, buf.data());
-			if (nSize < buf.size()) break;
+		for (DWORD nSize = MAX_PATH;;) {
 			buf.resize(nSize);
+			nSize = ::GetCurrentDirectory(nSize, buf.data());
+			if (nSize < buf.size()) {
+				return std::wstring(buf.data());
+			}
 		}
-		return std::wstring(buf.data());
 	}
 
 	// Make unique new name
 	std::wstring unique_name(const std::wstring& obj, const std::wstring& post = std::wstring()) {
 		if (path::is_root(obj)) return L"";  // Failure
-		const auto path = path::parent(obj);
+		const auto parent = path::parent(obj);
 		auto name = path::name(obj);
 
 		std::wstring ext;
-		if (!is_directory(obj)) {
-			if (name.front() != path::EXT_PREFIX) {  // When the file is not dot file
-				name = path::name_without_ext(obj);
-				ext = path::ext(obj);
-				if (!ext.empty()) ext.insert(std::begin(ext), path::EXT_PREFIX);
-			}
+		if (!is_directory(obj) && name.front() != path::EXT_PREFIX) {  // When the file is not dot file
+			name = path::name_without_ext(obj);
+			ext = path::ext(obj);
+			if (!ext.empty()) ext.insert(std::begin(ext), path::EXT_PREFIX);
 		}
-		std::wstring ret{ path };
-		ret.append(1, path::PATH_SEPARATOR).append(name).append(post).append(ext);
 
-		for (int i = 1;; ++i) {
-			if (!is_existing(ret)) break;
-			auto count = L"(" + std::to_wstring(i) + L")";
-			ret.assign(path).append(1, path::PATH_SEPARATOR).append(name).append(post).append(count).append(ext);
+		auto build_path = [&](const std::wstring& suffix) {
+			return parent + std::wstring(1, path::PATH_SEPARATOR) + name + post + suffix + ext;
+		};
+
+		auto ret = build_path(L"");
+		for (int i = 1; is_existing(ret); ++i) {
+			ret = build_path(L"(" + std::to_wstring(i) + L")");
 		}
 		return ret;
 	}
@@ -177,13 +168,11 @@ namespace file_system {
 	}
 
 	bool calc_file_size(const std::vector<std::wstring>& paths, uint64_t& size, const uint64_t& limitTime) {
-		uint64_t s{};
 		size = 0;
-
 		for (const auto& p : paths) {
-			const bool success = calc_file_size(p, s, limitTime);
+			uint64_t s{};
+			if (!calc_file_size(p, s, limitTime)) return false;
 			size += s;
-			if (!success) return false;
 		}
 		return true;
 	}
@@ -196,22 +185,18 @@ namespace file_system {
 		}
 		auto opt = line.substr(sep + 1);
 
+		auto replace_placeholder = [&](const std::wstring& placeholder, const std::wstring& replacement) {
+			const auto pos = opt.find(placeholder);
+			if (pos != std::wstring::npos) opt.replace(pos, placeholder.size(), replacement);
+		};
+
 		// %path%  -> "path\file"
-		auto pos = opt.find(L"%path%");
-		if (pos != std::wstring::npos) {
-			opt.replace(pos, 6, path::quote(path::ensure_unc_prefix_if_needed(objs.front())));
-		}
+		replace_placeholder(L"%path%", path::quote(path::ensure_unc_prefix_if_needed(objs.front())));
 		// %paths% -> "path\file1" "path\file2"...
-		pos = opt.find(L"%paths%");
-		if (pos != std::wstring::npos) {
-			opt.replace(pos, 7, path::space_separated_quoted_paths_string(objs));
-		}
+		replace_placeholder(L"%paths%", path::space_separated_quoted_paths_string(objs));
 		// %file% -> "file"
-		pos = opt.find(L"%file%");
-		if (pos != std::wstring::npos) {
-			opt.replace(pos, 6, path::quote(path::name(objs.front())));
-		}
-		return{ path::absolute_path(line.substr(0, sep), file_system::module_file_path()), opt };
+		replace_placeholder(L"%file%", path::quote(path::name(objs.front())));
+		return { path::absolute_path(line.substr(0, sep), file_system::module_file_path()), opt };
 	}
 
 };

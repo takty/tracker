@@ -2,7 +2,7 @@
  * History
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -44,7 +44,7 @@ public:
 		text_reader_writer::write(path_, paths_);
 	}
 
-	size_t size() noexcept {
+	size_t size() const noexcept {
 		return paths_.size();
 	}
 
@@ -56,7 +56,7 @@ public:
 		auto root = std::wstring(1, path.front()) + L":\\";
 		if (file_system::is_removable(root)) return;  // Do not leave removable
 
-		paths_.erase(remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
+		paths_.erase(std::remove(paths_.begin(), paths_.end(), path), paths_.end());  // Delete the same history
 		paths_.insert(paths_.begin(), path);  // Add
 
 		if (paths_.size() > max_size_) {  // Maximum number of history limit
@@ -67,10 +67,10 @@ public:
 	void clean_up() {
 		// Delete a nonexistent path
 		paths_.erase(
-			remove_if(
+			std::remove_if(
 				paths_.begin(),
 				paths_.end(),
-				[](std::wstring& p) noexcept {return !file_system::is_existing(p); }
+				[](const std::wstring& p) noexcept { return !file_system::is_existing(p); }
 			),
 			paths_.end()
 		);

@@ -2,7 +2,7 @@
  * Drives
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -29,7 +29,7 @@ public:
 
 	Drives() noexcept : slow_drives_(LAST_LETTER - FIRST_LETTER + 1, false) {}
 
-	size_t size() noexcept {
+	size_t size() const noexcept {
 		return paths_.size();
 	}
 
@@ -41,6 +41,10 @@ public:
 		paths_.clear();
 		std::wstring path(L"A:\\");
 
+		auto can_access = [&]() noexcept {
+			return ::GetDiskFreeSpace(path.c_str(), nullptr, nullptr, nullptr, nullptr) != 0;
+		};
+
 		for (wchar_t c = FIRST_LETTER; c <= LAST_LETTER; ++c) {
 			const auto idx = c - FIRST_LETTER;
 			path.at(path.size() - 3) = c;
@@ -48,18 +52,18 @@ public:
 			if (type == DRIVE_NO_ROOT_DIR) continue;
 			if (type == DRIVE_REMOVABLE) {
 				if (!slow_drives_.at(idx)) {
-					const auto startTime = ::GetTickCount64();
-					const bool can = (::GetDiskFreeSpace(path.c_str(), nullptr, nullptr, nullptr, nullptr) != 0);
-					if (::GetTickCount64() - startTime > WAITING_TIME) {  // If it takes time
+					const auto start_time = ::GetTickCount64();
+					const bool can = can_access();
+					if (::GetTickCount64() - start_time > WAITING_TIME) {
 						slow_drives_.at(idx) = true;
-					} else {
-						if (!can) continue;
+					} else if (!can) {
+						continue;
 					}
 				}
-			} else {
-				if (!::GetDiskFreeSpace(path.c_str(), nullptr, nullptr, nullptr, nullptr)) continue;
+			} else if (!can_access()) {
+				continue;
 			}
-			paths_.push_back(path);
+			paths_.emplace_back(path);
 		}
 	}
 

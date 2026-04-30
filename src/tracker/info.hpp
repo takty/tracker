@@ -2,7 +2,7 @@
  * File Informations
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -42,23 +42,23 @@ namespace info {
 	// Generate a string representing the size of the file or drive
 	std::wstring file_size_to_str(const uint64_t& size, bool success, const wchar_t* prefix) {
 		std::wstring dest;
-		std::wstring u;
-		bool ab{ false };
 		double val{};
+		const wchar_t* u = L"";
+		bool ab = false;
 
-		if (size >= (1 << 30)) {
+		if (size >= (1ULL << 30)) {
 			val = static_cast<double>(size) / (1ULL << 30);
 			u = L" GB";
-		} else if (size >= (1 << 20)) {
+		} else if (size >= (1ULL << 20)) {
 			val = static_cast<double>(size) / (1ULL << 20);
 			u = L" MB";
 			ab = true;
-		} else if (size >= (1 << 10)) {
+		} else if (size >= (1ULL << 10)) {
 			val = static_cast<double>(size) / (1ULL << 10);
 			u = L" kB";
 			ab = true;
 		} else {
-			val = static_cast<double>(size) / (1ULL << 0);
+			val = static_cast<double>(size);
 			u = L" Bytes";
 		}
 
@@ -68,7 +68,7 @@ namespace info {
 		if (val < 1) ++pre;
 
 		wchar_t format[100]{}, temp[100]{};
-		swprintf_s(&format[0], 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, u.c_str());
+		swprintf_s(&format[0], 100, L"%s%s%%.%dlf%s", prefix, (!success ? L">" : L""), pre, u);
 		swprintf_s(&temp[0], 100, &format[0], val);
 		dest.assign(&temp[0]);
 		if (ab) {

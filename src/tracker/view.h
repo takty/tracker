@@ -2,7 +2,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -83,6 +83,27 @@ class View : public Observer {
 	RenameEdit re_;
 	Search search_;
 	ToolTip tt_;
+
+	void reset_mouse_down_state() noexcept {
+		mouse_down_y_    = -1;
+		mouse_down_area_ = -1;
+		mouse_down_idx_.reset();
+		mouse_down_top_idx_.reset();
+	}
+
+	bool prepare_operator_for_menu(Document::ListType w, std::optional<size_t> index, int& type) {
+		doc_.set_operator(index, w, ope_);
+		if (ope_.size() == 0 || ope_[0].empty()) return false;  // Reject if objs is empty
+
+		auto ext = file_system::is_directory(ope_[0]) ? PATH_EXT_DIR : path::ext(ope_[0]);
+		type = extensions_.get_id(ext) + 1;
+		return true;
+	}
+
+	size_t skip_hier_separator(size_t index, bool forward) {
+		if ((doc_.get_navis().at(index)->data() & SEPA) == 0) return index;
+		return forward ? index + 1 : index - 1;
+	}
 
 public:
 
@@ -555,9 +576,7 @@ public:
 			if (!(::GetAsyncKeyState(vkey) < 0)) return;
 		}
 		if (vkey == VK_LBUTTON || vkey == VK_RBUTTON) action(CMD_START_DRAG, mouse_down_list_type_, mouse_down_idx_);
-		mouse_down_y_ = mouse_down_area_ = -1;
-		mouse_down_idx_.reset();
-		mouse_down_top_idx_.reset();
+		reset_mouse_down_state();
 	}
 
 	void wm_mouse_move(WPARAM mkey, int x, int y) {
@@ -651,9 +670,7 @@ public:
 		}
 		if (mouse_down_area_ == 1) {  // Scroller
 			::ReleaseCapture();
-			mouse_down_y_ = mouse_down_area_ = -1;
-			mouse_down_idx_.reset();
-			mouse_down_top_idx_.reset();
+			reset_mouse_down_state();
 			return;
 		}
 		Document::ListType type;
@@ -666,29 +683,27 @@ public:
 			type != mouse_down_list_type_ ||
 			get_item_area(x) != 2
 		) {
-			mouse_down_y_    = -1;
-			mouse_down_area_ = -1;
-			mouse_down_idx_.reset();
-			mouse_down_top_idx_.reset();
+			reset_mouse_down_state();
 			return;
 		}
 
 		const bool lbtn = (mkey & MK_LBUTTON) != 0;
 		const bool rbtn = (mkey & MK_RBUTTON) != 0;
+		const bool file_drag_select = (type == Document::ListType::FILE && list_cursor_idx_ != mouse_down_idx_);
 
 		if ((vkey == VK_RBUTTON && lbtn) || (vkey == VK_LBUTTON && rbtn)) {
-			if (type == Document::ListType::FILE && list_cursor_idx_ != mouse_down_idx_) {
+			if (file_drag_select) {
 				select_file(mouse_down_idx_, list_cursor_idx_);
 			}
 			action(CMD_SHELL_MENU, type, list_cursor_idx_);
 		} else if (vkey == VK_LBUTTON) {
-			if (type == Document::ListType::FILE && (list_cursor_idx_ != mouse_down_idx_ || window_utils::ctrl_pressed())) {
+			if (type == Document::ListType::FILE && (file_drag_select || window_utils::ctrl_pressed())) {
 				select_file(mouse_down_idx_, list_cursor_idx_);
 			} else {
 				action(CMD_OPEN, type, list_cursor_idx_);
 			}
 		} else if (vkey == VK_RBUTTON) {
-			if (type == Document::ListType::FILE && list_cursor_idx_ != mouse_down_idx_) {
+			if (file_drag_select) {
 				select_file(mouse_down_idx_, list_cursor_idx_);
 			}
 			if (window_utils::ctrl_pressed()) {
@@ -703,9 +718,7 @@ public:
 				action(CMD_FAVORITE, type, list_cursor_idx_);
 			}
 		}
-		mouse_down_y_ = mouse_down_area_ = -1;
-		mouse_down_idx_.reset();
-		mouse_down_top_idx_.reset();
+		reset_mouse_down_state();
 	}
 
 	// Check the position of the pointer
@@ -796,7 +809,7 @@ public:
 		case VK_DOWN:
 			++i;
 			if (list_cursor_switch_ == Document::ListType::HIER) {
-				if (i < ns.size() && (doc_.get_item(Document::ListType::HIER, i)->data() & SEPA) != 0) ++i;
+				if (i < ns.size()) i = skip_hier_separator(i, true);
 				if (i < ns.size()) {
 					set_cursor_index(i, Document::ListType::HIER);
 				} else {
@@ -816,13 +829,13 @@ public:
 					set_cursor_index(fs.size() - 1, Document::ListType::FILE);
 				} else {
 					i = ns.size() - 1;
-					if ((doc_.get_item(Document::ListType::HIER, i)->data() & SEPA) != 0) --i;
+					i = skip_hier_separator(i, false);
 					set_cursor_index(i, Document::ListType::HIER);
 				}
 			} else {
 				--i;
 				if (list_cursor_switch_ == Document::ListType::HIER) {
-					if ((doc_.get_item(Document::ListType::HIER, i)->data() & SEPA) != 0) --i;
+					i = skip_hier_separator(i, false);
 					set_cursor_index(i, Document::ListType::HIER);
 				} else {
 					set_cursor_index(i, Document::ListType::FILE);
@@ -915,11 +928,8 @@ public:
 	void popup_menu(Document::ListType w, std::optional<size_t> index) {
 		if (!index) return;
 
-		doc_.set_operator(index, w, ope_);
-		if (ope_.size() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
-
-		auto ext = file_system::is_directory(ope_[0]) ? PATH_EXT_DIR : path::ext(ope_[0]);
-		const int type = extensions_.get_id(ext) + 1;
+		int type{};
+		if (!prepare_operator_for_menu(w, index, type)) return;
 
 		UINT f;
 		const POINT pt = get_popup_pt(w, index.value(), f);
@@ -934,10 +944,8 @@ public:
 
 	// Execution of command by accelerator
 	void accelerator(TCHAR accelerator, Document::ListType w, std::optional<size_t> index) {
-		doc_.set_operator(index, w, ope_);
-		if (ope_.size() == 0 || ope_[0].empty()) return;  // Reject if objs is empty
-		auto ext = file_system::is_directory(ope_[0]) ? PATH_EXT_DIR : path::ext(ope_[0]);
-		const int type = extensions_.get_id(ext) + 1;
+		int type{};
+		if (!prepare_operator_for_menu(w, index, type)) return;
 		std::wstring cmd;
 		PopupMenu pm(wnd_, &pref_);
 		if (pm.get_accel_command(type, accelerator, cmd)) action(ope_, cmd, w, index);
@@ -962,12 +970,14 @@ public:
 			if (index) {
 				system_command(cmd, objs, w, index.value());
 			}
-		} else {
-			if (!has_obj) return;
+			if (has_obj) ::SetCurrentDirectory(old_current.c_str());
+			return;
+		}
+		if (has_obj) {
 			::ShowWindow(wnd_, SW_HIDE);  // Hide in advance
 			ope_.open_by(cmd);
+			::SetCurrentDirectory(old_current.c_str());
 		}
-		if (has_obj) ::SetCurrentDirectory(old_current.c_str());
 	}
 
 	// System command execution

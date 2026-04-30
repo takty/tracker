@@ -2,7 +2,7 @@
  * File Item
  *
  * @author Takuto Yanagida
- * @version 2025-11-18
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -26,11 +26,8 @@ class Item {
 public:
 
 	static std::shared_ptr<Item> create() {
-		if (cache_.empty()) {
-			auto it = std::make_shared<Item>();
-			return it;
-		}
-		std::shared_ptr<Item> it = cache_.back();
+		if (cache_.empty()) return std::make_shared<Item>();
+		auto it = cache_.back();
 		cache_.pop_back();
 		return it;
 	}
@@ -90,7 +87,7 @@ private:
 
 public:
 
-	Item() noexcept {}
+	Item() noexcept = default;
 	Item(const Item&) = delete;
 	Item& operator=(const Item&) = delete;
 	Item(Item&&) = delete;
@@ -99,8 +96,9 @@ public:
 
 	void set_file(const std::wstring& parent_path, const WIN32_FIND_DATA& wfd, const TypeTable& exts) {
 		// parentPath must include \ at the end
-		path_ = parent_path + std::wstring{ &wfd.cFileName[0] };
-		name_ = std::wstring{ &wfd.cFileName[0] };
+		const std::wstring file_name{ &wfd.cFileName[0] };
+		path_ = parent_path + file_name;
+		name_ = file_name;
 		time_ = wfd.ftLastWriteTime;
 		size_ = (static_cast<unsigned long long>(wfd.nFileSizeHigh) << 32) | wfd.nFileSizeLow;
 
@@ -132,14 +130,14 @@ public:
 
 	void set_empty() {
 		path_.clear();
-		name_  = Item::EMPTY_STR;
-		style_ = Item::EMPTY;
+		name_  = EMPTY_STR;
+		style_ = EMPTY;
 	}
 
 	void set_special(const std::wstring& path, const std::wstring& name) {
 		path_  = path;
 		name_  = name;
-		style_ = Item::DIR;
+		style_ = DIR;
 		color_ = ::GetSysColor(COLOR_GRAYTEXT);
 	}
 

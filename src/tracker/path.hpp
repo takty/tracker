@@ -2,7 +2,7 @@
  * File Path Operations
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-04-30
  */
 
 #pragma once
@@ -20,6 +20,17 @@ namespace path {
 	constexpr wchar_t EXT_PREFIX       = L'.';   // Extension prefix
 
 	constexpr wchar_t const * const UNC_PREFIX = L"\\\\?\\";
+	constexpr size_t UNC_PREFIX_SIZE = 4;
+
+	bool has_unc_prefix(const std::wstring& path) noexcept {
+		return 0 == path.compare(0, UNC_PREFIX_SIZE, UNC_PREFIX);
+	}
+
+	void append_root_separator_if_drive(std::wstring& out, const std::wstring& path) noexcept {
+		if (path.back() == DRIVE_IDENTIFIER) {
+			out.append(1, PATH_SEPARATOR);
+		}
+	}
 
 	// Extract file name (UNC ok)
 	std::wstring name(const std::wstring& path) noexcept {
@@ -79,7 +90,7 @@ namespace path {
 
 	// Ensure the path begin with UNC prefix "\\?\"
 	std::wstring ensure_unc_prefix(const std::wstring& path) noexcept {
-		if (0 == path.compare(0, 4, UNC_PREFIX)) {
+		if (has_unc_prefix(path)) {
 			return path;
 		}
 		return UNC_PREFIX + path;
@@ -87,8 +98,8 @@ namespace path {
 
 	// Ensure the path does not begin with UNC prefix "\\?\"
 	std::wstring ensure_no_unc_prefix(const std::wstring& path) noexcept {
-		if (0 == path.compare(0, 4, UNC_PREFIX)) {
-			return path.substr(4);
+		if (has_unc_prefix(path)) {
+			return path.substr(UNC_PREFIX_SIZE);
 		}
 		return path;
 	}
@@ -108,7 +119,7 @@ namespace path {
 			auto ret = parent(module_file_path);
 			return ret.append(path, 1);
 		}
-		return std::wstring(path);
+		return path;
 	}
 
 	// Make quoted and space-separated path string
@@ -116,12 +127,10 @@ namespace path {
 		std::wstring ret;
 		for (const auto& path : paths) {
 			ret.append(1, L'\"').append(ensure_unc_prefix_if_needed(path));
-			if (path.back() == DRIVE_IDENTIFIER) {
-				ret.append(1, PATH_SEPARATOR);
-			}
+			append_root_separator_if_drive(ret, path);
 			ret.append(L"\" ");
 		}
-		ret.pop_back();  // Remove last space
+		if (!ret.empty()) ret.pop_back();  // Remove last space
 		return ret;
 	}
 
@@ -130,9 +139,7 @@ namespace path {
 		std::wstring ret;
 		for (const auto& path : paths) {
 			ret.append(path);
-			if (path.back() == DRIVE_IDENTIFIER) {
-				ret.append(1, PATH_SEPARATOR);
-			}
+			append_root_separator_if_drive(ret, path);
 			ret.append(1, L'\0');
 		}
 		ret.append(1, L'\0');
