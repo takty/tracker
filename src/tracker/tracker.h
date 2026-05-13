@@ -2,7 +2,7 @@
  * Common Header
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -19,13 +19,16 @@
 
 const std::wstring SECTION_WINDOW(L"Window");
 
-	const std::wstring KEY_MAX_HISTORY(L"MaxHistory");				constexpr int VAL_MAX_HISTORY      = 32;
-	const std::wstring KEY_SHOW_HIDDEN(L"ShowHidden");				constexpr int VAL_SHOW_HIDDEN      = 0;
-	const std::wstring KEY_SORT_BY(L"SortBy");						constexpr int VAL_SORT_BY          = 0;
-	const std::wstring KEY_SORT_REV(L"SortRev");					constexpr int VAL_SORT_REV         = 0;
-	const std::wstring KEY_SORT_HISTORY(L"SortHistory");			constexpr int VAL_SORT_HISTORY     = 1;
-	const std::wstring KEY_SORT_HISTORY_BY(L"SortHistoryBy");		constexpr int VAL_SORT_HISTORY_BY  = 1;
-	const std::wstring KEY_SORT_HISTORY_REV(L"SortHistoryRev");		constexpr int VAL_SORT_HISTORY_REV = 0;
+	const std::wstring KEY_MAX_HISTORY(L"MaxHistory");				constexpr int VAL_MAX_HISTORY = 32;
+
+	const std::wstring KEY_SHOW_HIDDEN(L"ShowHidden");				constexpr int VAL_SHOW_HIDDEN = 0;
+	const std::wstring KEY_SORT_REV(L"SortRev");					constexpr int VAL_SORT_REV    = 0;
+	const std::wstring KEY_SORT_BY(L"SortBy");						constexpr int VAL_SORT_BY     = 0;
+
+	const std::wstring KEY_DOT_FILE_AS_HIDDEN(L"DotFileAsHidden");	constexpr int VAL_DOT_FILE_AS_HIDDEN = 1;
+	const std::wstring KEY_SORT_HISTORY(L"SortHistory");			constexpr int VAL_SORT_HISTORY       = 1;
+	const std::wstring KEY_SORT_HISTORY_BY(L"SortHistoryBy");		constexpr int VAL_SORT_HISTORY_BY    = 1;
+	const std::wstring KEY_SORT_HISTORY_REV(L"SortHistoryRev");		constexpr int VAL_SORT_HISTORY_REV   = 0;
 
 	const std::wstring KEY_MULTI_USER(L"MultiUser");				constexpr int VAL_MULTI_USER        = 0;
 	const std::wstring KEY_NO_LINKED(L"NoLinked");					const std::wstring VAL_NO_LINKED(L"");

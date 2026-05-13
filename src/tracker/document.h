@@ -2,7 +2,7 @@
  * Document
  *
  * @author Takuto Yanagida
- * @version 2026-04-30
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -75,7 +75,12 @@ private:
 		// Add files
 		file_system::find_first_file(path, [&](const std::wstring& parent, const WIN32_FIND_DATA& wfd) {
 			const bool is_hidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
-			if (!is_hidden || opt_.is_show_hidden()) {
+			const bool is_dot    = wfd.cFileName[0] == L'.';
+			if (
+				(!is_hidden && !is_dot) ||
+				(is_dot && !opt_.is_dot_file_as_hidden()) ||
+				opt_.is_show_hidden()
+			) {
 				const auto it = Item::create();
 				it->set_file(parent, wfd, exts_);
 				files_.add(it);

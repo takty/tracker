@@ -2,7 +2,7 @@
  * Document Options
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -14,10 +14,13 @@
 
 class Option {
 
-	bool show_hidden_, sort_rev_;
+	bool show_hidden_;
+	bool sort_rev_;
 	int sort_by_;
 
-	bool sort_his_, sort_his_rev_;
+	bool dot_file_as_hidden_;
+	bool sort_his_;
+	bool sort_his_rev_;
 	int sort_his_by_;
 
 public:
@@ -30,19 +33,16 @@ public:
 		sort_rev_    = pref.item_int(KEY_SORT_REV,    VAL_SORT_REV)    != 0;
 		sort_by_     = pref.item_int(KEY_SORT_BY,     VAL_SORT_BY);
 
-		sort_his_     = pref.item_int(KEY_SORT_HISTORY,     VAL_SORT_HISTORY)     != 0;
-		sort_his_rev_ = pref.item_int(KEY_SORT_HISTORY_REV, VAL_SORT_HISTORY_REV) != 0;
-		sort_his_by_  = pref.item_int(KEY_SORT_HISTORY_BY,  VAL_SORT_HISTORY_BY);
+		dot_file_as_hidden_ = pref.item_int(KEY_DOT_FILE_AS_HIDDEN, VAL_DOT_FILE_AS_HIDDEN) != 0;
+		sort_his_           = pref.item_int(KEY_SORT_HISTORY,       VAL_SORT_HISTORY)       != 0;
+		sort_his_rev_       = pref.item_int(KEY_SORT_HISTORY_REV,   VAL_SORT_HISTORY_REV)   != 0;
+		sort_his_by_        = pref.item_int(KEY_SORT_HISTORY_BY,    VAL_SORT_HISTORY_BY);
 	}
 
 	void store(Pref& pref) const noexcept {
 		pref.set_item_int(SECTION_WINDOW, KEY_SHOW_HIDDEN, show_hidden_);
 		pref.set_item_int(SECTION_WINDOW, KEY_SORT_REV,    sort_rev_);
 		pref.set_item_int(SECTION_WINDOW, KEY_SORT_BY,     sort_by_);
-
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY,     sort_his_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_REV, sort_his_rev_);
-		pref.set_item_int(SECTION_WINDOW, KEY_SORT_HISTORY_BY,  sort_his_by_);
 	}
 
 	int get_sort_type() const noexcept {
@@ -65,6 +65,10 @@ public:
 
 	bool is_show_hidden() const noexcept {
 		return show_hidden_;
+	}
+
+	bool is_dot_file_as_hidden() const noexcept {
+		return dot_file_as_hidden_;
 	}
 
 	int set_sort_type(int t) noexcept {
