@@ -2,7 +2,7 @@
  * View
  *
  * @author Takuto Yanagida
- * @version 2026-04-30
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -111,7 +111,7 @@ public:
 		switch (msg) {
 		case WM_WINDOWPOSCHANGING:
 			{
-				[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 				auto pos = reinterpret_cast<LPWINDOWPOS>(lp);
 				if ((pos->flags & SWP_NOSIZE) && pos->y < menu_top_()) {
 					RECT r;
@@ -123,7 +123,7 @@ public:
 			}
 		default: break;
 		}
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		auto proc = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(menu, GWLP_USERDATA));
 		return ::CallWindowProc(proc, menu, msg, wp, lp);
 	}
@@ -313,7 +313,7 @@ public:
 		if (!::IsWindow(menu)) return;
 		if (enter) {
 			::SetWindowLongPtr(menu, GWLP_USERDATA, ::GetWindowLongPtr(menu, GWLP_WNDPROC));
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			::SetWindowLongPtr(menu, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(View::menu_proc));
 		} else {
 			::SetWindowLongPtr(menu, GWLP_WNDPROC, ::GetWindowLongPtr(menu, GWLP_USERDATA));
@@ -871,7 +871,7 @@ public:
 				set_scroll_list_top_index(index.value() - scroll_list_line_num_ + 1, false);
 			}
 		}
-		if (list_cursor_idx_ && (list_cursor_switch_ != type || (!index.has_value() || list_cursor_idx_ != index.value()))) {
+		if (list_cursor_idx_ && (list_cursor_switch_ != type || (!index.has_value() || list_cursor_idx_ != index))) {
 			RECT r = list_rect_;
 			r.top    = gsl::narrow_cast<long>(index_to_line(list_cursor_idx_.value(), list_cursor_switch_) * cy_item_);
 			r.bottom = r.top + cy_item_;
@@ -884,7 +884,7 @@ public:
 			return;
 		}
 		if (list_cursor_switch_ != type || list_cursor_idx_ != index) {
-			list_cursor_idx_    = index.value();
+			list_cursor_idx_    = index;
 			list_cursor_switch_ = type;
 			RECT r = list_rect_;
 			r.top    = gsl::narrow<long>(index_to_line(index.value(), type) * cy_item_);

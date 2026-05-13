@@ -2,7 +2,7 @@
  * Rename Edit
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -28,7 +28,7 @@ class RenameEdit {
 	std::wstring new_file_name_;
 
 	static LRESULT CALLBACK edit_proc(HWND hedit, UINT msg, WPARAM wp, LPARAM lp) {
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		auto p = reinterpret_cast<RenameEdit*>(::GetWindowLongPtr(hedit, GWLP_USERDATA));
 
 		switch (msg) {
@@ -54,25 +54,25 @@ public:
 
 	void initialize(HWND wnd) noexcept {
 		wnd_ = wnd;
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		auto inst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(wnd, GWLP_HINSTANCE));
 		edit_ = ::CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""), WS_CHILD | ES_AUTOHSCROLL,
 			0, 0, 0, 0, wnd, nullptr, inst, nullptr);
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		org_proc_ = reinterpret_cast<WNDPROC>(::GetWindowLongPtr(edit_, GWLP_WNDPROC));
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		::SetWindowLongPtr(edit_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		::SetWindowLongPtr(edit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(RenameEdit::edit_proc));
 	}
 
 	void finalize() const noexcept {
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		::SetWindowLongPtr(edit_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(org_proc_));
 	}
 
 	void set_font(HFONT font) const noexcept {
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		::SendMessage(edit_, WM_SETFONT, reinterpret_cast<WPARAM>(font), 0);
 	}
 

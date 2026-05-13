@@ -2,7 +2,7 @@
  * Reader and Writer of Text Files
  *
  * @author Takuto Yanagida
- * @version 2025-11-10
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -29,7 +29,7 @@ namespace text_reader_writer {
 		unsigned char bom[2]{};
 		bool hasBOM = false;
 		if (total >= 2) {
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			ifs.read(reinterpret_cast<char*>(bom), 2);
 			hasBOM = (bom[0] == 0xFF && bom[1] == 0xFE);
 		}
@@ -42,7 +42,7 @@ namespace text_reader_writer {
 
 		std::wstring text;
 		text.resize(gsl::narrow<size_t>(remain / 2));
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		if (!ifs.read(reinterpret_cast<char*>(text.data()), remain)) {
 			const auto got = gsl::narrow<size_t>(ifs.gcount());
 			if (got % 2 == 0) {
@@ -75,15 +75,15 @@ namespace text_reader_writer {
 		if (!ofs) return;
 
 		const unsigned char bom[2]{0xFF, 0xFE};
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		ofs.write(reinterpret_cast<const char*>(bom), sizeof(bom));
 
 		for (const auto& line : lines) {
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			ofs.write(reinterpret_cast<const char*>(line.data()), gsl::narrow<std::streamsize>(line.size() * sizeof(wchar_t)));
 
 			const wchar_t crlf[] = L"\r\n";
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			ofs.write(reinterpret_cast<const char*>(crlf), gsl::narrow<std::streamsize>(2 * sizeof(wchar_t)));
 		}
 		ofs.close();

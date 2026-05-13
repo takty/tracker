@@ -2,7 +2,7 @@
  * Tool Tip
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2026-05-13
  *
  * Need to add to stdafx.h
  * #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -28,7 +28,7 @@ public:
 	ToolTip() = default;
 
 	void initialize(HWND hWnd) noexcept {
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		auto inst = reinterpret_cast<HINSTANCE>(::GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
 
 		wnd_  = hWnd;
@@ -50,7 +50,7 @@ public:
 		ti.hinst    = nullptr;
 		ti.lpszText = temp.data();
 
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		::SendMessage(hint_, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 
 		is_active_ = true;
@@ -66,7 +66,7 @@ public:
 		ti.hwnd   = wnd_;
 		ti.uId    = 1;
 
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		::SendMessage(hint_, TTM_DELTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 	}
 

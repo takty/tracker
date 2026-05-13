@@ -2,7 +2,7 @@
  * Shell Execution
  *
  * @author Takuto Yanagida
- * @version 2025-11-13
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -18,7 +18,7 @@
 namespace execute {
 
 	bool shell_execute(HWND wnd, const std::wstring& obj, const wchar_t* opt = nullptr) noexcept {
-		[[gsl::suppress(type.7)]]
+		[[gsl::suppress("type.7")]]
 		SHELLEXECUTEINFO sei{};
 		sei.cbSize       = sizeof(SHELLEXECUTEINFO);
 		sei.fMask        = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC | SEE_MASK_FLAG_LOG_USAGE;  // To suppress that a caution dialog is shown

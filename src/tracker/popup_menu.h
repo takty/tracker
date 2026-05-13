@@ -2,7 +2,7 @@
  * Popup Menu
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -45,14 +45,14 @@ class PopupMenu {
 				menus_.push_back(hsub_menu);
 				add_type_menu(sec.substr(1), items, hsub_menu);
 
-				[[gsl::suppress(type.1)]]
+				[[gsl::suppress("type.1")]]
 				::AppendMenu(hmenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hsub_menu), name.c_str());
 			} else if (path == _T("<New>")) {  // New file menu
 				HMENU hsub_menu = ::CreateMenu();
 				menus_.push_back(hsub_menu);
 				add_new_file_menu(hsub_menu, items);
 
-				[[gsl::suppress(type.1)]]
+				[[gsl::suppress("type.1")]]
 				::AppendMenu(hmenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hsub_menu), name.c_str());
 			} else {  // Normal menu item
 				UINT flag = MF_STRING;

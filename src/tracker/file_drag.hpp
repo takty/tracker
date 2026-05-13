@@ -2,7 +2,7 @@
  * OLE File Dragging
  *
  * @author Takuto Yanagida
- * @version 2025-11-13
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -77,7 +77,7 @@ namespace file_drag {
 		auto dobj = static_cast<LPDATAOBJECT>(shell::get_ole_ui_object(paths, IID_IDataObject));
 		if (!dobj) return;
 
-		[[gsl::suppress(r)]]
+		[[gsl::suppress("r")]]
 		auto ds = new DropSource();
 		const bool notDrive = !path::is_root(paths.front());
 		DWORD dwEffect;

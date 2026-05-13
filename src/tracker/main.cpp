@@ -2,7 +2,7 @@
  * Main Function
  *
  * @author Takuto Yanagida
- * @version 2025-11-20
+ * @version 2026-05-13
  */
 
 #include <memory>
@@ -39,7 +39,7 @@ int WINAPI wWinMain(_In_ HINSTANCE inst, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ i
 		return 0;
 	}
 	// Create main window
-	[[gsl::suppress(con.4)]]
+	[[gsl::suppress("con.4")]]
 	const HWND wnd = ::CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, &CLASS_NAME[0], &WINDOW_NAME[0], WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 0, 0, 0, 0, nullptr, nullptr, inst, nullptr);
 	if (!wnd) {
 		::MessageBeep(MB_ICONHAND);
@@ -79,7 +79,7 @@ LRESULT CALLBACK wnd_proc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp) {
 	case WM_DESTROY:           view->finalize(); break;
 	case WM_DPICHANGED:        view->wm_dpi_changed(LOWORD(wp), HIWORD(wp)); break;
 	case WM_WINDOWPOSCHANGING:
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		if (view) view->wm_window_pos_changing(reinterpret_cast<LPWINDOWPOS>(lp));
 		break;
 	case WM_SIZE:              view->wm_size(LOWORD(lp), HIWORD(lp)); break;

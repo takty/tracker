@@ -2,7 +2,7 @@
  * Migemo Wrapper
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -45,13 +45,13 @@ public:
 	bool load_library(const std::wstring& dictPath = std::wstring()) {
 		hmigemo_ = ::LoadLibrary(_T("Migemo.dll"));
 		if (hmigemo_) {
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			migemo_open_    = reinterpret_cast<MIGEMO_OPEN>(GetProcAddress(hmigemo_, "migemo_open"));
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			migemo_close_   = reinterpret_cast<MIGEMO_CLOSE>(GetProcAddress(hmigemo_, "migemo_close"));
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			migemo_query_   = reinterpret_cast<MIGEMO_QUERY>(GetProcAddress(hmigemo_, "migemo_query"));
-			[[gsl::suppress(type.1)]]
+			[[gsl::suppress("type.1")]]
 			migemo_release_ = reinterpret_cast<MIGEMO_RELEASE>(GetProcAddress(hmigemo_, "migemo_release"));
 
 			std::wstring dp(dictPath);
@@ -67,9 +67,9 @@ public:
 
 	void query(const std::wstring& searchWord, std::wstring& query) {
 		auto mbs = sc_.wc2mb(searchWord);
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		auto p = migemo_query_(m_, reinterpret_cast<unsigned char*>(mbs.get()));
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		std::string temp{ reinterpret_cast<const char*>(p) };
 
 		query.assign(sc_.mb2wc(temp).get());

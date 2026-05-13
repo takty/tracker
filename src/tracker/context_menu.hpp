@@ -2,7 +2,7 @@
  * Shell Context Menu
  *
  * @author Takuto Yanagida
- * @version 2025-11-19
+ * @version 2026-05-13
  */
 
 #pragma once
@@ -84,11 +84,11 @@ public:
 		// Popup the menu
 		::SetProp(wnd_, PROP_INSTANCE, this);
 		context_menu_ = cm2;
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		orig_proc_ = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(MenuProc)));
 		const int id = ::TrackPopupMenu(hmenu, TPM_RETURNCMD | flag, pt.x, pt.y, 0, wnd_, nullptr);
 		context_menu_ = nullptr;
-		[[gsl::suppress(type.1)]]
+		[[gsl::suppress("type.1")]]
 		::SetWindowLongPtr(wnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(orig_proc_));
 		::RemoveProp(wnd_, PROP_INSTANCE);
 
