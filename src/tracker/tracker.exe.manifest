@@ -2,7 +2,7 @@
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"
           xmlns:asmv3="urn:schemas-microsoft-com:asm.v3"
           xmlns:ws2="http://schemas.microsoft.com/SMI/2016/WindowsSettings">
-	<assemblyIdentity name="tracker" version="5.1.0.0" processorArchitecture="*" type="win32"/>
+	<assemblyIdentity name="tracker" version="5.2.0.0" processorArchitecture="*" type="win32"/>
 	<asmv3:application>
 		<ws2:windowsSettings>
 			<ws2:longPathAware>true</ws2:longPathAware>
